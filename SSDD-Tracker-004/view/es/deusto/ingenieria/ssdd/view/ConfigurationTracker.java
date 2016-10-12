@@ -87,11 +87,16 @@ public class ConfigurationTracker {
 		btnBack.setBackground(Color.WHITE);
 		btnBack.setForeground(Color.BLACK);
 		
-		JButton btnTestFailure = new JButton("TEST FAILURE");
-		btnTestFailure.setBorder(new MatteBorder(4, 4, 0, 4, (Color) new Color(0, 0, 0)));
+		JButton btnTestFailure = new JButton("TEST CONNECTION FAILURE");
+		btnTestFailure.setBorder(new MatteBorder(3, 3, 3, 3, (Color) new Color(0, 0, 0)));
 		btnTestFailure.setBackground(Color.RED);
 		btnTestFailure.setForeground(Color.WHITE);
-		btnTestFailure.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 20));
+		btnTestFailure.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		
+		JButton btnStartStop = new JButton("Start / Stop");
+		btnStartStop.setBackground(new Color(50, 205, 50));
+		btnStartStop.setForeground(Color.WHITE);
+		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 30));
 		GroupLayout groupLayout = new GroupLayout(TrackerConfiguration.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -103,13 +108,14 @@ public class ConfigurationTracker {
 					.addGap(110))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(62)
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addComponent(btnTestFailure)
-							.addContainerGap())
-						.addGroup(groupLayout.createSequentialGroup()
-							.addComponent(panel, GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE)
-							.addGap(62))))
+					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+						.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 222, GroupLayout.PREFERRED_SIZE)
+						.addComponent(panel, GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE))
+					.addGap(62))
+				.addGroup(groupLayout.createSequentialGroup()
+					.addContainerGap()
+					.addComponent(btnTestFailure)
+					.addContainerGap(367, Short.MAX_VALUE))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -123,8 +129,11 @@ public class ConfigurationTracker {
 							.addComponent(lblTrackerConfiguring)))
 					.addGap(102)
 					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 130, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED, 131, Short.MAX_VALUE)
-					.addComponent(btnTestFailure))
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(ComponentPlacement.RELATED, 34, Short.MAX_VALUE)
+					.addComponent(btnTestFailure)
+					.addContainerGap())
 		);
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{158, 0, 0};
@@ -144,7 +153,6 @@ public class ConfigurationTracker {
 		panel.add(lblIp, gbc_lblIp);
 		
 		txtIP = new JTextField();
-		txtIP.setText("IP");
 		txtIP.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		GridBagConstraints gbc_txtIP = new GridBagConstraints();
 		gbc_txtIP.insets = new Insets(0, 0, 5, 0);
@@ -165,7 +173,6 @@ public class ConfigurationTracker {
 		panel.add(lblPort, gbc_lblPort);
 		
 		txtPort = new JTextField();
-		txtPort.setText("Port");
 		txtPort.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		GridBagConstraints gbc_txtPort = new GridBagConstraints();
 		gbc_txtPort.insets = new Insets(0, 0, 5, 0);
@@ -186,7 +193,6 @@ public class ConfigurationTracker {
 		panel.add(lblID, gbc_lblID);
 		
 		txtId = new JTextField();
-		txtId.setText("ID");
 		txtId.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		GridBagConstraints gbc_txtId = new GridBagConstraints();
 		gbc_txtId.fill = GridBagConstraints.HORIZONTAL;

@@ -57,6 +57,21 @@ public class Dashboard {
 		TrackerDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		TrackerDashboard.getContentPane().setBackground(new Color(0, 102, 153));
 		TrackerDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		TrackerDashboard.addWindowListener(new WindowAdapter() {
+	        @Override
+	        public void windowClosing(WindowEvent e) {
+	                // Ask for confirmation before terminating the program.
+	                int option = JOptionPane.showConfirmDialog(
+	                        frame, 
+	                        "Are you sure you want to close the application?",
+	                        "Close Confirmation", 
+	                        JOptionPane.YES_NO_OPTION, 
+	                        JOptionPane.QUESTION_MESSAGE);
+	                if (option == JOptionPane.YES_OPTION) {
+	                        System.exit(0);
+	                }
+	        }
+	});
 		
 		JLabel lblTrackerDashboard = new JLabel("Tracker dashboard");
 		lblTrackerDashboard.setHorizontalTextPosition(SwingConstants.CENTER);
