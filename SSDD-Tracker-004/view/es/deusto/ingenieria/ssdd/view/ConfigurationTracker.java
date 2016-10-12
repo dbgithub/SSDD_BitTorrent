@@ -18,12 +18,17 @@ import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
 import java.awt.Rectangle;
+import java.util.Observable;
+import java.util.Observer;
+
 import javax.swing.border.EmptyBorder;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
 
-public class ConfigurationTracker {
+import es.deusto.ingenieria.ssdd.data.DataModel;
+
+public class ConfigurationTracker implements Observer{
 
 	private JFrame TrackerConfiguration;
 	private JTextField txtIP;
@@ -195,5 +200,13 @@ public class ConfigurationTracker {
 		panel.add(txtId, gbc_txtId);
 		txtId.setColumns(10);
 		TrackerConfiguration.getContentPane().setLayout(groupLayout);
+	}
+
+	@Override
+	public void update(Observable o, Object arg) {
+		if( o instanceof DataModel){
+			//The update is related with the value that we are observing
+		}
+		
 	}
 }
