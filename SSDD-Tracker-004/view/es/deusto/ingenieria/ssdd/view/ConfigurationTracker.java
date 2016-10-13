@@ -34,6 +34,7 @@ public class ConfigurationTracker implements Observer{
 	private JTextField txtIP;
 	private JTextField txtPort;
 	private JTextField txtId;
+	private JTextField txtMaster;
 
 	/**
 	 * Launch the application.
@@ -112,15 +113,15 @@ public class ConfigurationTracker implements Observer{
 					.addComponent(lblTrackerConfiguring, GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
 					.addGap(110))
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(62)
-					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 222, GroupLayout.PREFERRED_SIZE)
-						.addComponent(panel, GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE))
-					.addGap(62))
-				.addGroup(groupLayout.createSequentialGroup()
 					.addContainerGap()
 					.addComponent(btnTestFailure)
 					.addContainerGap(367, Short.MAX_VALUE))
+				.addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+					.addContainerGap(62, Short.MAX_VALUE)
+					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+						.addComponent(panel, GroupLayout.PREFERRED_SIZE, 476, GroupLayout.PREFERRED_SIZE)
+						.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 222, GroupLayout.PREFERRED_SIZE))
+					.addGap(62))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
@@ -132,19 +133,19 @@ public class ConfigurationTracker implements Observer{
 						.addGroup(groupLayout.createSequentialGroup()
 							.addGap(27)
 							.addComponent(lblTrackerConfiguring)))
-					.addGap(102)
+					.addGap(31)
 					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 130, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addGap(83)
 					.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED, 34, Short.MAX_VALUE)
+					.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 					.addComponent(btnTestFailure)
 					.addContainerGap())
 		);
 		GridBagLayout gbl_panel = new GridBagLayout();
 		gbl_panel.columnWidths = new int[]{158, 0, 0};
-		gbl_panel.rowHeights = new int[]{55, 55, 55, 0};
+		gbl_panel.rowHeights = new int[]{55, 55, 55, 0, 0};
 		gbl_panel.columnWeights = new double[]{0.0, 1.0, Double.MIN_VALUE};
-		gbl_panel.rowWeights = new double[]{1.0, 1.0, 1.0, Double.MIN_VALUE};
+		gbl_panel.rowWeights = new double[]{1.0, 1.0, 1.0, 0.0, Double.MIN_VALUE};
 		panel.setLayout(gbl_panel);
 		
 		JLabel lblIp = new JLabel("IP");
@@ -192,7 +193,7 @@ public class ConfigurationTracker implements Observer{
 		lblID.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		GridBagConstraints gbc_lblID = new GridBagConstraints();
 		gbc_lblID.fill = GridBagConstraints.HORIZONTAL;
-		gbc_lblID.insets = new Insets(0, 0, 0, 5);
+		gbc_lblID.insets = new Insets(0, 0, 5, 5);
 		gbc_lblID.gridx = 0;
 		gbc_lblID.gridy = 2;
 		panel.add(lblID, gbc_lblID);
@@ -200,11 +201,32 @@ public class ConfigurationTracker implements Observer{
 		txtId = new JTextField();
 		txtId.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		GridBagConstraints gbc_txtId = new GridBagConstraints();
+		gbc_txtId.insets = new Insets(0, 0, 5, 0);
 		gbc_txtId.fill = GridBagConstraints.HORIZONTAL;
 		gbc_txtId.gridx = 1;
 		gbc_txtId.gridy = 2;
 		panel.add(txtId, gbc_txtId);
 		txtId.setColumns(10);
+		
+		JLabel lblMaster = new JLabel("Is master?");
+		lblMaster.setForeground(Color.WHITE);
+		lblMaster.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		GridBagConstraints gbc_lblMaster = new GridBagConstraints();
+		gbc_lblMaster.anchor = GridBagConstraints.WEST;
+		gbc_lblMaster.insets = new Insets(0, 0, 0, 5);
+		gbc_lblMaster.gridx = 0;
+		gbc_lblMaster.gridy = 3;
+		panel.add(lblMaster, gbc_lblMaster);
+		
+		txtMaster = new JTextField();
+		txtMaster.setEnabled(false);
+		txtMaster.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		txtMaster.setColumns(10);
+		GridBagConstraints gbc_txtMaster = new GridBagConstraints();
+		gbc_txtMaster.fill = GridBagConstraints.HORIZONTAL;
+		gbc_txtMaster.gridx = 1;
+		gbc_txtMaster.gridy = 3;
+		panel.add(txtMaster, gbc_txtMaster);
 		TrackerConfiguration.getContentPane().setLayout(groupLayout);
 	}
 

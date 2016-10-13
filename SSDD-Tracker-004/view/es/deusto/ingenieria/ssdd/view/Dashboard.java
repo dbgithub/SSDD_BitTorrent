@@ -12,12 +12,16 @@ import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
 import java.awt.Rectangle;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
 import javax.swing.border.EmptyBorder;
 
 public class Dashboard {
@@ -54,24 +58,23 @@ public class Dashboard {
 		TrackerDashboard = new JFrame();
 		TrackerDashboard.setMinimumSize(new Dimension(600, 480));
 		TrackerDashboard.setBounds(100, 100, 450, 300);
-		TrackerDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		TrackerDashboard.getContentPane().setBackground(new Color(0, 102, 153));
-		TrackerDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		TrackerDashboard.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		TrackerDashboard.addWindowListener(new WindowAdapter() {
-	        @Override
-	        public void windowClosing(WindowEvent e) {
-	                // Ask for confirmation before terminating the program.
-	                int option = JOptionPane.showConfirmDialog(
-	                        frame, 
-	                        "Are you sure you want to close the application?",
-	                        "Close Confirmation", 
-	                        JOptionPane.YES_NO_OPTION, 
-	                        JOptionPane.QUESTION_MESSAGE);
-	                if (option == JOptionPane.YES_OPTION) {
-	                        System.exit(0);
-	                }
-	        }
-	});
+			@Override
+			public void windowClosing(WindowEvent e) {
+				// Ask for confirmation before exiting the program.
+				int option = JOptionPane.showConfirmDialog(
+						TrackerDashboard, 
+						"Are you sure you want to close this tracker?",
+						"Exit confirmation", 
+						JOptionPane.YES_NO_OPTION, 
+						JOptionPane.QUESTION_MESSAGE);
+				if (option == JOptionPane.YES_OPTION) {
+					System.exit(0);
+				}
+			}
+		});
 		
 		JLabel lblTrackerDashboard = new JLabel("Tracker dashboard");
 		lblTrackerDashboard.setHorizontalTextPosition(SwingConstants.CENTER);
