@@ -18,6 +18,8 @@ import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
 import java.awt.Rectangle;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -26,10 +28,13 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 //import es.deusto.ingenieria.ssdd.data.DataModel;
 
@@ -68,9 +73,24 @@ public class SeeSwarms implements Observer{
 		SeeSwarms = new JFrame();
 		SeeSwarms.setMinimumSize(new Dimension(600, 480));
 		SeeSwarms.setBounds(100, 100, 450, 300);
-		SeeSwarms.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		SeeSwarms.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		SeeSwarms.getContentPane().setBackground(new Color(0, 102, 153));
-		SeeSwarms.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		SeeSwarms.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				// Ask for confirmation before exiting the program.
+				int option = JOptionPane.showConfirmDialog(
+						SeeSwarms, 
+						"Are you sure you want to close this tracker?",
+						"Exit confirmation", 
+						JOptionPane.YES_NO_OPTION, 
+						JOptionPane.QUESTION_MESSAGE);
+				if (option == JOptionPane.YES_OPTION) {
+					System.exit(0);
+				}
+			}
+		});
+		
 		
 		JLabel lblSeeSwarms = new JLabel("See Swarms");
 		lblSeeSwarms.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -81,6 +101,13 @@ public class SeeSwarms implements Observer{
 		lblSeeSwarms.setFont(new Font("Ubuntu", Font.BOLD, 34));
 		
 		JButton btnBack = new JButton("❰");
+		btnBack.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				Dashboard.show(true);
+				SeeSwarms.dispose();
+			}
+		});
 		btnBack.setMargin(new Insets(0, 0, 0, 0));
 		btnBack.setFont(new Font("Dialog", Font.BOLD, 40));
 		btnBack.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -121,19 +148,30 @@ public class SeeSwarms implements Observer{
 		);
 		
 		JTable table = new JTable();
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					JTable tempTable = (JTable)e.getSource();
+				    System.out.println("double clicked in row#" + (tempTable.rowAtPoint(e.getPoint()) + 1));
+				    SeePeers.main(null);
+				    
+				  }
+			}
+		});
 		table.setModel(new DefaultTableModel(
 			new Object[][] {
-				{null, null, null, null, null},
-				{null, null, null, null, null},
-				{null, null, null, null, null},
-				{null, null, null, null, null},
+				{"ejemplo", "ejemplo", "ejemplo", "ejemplo"},
+				{null, null, null, null},
+				{null, null, null, null},
+				{null, null, null, null},
 			},
 			new String[] {
-				"Swarm content", "Size", "Total seeders", "Total leechers", "List of peers"
+				"Swarm content", "Size", "Total seeders", "Total leechers"
 			}
 		) {
 			boolean[] columnEditables = new boolean[] {
-				false, false, false, false, false
+				false, false, false, false
 			};
 			public boolean isCellEditable(int row, int column) {
 				return columnEditables[column];
@@ -147,8 +185,6 @@ public class SeeSwarms implements Observer{
 		table.getColumnModel().getColumn(2).setMinWidth(100);
 		table.getColumnModel().getColumn(3).setPreferredWidth(100);
 		table.getColumnModel().getColumn(3).setMinWidth(100);
-		table.getColumnModel().getColumn(4).setPreferredWidth(130);
-		table.getColumnModel().getColumn(4).setMinWidth(130);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		scrollPane.setViewportView(table);

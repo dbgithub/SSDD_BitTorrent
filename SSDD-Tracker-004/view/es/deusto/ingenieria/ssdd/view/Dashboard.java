@@ -154,6 +154,13 @@ public class Dashboard {
 		panel.add(btnConfigureTracker, gbc_btnConfigureTracker);
 		
 		JButton btnSeeTrackers = new JButton("See trackers");
+		btnSeeTrackers.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				SeeTrackers.main(null);
+				TrackerDashboard.setVisible(false);
+			}
+		});
 		btnSeeTrackers.setFocusPainted(false);
 		btnSeeTrackers.setMargin(new Insets(0, 14, 0, 14));
 		btnSeeTrackers.setBorder(null);
@@ -169,6 +176,13 @@ public class Dashboard {
 		panel.add(btnSeeTrackers, gbc_btnSeeTrackers);
 		
 		JButton btnSeeSwarms = new JButton("See swarms");
+		btnSeeSwarms.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				SeeSwarms.main(null);
+				TrackerDashboard.setVisible(false);
+			}
+		});
 		btnSeeSwarms.setFocusPainted(false);
 		btnSeeSwarms.setMargin(new Insets(0, 14, 0, 14));
 		btnSeeSwarms.setBorder(null);

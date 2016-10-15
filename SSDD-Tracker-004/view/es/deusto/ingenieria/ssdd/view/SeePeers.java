@@ -31,6 +31,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
 import java.awt.Window.Type;
+import java.awt.Dialog.ModalExclusionType;
 
 //import es.deusto.ingenieria.ssdd.data.DataModel;
 
@@ -67,12 +68,10 @@ public class SeePeers implements Observer{
 	@SuppressWarnings("serial")
 	private void initialize() {
 		SeePeers = new JFrame();
-		SeePeers.setType(Type.POPUP);
 		SeePeers.setMinimumSize(new Dimension(600, 480));
 		SeePeers.setBounds(100, 100, 450, 300);
-		SeePeers.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		SeePeers.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		SeePeers.getContentPane().setBackground(new Color(0, 102, 153));
-		SeePeers.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		JLabel lblPeersList = new JLabel("List of peers");
 		lblPeersList.setHorizontalTextPosition(SwingConstants.CENTER);

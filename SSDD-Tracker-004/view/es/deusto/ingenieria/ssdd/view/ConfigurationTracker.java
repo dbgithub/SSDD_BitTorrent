@@ -13,6 +13,7 @@ import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
@@ -33,6 +34,8 @@ import es.deusto.ingenieria.ssdd.data.DataModel;
 import javax.swing.JRadioButton;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class ConfigurationTracker implements Observer{
 
@@ -72,9 +75,23 @@ public class ConfigurationTracker implements Observer{
 		TrackerConfiguration = new JFrame();
 		TrackerConfiguration.setMinimumSize(new Dimension(600, 480));
 		TrackerConfiguration.setBounds(100, 100, 450, 300);
-		TrackerConfiguration.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		TrackerConfiguration.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		TrackerConfiguration.getContentPane().setBackground(new Color(0, 102, 153));
-		TrackerConfiguration.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		TrackerConfiguration.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				// Ask for confirmation before exiting the program.
+				int option = JOptionPane.showConfirmDialog(
+						TrackerConfiguration, 
+						"Are you sure you want to close this tracker?",
+						"Exit confirmation", 
+						JOptionPane.YES_NO_OPTION, 
+						JOptionPane.QUESTION_MESSAGE);
+				if (option == JOptionPane.YES_OPTION) {
+					System.exit(0);
+				}
+			}
+		});
 		
 		JLabel lblTrackerConfiguring = new JLabel("Configuring Tracker");
 		lblTrackerConfiguring.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -107,12 +124,24 @@ public class ConfigurationTracker implements Observer{
 		btnBack.setForeground(Color.BLACK);
 		
 		JButton btnTestFailure = new JButton("TEST CONNECTION FAILURE");
+		btnTestFailure.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				System.out.println("Test Connection Failure button pressed!");
+			}
+		});
 		btnTestFailure.setBorder(new MatteBorder(3, 3, 3, 3, (Color) new Color(0, 0, 0)));
 		btnTestFailure.setBackground(Color.RED);
 		btnTestFailure.setForeground(Color.WHITE);
 		btnTestFailure.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		
 		JButton btnStartStop = new JButton("Start / Stop");
+		btnStartStop.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				System.out.println("Start/Stop buttons clicked");
+			}
+		});
 		btnStartStop.setBackground(new Color(50, 205, 50));
 		btnStartStop.setForeground(Color.WHITE);
 		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 30));
