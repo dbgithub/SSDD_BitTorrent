@@ -22,16 +22,19 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import es.deusto.ingenieria.ssdd.controllers.*;
 
 public class Dashboard {
 
 	private static JFrame TrackerDashboard;
+	private static DashboardController controller;
 
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
+			@SuppressWarnings("unused")
 			public void run() {
 				try {
 					Dashboard window = new Dashboard();
@@ -134,6 +137,9 @@ public class Dashboard {
 		btnConfigureTracker.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
+				// This is the MOUSE CLICK EVENT for "configure tracker"
+				controller.showExampleMessage();
+				ConfigurationTrackerController.main(null);
 				ConfigurationTracker.main(null);
 				TrackerDashboard.setVisible(false);
 			}
@@ -157,7 +163,10 @@ public class Dashboard {
 		btnSeeTrackers.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				// This is the MOUSE CLICK EVENT for "see trackers"
+				controller.showExampleMessage();
 				SeeTrackers.main(null);
+				SeeTrackersController.main(null);
 				TrackerDashboard.setVisible(false);
 			}
 		});
@@ -179,7 +188,10 @@ public class Dashboard {
 		btnSeeSwarms.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+				// This is the MOUSE CLICK EVENT for "see swarms"
+				controller.showExampleMessage();
 				SeeSwarms.main(null);
+				SeeSwarmsController.main(null);
 				TrackerDashboard.setVisible(false);
 			}
 		});
@@ -198,8 +210,26 @@ public class Dashboard {
 		TrackerDashboard.getContentPane().setLayout(groupLayout);
 	}
 	
+	/**
+	 * It displays the window when requested
+	 * @param bol
+	 */
 	public static void show(boolean bol) {
 		TrackerDashboard.setVisible(true);
+	}
+
+	/**
+	 * @return the controller
+	 */
+	public DashboardController getController() {
+		return controller;
+	}
+
+	/**
+	 * @param controller the controller to set
+	 */
+	public static void setController(DashboardController controller) {
+		Dashboard.controller = controller;
 	}
 
 }

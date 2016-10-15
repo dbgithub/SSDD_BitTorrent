@@ -4,40 +4,28 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-
 import javax.swing.GroupLayout;
-import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
-import java.awt.Rectangle;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.border.EmptyBorder;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.JTextField;
-import javax.swing.border.MatteBorder;
-import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
-import java.awt.Window.Type;
-import java.awt.Dialog.ModalExclusionType;
+import es.deusto.ingenieria.ssdd.controllers.*;
 
-//import es.deusto.ingenieria.ssdd.data.DataModel;
+import es.deusto.ingenieria.ssdd.data.DataModelPeers;;
 
 public class SeePeers implements Observer{
 
-	private JFrame SeePeers;
+	private JFrame PeersSee;
+	private static SeePeersController controller;
 
 	/**
 	 * Launch the application.
@@ -47,7 +35,8 @@ public class SeePeers implements Observer{
 			public void run() {
 				try {
 					SeePeers window = new SeePeers();
-					window.SeePeers.setVisible(true);
+					window.PeersSee.setVisible(true);
+					controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -67,11 +56,11 @@ public class SeePeers implements Observer{
 	 */
 	@SuppressWarnings("serial")
 	private void initialize() {
-		SeePeers = new JFrame();
-		SeePeers.setMinimumSize(new Dimension(600, 480));
-		SeePeers.setBounds(100, 100, 450, 300);
-		SeePeers.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		SeePeers.getContentPane().setBackground(new Color(0, 102, 153));
+		PeersSee = new JFrame();
+		PeersSee.setMinimumSize(new Dimension(600, 480));
+		PeersSee.setBounds(100, 100, 450, 300);
+		PeersSee.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		PeersSee.getContentPane().setBackground(new Color(0, 102, 153));
 		
 		JLabel lblPeersList = new JLabel("List of peers");
 		lblPeersList.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -82,7 +71,7 @@ public class SeePeers implements Observer{
 		lblPeersList.setFont(new Font("Ubuntu", Font.BOLD, 34));
 		
 		JScrollPane scrollPane = new JScrollPane();
-		GroupLayout groupLayout = new GroupLayout(SeePeers.getContentPane());
+		GroupLayout groupLayout = new GroupLayout(PeersSee.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
@@ -137,14 +126,28 @@ public class SeePeers implements Observer{
 		table.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		scrollPane.setViewportView(table);
 		
-		SeePeers.getContentPane().setLayout(groupLayout);
+		PeersSee.getContentPane().setLayout(groupLayout);
 	}
 
 	@Override
 	public void update(Observable o, Object arg) {
-//		if( o instanceof DataModel){
-//			//The update is related with the value that we are observing
-//		}
+		if( o instanceof DataModelPeers){
+			//The update is related with the value that we are observing
+		}
 		
+	}
+
+	/**
+	 * @return the controller
+	 */
+	public SeePeersController getController() {
+		return controller;
+	}
+
+	/**
+	 * @param controller the controller to set
+	 */
+	public static void setController(SeePeersController controller) {
+		SeePeers.controller = controller;
 	}
 }

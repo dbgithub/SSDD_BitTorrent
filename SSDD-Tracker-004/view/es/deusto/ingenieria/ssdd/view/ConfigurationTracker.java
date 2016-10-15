@@ -21,11 +21,9 @@ import java.awt.Dimension;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 
-import java.awt.Rectangle;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.border.EmptyBorder;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
@@ -36,6 +34,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import es.deusto.ingenieria.ssdd.controllers.*;
 
 public class ConfigurationTracker implements Observer{
 
@@ -43,6 +42,7 @@ public class ConfigurationTracker implements Observer{
 	private JTextField txtIP;
 	private JTextField txtPort;
 	private JTextField txtId;
+	private static ConfigurationTrackerController controller;
 
 	/**
 	 * Launch the application.
@@ -54,6 +54,7 @@ public class ConfigurationTracker implements Observer{
 					ConfigurationTracker window = new ConfigurationTracker();
 					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 					window.TrackerConfiguration.setVisible(true);
+					controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -284,5 +285,19 @@ public class ConfigurationTracker implements Observer{
 			//The update is related with the value that we are observing
 		}
 		
+	}
+
+	/**
+	 * @return the controller
+	 */
+	public ConfigurationTrackerController getController() {
+		return controller;
+	}
+
+	/**
+	 * @param controller the controller to set
+	 */
+	public static void setController(ConfigurationTrackerController controller) {
+		ConfigurationTracker.controller = controller;
 	}
 }

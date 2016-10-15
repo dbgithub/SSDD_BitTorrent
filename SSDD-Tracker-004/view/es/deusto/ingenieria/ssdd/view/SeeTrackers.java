@@ -4,28 +4,19 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.EventQueue;
 import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
-import java.awt.Rectangle;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.border.EmptyBorder;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.JTextField;
-import javax.swing.border.MatteBorder;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
@@ -35,12 +26,13 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
-//import es.deusto.ingenieria.ssdd.data.DataModel;
+import es.deusto.ingenieria.ssdd.controllers.*;
+import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
 public class SeeTrackers implements Observer{
 
-	private JFrame SeeTrackers;
+	private JFrame TrackersSee;
+	private static SeeTrackersController controller;
 
 	/**
 	 * Launch the application.
@@ -50,7 +42,8 @@ public class SeeTrackers implements Observer{
 			public void run() {
 				try {
 					SeeTrackers window = new SeeTrackers();
-					window.SeeTrackers.setVisible(true);
+					window.TrackersSee.setVisible(true);
+					controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -70,17 +63,17 @@ public class SeeTrackers implements Observer{
 	 */
 	@SuppressWarnings("serial")
 	private void initialize() {
-		SeeTrackers = new JFrame();
-		SeeTrackers.setMinimumSize(new Dimension(600, 480));
-		SeeTrackers.setBounds(100, 100, 450, 300);
-		SeeTrackers.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		SeeTrackers.getContentPane().setBackground(new Color(0, 102, 153));
-		SeeTrackers.addWindowListener(new WindowAdapter() {
+		TrackersSee = new JFrame();
+		TrackersSee.setMinimumSize(new Dimension(600, 480));
+		TrackersSee.setBounds(100, 100, 450, 300);
+		TrackersSee.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		TrackersSee.getContentPane().setBackground(new Color(0, 102, 153));
+		TrackersSee.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				// Ask for confirmation before exiting the program.
 				int option = JOptionPane.showConfirmDialog(
-						SeeTrackers, 
+						TrackersSee, 
 						"Are you sure you want to close this tracker?",
 						"Exit confirmation", 
 						JOptionPane.YES_NO_OPTION, 
@@ -104,7 +97,7 @@ public class SeeTrackers implements Observer{
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				Dashboard.show(true);
-				SeeTrackers.dispose();
+				TrackersSee.dispose();
 			}
 		});
 		btnBack.setMargin(new Insets(0, 0, 0, 0));
@@ -117,7 +110,7 @@ public class SeeTrackers implements Observer{
 		btnBack.setForeground(Color.BLACK);
 		
 		JScrollPane scrollPane = new JScrollPane();
-		GroupLayout groupLayout = new GroupLayout(SeeTrackers.getContentPane());
+		GroupLayout groupLayout = new GroupLayout(TrackersSee.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
@@ -179,14 +172,28 @@ public class SeeTrackers implements Observer{
 		table.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		scrollPane.setViewportView(table);
 		
-		SeeTrackers.getContentPane().setLayout(groupLayout);
+		TrackersSee.getContentPane().setLayout(groupLayout);
 	}
 
 	@Override
 	public void update(Observable o, Object arg) {
-//		if( o instanceof DataModel){
-//			//The update is related with the value that we are observing
-//		}
+		if( o instanceof DataModelTracker){
+			//The update is related with the value that we are observing
+		}
 		
+	}
+
+	/**
+	 * @return the controller
+	 */
+	public SeeTrackersController getController() {
+		return controller;
+	}
+
+	/**
+	 * @param controller the controller to set
+	 */
+	public static void setController(SeeTrackersController controller) {
+		SeeTrackers.controller = controller;
 	}
 }
