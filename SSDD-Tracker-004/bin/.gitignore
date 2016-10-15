@@ -1,4 +1,1 @@
 /es/
-# Pongo el classpath en el gitignore para que no se suba a github
-../.classpath
-.classpath
