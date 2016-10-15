@@ -18,6 +18,8 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+
 import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -36,6 +38,7 @@ public class Dashboard {
 			public void run() {
 				try {
 					Dashboard window = new Dashboard();
+					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 					window.TrackerDashboard.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();

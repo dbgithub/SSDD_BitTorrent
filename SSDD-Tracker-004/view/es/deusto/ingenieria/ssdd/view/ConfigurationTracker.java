@@ -17,6 +17,8 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
+import javax.swing.UIManager;
+
 import java.awt.Rectangle;
 import java.util.Observable;
 import java.util.Observer;
@@ -44,6 +46,7 @@ public class ConfigurationTracker implements Observer{
 			public void run() {
 				try {
 					ConfigurationTracker window = new ConfigurationTracker();
+					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
 					window.TrackerConfiguration.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
