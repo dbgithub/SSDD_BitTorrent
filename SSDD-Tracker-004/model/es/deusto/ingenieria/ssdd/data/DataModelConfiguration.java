@@ -3,7 +3,7 @@ package es.deusto.ingenieria.ssdd.data;
 import java.sql.Date;
 import java.util.Observable;
 
-public class DataModel extends Observable{
+public class DataModelConfiguration extends Observable{
 	private String ip;
 	private int port;
 	private String id;
@@ -12,7 +12,7 @@ public class DataModel extends Observable{
 	private int totalSeeders;
 	private int totalLeechers;
 	
-	public DataModel(String ip, int port, String id) {
+	public DataModelConfiguration(String ip, int port, String id) {
 		super();
 		this.ip = ip;
 		this.port = port;

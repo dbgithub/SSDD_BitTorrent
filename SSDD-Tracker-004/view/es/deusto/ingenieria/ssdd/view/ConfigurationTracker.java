@@ -29,7 +29,7 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JTextField;
 import javax.swing.border.MatteBorder;
 
-import es.deusto.ingenieria.ssdd.data.DataModel;
+import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import javax.swing.JRadioButton;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -251,7 +251,7 @@ public class ConfigurationTracker implements Observer{
 
 	@Override
 	public void update(Observable o, Object arg) {
-		if( o instanceof DataModel){
+		if( o instanceof DataModelConfiguration){
 			//The update is related with the value that we are observing
 		}
 		
