@@ -1,5 +1,7 @@
 package es.deusto.ingenieria.ssdd.data;
 
-public class DataModelTracker {
+import java.util.Observable;
+
+public class DataModelTracker extends Observable{
 
 }

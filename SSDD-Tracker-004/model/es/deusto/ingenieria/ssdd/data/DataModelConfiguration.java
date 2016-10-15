@@ -8,9 +8,6 @@ public class DataModelConfiguration extends Observable{
 	private int port;
 	private String id;
 	private boolean master;
-	private Date lastReceivedKeepAlive;
-	private int totalSeeders;
-	private int totalLeechers;
 	
 	public DataModelConfiguration(String ip, int port, String id) {
 		super();
@@ -48,6 +45,18 @@ public class DataModelConfiguration extends Observable{
 		setChanged();
 	    notifyObservers();
 	}
+
+	public boolean isMaster() {
+		return master;
+	}
+
+	public void setMaster(boolean master) {
+		this.master = master;
+		setChanged();
+	    notifyObservers();
+	}
+	
+	
 	
 	
 
