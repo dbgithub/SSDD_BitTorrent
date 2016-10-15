@@ -7,7 +7,6 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -19,16 +18,14 @@ import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-
-import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-
-import javax.swing.border.EmptyBorder;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class Dashboard {
 
-	private JFrame TrackerDashboard;
+	private static JFrame TrackerDashboard;
 
 	/**
 	 * Launch the application.
@@ -39,7 +36,7 @@ public class Dashboard {
 				try {
 					Dashboard window = new Dashboard();
 					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-					window.TrackerDashboard.setVisible(true);
+					Dashboard.TrackerDashboard.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -134,6 +131,13 @@ public class Dashboard {
 		panel.setLayout(gbl_panel);
 		
 		JButton btnConfigureTracker = new JButton("Configure tracker");
+		btnConfigureTracker.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent arg0) {
+				ConfigurationTracker.main(null);
+				TrackerDashboard.setVisible(false);
+			}
+		});
 		btnConfigureTracker.setFocusPainted(false);
 		btnConfigureTracker.setMargin(new Insets(0, 14, 0, 14));
 		btnConfigureTracker.setBorder(null);
@@ -178,6 +182,10 @@ public class Dashboard {
 		gbc_btnSeeSwarms.gridy = 2;
 		panel.add(btnSeeSwarms, gbc_btnSeeSwarms);
 		TrackerDashboard.getContentPane().setLayout(groupLayout);
+	}
+	
+	public static void show(boolean bol) {
+		TrackerDashboard.setVisible(true);
 	}
 
 }

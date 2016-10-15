@@ -30,12 +30,13 @@ import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
+import java.awt.Window.Type;
 
 //import es.deusto.ingenieria.ssdd.data.DataModel;
 
-public class SeeTrackers implements Observer{
+public class SeePeers implements Observer{
 
-	private JFrame SeeTrackers;
+	private JFrame SeePeers;
 
 	/**
 	 * Launch the application.
@@ -44,8 +45,8 @@ public class SeeTrackers implements Observer{
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					SeeTrackers window = new SeeTrackers();
-					window.SeeTrackers.setVisible(true);
+					SeePeers window = new SeePeers();
+					window.SeePeers.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -56,7 +57,7 @@ public class SeeTrackers implements Observer{
 	/**
 	 * Create the application.
 	 */
-	public SeeTrackers() {
+	public SeePeers() {
 		initialize();
 	}
 
@@ -65,40 +66,29 @@ public class SeeTrackers implements Observer{
 	 */
 	@SuppressWarnings("serial")
 	private void initialize() {
-		SeeTrackers = new JFrame();
-		SeeTrackers.setMinimumSize(new Dimension(600, 480));
-		SeeTrackers.setBounds(100, 100, 450, 300);
-		SeeTrackers.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		SeeTrackers.getContentPane().setBackground(new Color(0, 102, 153));
-		SeeTrackers.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		SeePeers = new JFrame();
+		SeePeers.setType(Type.POPUP);
+		SeePeers.setMinimumSize(new Dimension(600, 480));
+		SeePeers.setBounds(100, 100, 450, 300);
+		SeePeers.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		SeePeers.getContentPane().setBackground(new Color(0, 102, 153));
+		SeePeers.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		JLabel lblSeeTrackers = new JLabel("See Trackers");
-		lblSeeTrackers.setHorizontalTextPosition(SwingConstants.CENTER);
-		lblSeeTrackers.setHorizontalAlignment(SwingConstants.CENTER);
-		lblSeeTrackers.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblSeeTrackers.setBorder(null);
-		lblSeeTrackers.setForeground(Color.WHITE);
-		lblSeeTrackers.setFont(new Font("Ubuntu", Font.BOLD, 34));
-		
-		JButton btnBack = new JButton("❰");
-		btnBack.setMargin(new Insets(0, 0, 0, 0));
-		btnBack.setFont(new Font("Dialog", Font.BOLD, 40));
-		btnBack.setHorizontalTextPosition(SwingConstants.CENTER);
-		btnBack.setFocusPainted(false);
-		btnBack.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnBack.setBorder(new LineBorder(new Color(0, 0, 0), 2));
-		btnBack.setBackground(Color.WHITE);
-		btnBack.setForeground(Color.BLACK);
+		JLabel lblPeersList = new JLabel("List of peers");
+		lblPeersList.setHorizontalTextPosition(SwingConstants.CENTER);
+		lblPeersList.setHorizontalAlignment(SwingConstants.CENTER);
+		lblPeersList.setAlignmentX(Component.CENTER_ALIGNMENT);
+		lblPeersList.setBorder(null);
+		lblPeersList.setForeground(Color.WHITE);
+		lblPeersList.setFont(new Font("Ubuntu", Font.BOLD, 34));
 		
 		JScrollPane scrollPane = new JScrollPane();
-		GroupLayout groupLayout = new GroupLayout(SeeTrackers.getContentPane());
+		GroupLayout groupLayout = new GroupLayout(SeePeers.getContentPane());
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(12)
-					.addComponent(btnBack, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE)
-					.addGap(29)
-					.addComponent(lblSeeTrackers, GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
+					.addGap(111)
+					.addComponent(lblPeersList, GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
 					.addGap(110))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(5)
@@ -108,15 +98,10 @@ public class SeeTrackers implements Observer{
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(btnBack, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(27)
-							.addComponent(lblSeeTrackers)))
-					.addGap(40)
-					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 346, Short.MAX_VALUE)
+					.addGap(27)
+					.addComponent(lblPeersList)
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 395, Short.MAX_VALUE)
 					.addGap(5))
 		);
 		
@@ -129,7 +114,7 @@ public class SeeTrackers implements Observer{
 				{null, null, null, null, null},
 			},
 			new String[] {
-				"ID tracker", "IP", "Port", "Master?", "Last keepalive"
+				"Peers ID", "IP", "Port", "Downloaded", "Uploaded"
 			}
 		) {
 			boolean[] columnEditables = new boolean[] {
@@ -139,21 +124,21 @@ public class SeeTrackers implements Observer{
 				return columnEditables[column];
 			}
 		});
-		table.getColumnModel().getColumn(0).setPreferredWidth(100);
-		table.getColumnModel().getColumn(0).setMinWidth(100);
+		table.getColumnModel().getColumn(0).setPreferredWidth(150);
+		table.getColumnModel().getColumn(0).setMinWidth(150);
 		table.getColumnModel().getColumn(1).setPreferredWidth(130);
 		table.getColumnModel().getColumn(1).setMinWidth(130);
-		table.getColumnModel().getColumn(2).setPreferredWidth(130);
-		table.getColumnModel().getColumn(2).setMinWidth(130);
-		table.getColumnModel().getColumn(3).setPreferredWidth(80);
-		table.getColumnModel().getColumn(3).setMinWidth(80);
-		table.getColumnModel().getColumn(4).setPreferredWidth(130);
-		table.getColumnModel().getColumn(4).setMinWidth(130);
+		table.getColumnModel().getColumn(2).setPreferredWidth(100);
+		table.getColumnModel().getColumn(2).setMinWidth(100);
+		table.getColumnModel().getColumn(3).setPreferredWidth(100);
+		table.getColumnModel().getColumn(3).setMinWidth(100);
+		table.getColumnModel().getColumn(4).setPreferredWidth(100);
+		table.getColumnModel().getColumn(4).setMinWidth(100);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		scrollPane.setViewportView(table);
 		
-		SeeTrackers.getContentPane().setLayout(groupLayout);
+		SeePeers.getContentPane().setLayout(groupLayout);
 	}
 
 	@Override
