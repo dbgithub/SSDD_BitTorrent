@@ -1,11 +1,16 @@
 package es.deusto.ingenieria.ssdd.data;
 
+import java.sql.Date;
 import java.util.Observable;
 
 public class DataModel extends Observable{
 	private String ip;
 	private int port;
 	private String id;
+	private boolean master;
+	private Date lastReceivedKeepAlive;
+	private int totalSeeders;
+	private int totalLeechers;
 	
 	public DataModel(String ip, int port, String id) {
 		super();
