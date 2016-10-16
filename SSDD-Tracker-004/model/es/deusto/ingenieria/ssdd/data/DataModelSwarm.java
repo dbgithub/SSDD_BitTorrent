@@ -19,11 +19,9 @@ public class DataModelSwarm extends Observable{
 	    notifyObservers();
 	}
 	
-	public void modifySwarm(String infoHash){
+	public void notifySwarmChanged(Swarm s){
 		setChanged();
-	    notifyObservers();
-	    
-		
+	    notifyObservers(s); 
 	}
 	
 	

@@ -19,6 +19,11 @@ public class DataModelPeers extends Observable {
 	    notifyObservers();
 	}
 	
+	public void notifyPeerChanged(Peer p){
+		setChanged();
+		notifyObservers(p);
+	}
+	
 	
 
 }
