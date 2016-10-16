@@ -65,4 +65,9 @@ public class DashboardController {
 		dmc.setMaster(true);
 		
 	}
+	
+	public void populateWithExampleData()
+	{
+		
+	}
 }

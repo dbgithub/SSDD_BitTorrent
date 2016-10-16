@@ -27,6 +27,9 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
+import es.deusto.ingenieria.ssdd.classes.Peer;
+import es.deusto.ingenieria.ssdd.classes.Swarm;
 import es.deusto.ingenieria.ssdd.controllers.*;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 
@@ -181,6 +184,11 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelSwarm){
 			//The update is related with the value that we are observing
+			if(arg == null)
+			{
+				//This is the Swarm object that provoked the notification
+				Swarm p = (Swarm)arg;
+			}
 		}
 		
 	}

@@ -19,6 +19,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
+
+import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.controllers.*;
 
 import es.deusto.ingenieria.ssdd.data.DataModelPeers;;
@@ -122,6 +124,13 @@ public class SeePeersPane extends JPanel implements Observer{
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelPeers){
 			//The update is related with the value that we are observing
+			if(arg == null)
+			{
+				//This is the peer object that provoked the notification
+				Peer p = (Peer)arg;
+			}
+			
+			
 		}
 		
 	}

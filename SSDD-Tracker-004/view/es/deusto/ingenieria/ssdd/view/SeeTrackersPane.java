@@ -27,6 +27,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
+import es.deusto.ingenieria.ssdd.classes.Swarm;
+import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.controllers.*;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
@@ -169,6 +172,11 @@ public class SeeTrackersPane extends JPanel implements Observer{
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelTracker){
 			//The update is related with the value that we are observing
+			if(arg == null)
+			{
+				//This is the Tracker object that provoked the notification
+				Tracker p = (Tracker)arg;
+			}
 		}
 		
 	}
