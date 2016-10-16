@@ -32,7 +32,7 @@ import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 public class SeeSwarms implements Observer{
 
 	private JFrame SwarmsSee;
-	private static SeeSwarmsController controller;
+	private static DashboardController controller;
 
 	/**
 	 * Launch the application.
@@ -55,6 +55,12 @@ public class SeeSwarms implements Observer{
 	 */
 	public SeeSwarms() {
 		initialize();
+	}
+
+	public SeeSwarms(DashboardController dashboardController) {
+		this.controller = dashboardController;
+		initialize();
+		this.SwarmsSee.setVisible(true);
 	}
 
 	/**
@@ -196,14 +202,14 @@ public class SeeSwarms implements Observer{
 	/**
 	 * @return the controller
 	 */
-	public SeeSwarmsController getController() {
+	public DashboardController getController() {
 		return controller;
 	}
 
 	/**
 	 * @param controller the controller to set
 	 */
-	public static void setController(SeeSwarmsController controller) {
+	public static void setController(DashboardController controller) {
 		SeeSwarms.controller = controller;
 	}
 }

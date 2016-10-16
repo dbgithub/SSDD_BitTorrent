@@ -18,6 +18,7 @@ import java.util.Observable;
 import java.util.Observer;
 
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
@@ -29,10 +30,10 @@ import java.awt.event.WindowEvent;
 import es.deusto.ingenieria.ssdd.controllers.*;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
-public class SeeTrackers implements Observer{
+public class SeeTrackersPane extends JPanel implements Observer{
 
-	private JFrame TrackersSee;
-	private static SeeTrackersController controller;
+	private JPanel TrackersSee;
+	private static DashboardController controller;
 
 	/**
 	 * Launch the application.
@@ -41,7 +42,7 @@ public class SeeTrackers implements Observer{
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					SeeTrackers window = new SeeTrackers();
+					SeeTrackersPane window = new SeeTrackersPane();
 					window.TrackersSee.setVisible(true);
 					controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
 				} catch (Exception e) {
@@ -54,14 +55,13 @@ public class SeeTrackers implements Observer{
 	/**
 	 * Create the application.
 	 */
-	public SeeTrackers() {
+	public SeeTrackersPane() {
 		initialize();
 	}
 
-	public SeeTrackers(SeeTrackersController stc) {
+	public SeeTrackersPane(DashboardController stc) {
 		this.controller = stc;
 		initialize();
-		this.TrackersSee.setVisible(true);
 	}
 
 	/**
@@ -69,26 +69,10 @@ public class SeeTrackers implements Observer{
 	 */
 	@SuppressWarnings("serial")
 	private void initialize() {
-		TrackersSee = new JFrame();
+		TrackersSee = this;
 		TrackersSee.setMinimumSize(new Dimension(600, 480));
 		TrackersSee.setBounds(100, 100, 450, 300);
-		TrackersSee.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		TrackersSee.getContentPane().setBackground(new Color(0, 102, 153));
-		TrackersSee.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// Ask for confirmation before exiting the program.
-				int option = JOptionPane.showConfirmDialog(
-						TrackersSee, 
-						"Are you sure you want to close this tracker?",
-						"Exit confirmation", 
-						JOptionPane.YES_NO_OPTION, 
-						JOptionPane.QUESTION_MESSAGE);
-				if (option == JOptionPane.YES_OPTION) {
-					System.exit(0);
-				}
-			}
-		});
+		TrackersSee.setBackground(new Color(0, 102, 153));
 		
 		JLabel lblSeeTrackers = new JLabel("See Trackers");
 		lblSeeTrackers.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -102,8 +86,6 @@ public class SeeTrackers implements Observer{
 		btnBack.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Dashboard.show(true);
-				TrackersSee.dispose();
 			}
 		});
 		btnBack.setMargin(new Insets(0, 0, 0, 0));
@@ -114,9 +96,11 @@ public class SeeTrackers implements Observer{
 		btnBack.setBorder(new LineBorder(new Color(0, 0, 0), 2));
 		btnBack.setBackground(Color.WHITE);
 		btnBack.setForeground(Color.BLACK);
+		btnBack.setVisible(false);
+
 		
 		JScrollPane scrollPane = new JScrollPane();
-		GroupLayout groupLayout = new GroupLayout(TrackersSee.getContentPane());
+		GroupLayout groupLayout = new GroupLayout(TrackersSee);
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
@@ -178,7 +162,7 @@ public class SeeTrackers implements Observer{
 		table.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		scrollPane.setViewportView(table);
 		
-		TrackersSee.getContentPane().setLayout(groupLayout);
+		TrackersSee.setLayout(groupLayout);
 	}
 
 	@Override
@@ -187,19 +171,5 @@ public class SeeTrackers implements Observer{
 			//The update is related with the value that we are observing
 		}
 		
-	}
-
-	/**
-	 * @return the controller
-	 */
-	public SeeTrackersController getController() {
-		return controller;
-	}
-
-	/**
-	 * @param controller the controller to set
-	 */
-	public static void setController(SeeTrackersController controller) {
-		SeeTrackers.controller = controller;
 	}
 }

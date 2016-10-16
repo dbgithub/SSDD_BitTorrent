@@ -51,6 +51,11 @@ public class Dashboard {
 	 * Create the application.
 	 */
 	public Dashboard() {
+		
+	}
+
+	public Dashboard(DashboardController dc) {
+		this.controller = dc;
 		initialize();
 	}
 
@@ -138,10 +143,12 @@ public class Dashboard {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
 				// This is the MOUSE CLICK EVENT for "configure tracker"
-				controller.showExampleMessage();
+				/*controller.showExampleMessage();
 				ConfigurationTrackerController.main(null);
 				ConfigurationTracker.main(null);
 				TrackerDashboard.setVisible(false);
+				TrackerDashboard.setVisible(false);
+				controller.openConfigurationController();*/
 			}
 		});
 		btnConfigureTracker.setFocusPainted(false);
@@ -164,10 +171,12 @@ public class Dashboard {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				// This is the MOUSE CLICK EVENT for "see trackers"
-				controller.showExampleMessage();
+				/*controller.showExampleMessage();
 				SeeTrackers.main(null);
 				SeeTrackersController.main(null);
 				TrackerDashboard.setVisible(false);
+				TrackerDashboard.setVisible(false);
+				controller.openSeeTrackers();*/
 			}
 		});
 		btnSeeTrackers.setFocusPainted(false);
@@ -189,10 +198,12 @@ public class Dashboard {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				// This is the MOUSE CLICK EVENT for "see swarms"
-				controller.showExampleMessage();
+				/*controller.showExampleMessage();
 				SeeSwarms.main(null);
 				SeeSwarmsController.main(null);
 				TrackerDashboard.setVisible(false);
+				TrackerDashboard.setVisible(false);
+				controller.openSeeSwarms();*/
 			}
 		});
 		btnSeeSwarms.setFocusPainted(false);

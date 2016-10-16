@@ -36,40 +36,24 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import es.deusto.ingenieria.ssdd.controllers.*;
 
-public class ConfigurationTracker extends JPanel implements Observer {
+public class ConfigurationTrackerPane extends JPanel implements Observer {
 
 	private JPanel TrackerConfiguration;
 	private JTextField txtIP;
 	private JTextField txtPort;
 	private JTextField txtId;
+	private JRadioButton rdbtnYes;
+	private JRadioButton rdbtnNo;
 	private static DashboardController controller;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					ConfigurationTracker window = new ConfigurationTracker();
-					UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
-					window.TrackerConfiguration.setVisible(true);
-					controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
 
 	/**
 	 * Create the application.
 	 */
-	public ConfigurationTracker() {
+	public ConfigurationTrackerPane() {
 		initialize();
 	}
 
-	public ConfigurationTracker(DashboardController dashboardController) {
+	public ConfigurationTrackerPane(DashboardController dashboardController) {
 		this.controller = dashboardController;
 		initialize();
 		this.TrackerConfiguration.setVisible(true);
@@ -106,6 +90,7 @@ public class ConfigurationTracker extends JPanel implements Observer {
 				TrackerConfiguration.dispose();*/
 			}
 		});
+		
 		btnBack.setMargin(new Insets(0, 0, 0, 0));
 		btnBack.setFont(new Font("Dialog", Font.BOLD, 40));
 		btnBack.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -114,12 +99,14 @@ public class ConfigurationTracker extends JPanel implements Observer {
 		btnBack.setBorder(new LineBorder(new Color(0, 0, 0), 2));
 		btnBack.setBackground(Color.WHITE);
 		btnBack.setForeground(Color.BLACK);
+		btnBack.setVisible(false);
+
 		
 		JButton btnTestFailure = new JButton("TEST CONNECTION FAILURE");
 		btnTestFailure.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				System.out.println("Test Connection Failure button pressed!");
+				controller.testFailure();
 			}
 		});
 		btnTestFailure.setBorder(new MatteBorder(3, 3, 3, 3, (Color) new Color(0, 0, 0)));
@@ -131,7 +118,7 @@ public class ConfigurationTracker extends JPanel implements Observer {
 		btnStartStop.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				System.out.println("Start/Stop buttons clicked");
+				controller.startStopFunction();
 			}
 		});
 		btnStartStop.setBackground(new Color(50, 205, 50));
@@ -259,9 +246,9 @@ public class ConfigurationTracker extends JPanel implements Observer {
 		gbc_panel_radiobtns.gridy = 3;
 		panel.add(panel_radiobtns, gbc_panel_radiobtns);
 		
-		JRadioButton rdbtnYes = new JRadioButton("Yes");
+		rdbtnYes = new JRadioButton("Yes");
 		panel_radiobtns.add(rdbtnYes);
-		JRadioButton rdbtnNo = new JRadioButton("No");
+		rdbtnNo = new JRadioButton("No");
 		panel_radiobtns.add(rdbtnNo);
 		ButtonGroup group = new ButtonGroup();
 		group.add(rdbtnYes);
@@ -274,21 +261,12 @@ public class ConfigurationTracker extends JPanel implements Observer {
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelConfiguration){
 			//The update is related with the value that we are observing
+			DataModelConfiguration dmc = (DataModelConfiguration)o;
+			txtId.setText(dmc.getId());
+			txtIP.setText(dmc.getIp());
+			txtPort.setText(dmc.getPort()+"");
+			rdbtnYes.setSelected(dmc.isMaster());	
 		}
 		
-	}
-
-	/**
-	 * @return the controller
-	 */
-	public DashboardController getController() {
-		return controller;
-	}
-
-	/**
-	 * @param controller the controller to set
-	 */
-	public static void setController(DashboardController controller) {
-		ConfigurationTracker.controller = controller;
 	}
 }

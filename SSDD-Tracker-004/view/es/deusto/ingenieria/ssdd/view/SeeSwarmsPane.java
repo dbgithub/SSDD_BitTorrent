@@ -14,25 +14,26 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Observable;
 import java.util.Observer;
 
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import es.deusto.ingenieria.ssdd.controllers.*;
-import es.deusto.ingenieria.ssdd.data.DataModelTracker;
+import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 
-public class SeeTrackers implements Observer{
+public class SeeSwarmsPane extends JPanel implements Observer{
 
-	private JFrame TrackersSee;
-	private static SeeTrackersController controller;
+	private JPanel SwarmsSee;
+	private static DashboardController controller;
 
 	/**
 	 * Launch the application.
@@ -41,9 +42,8 @@ public class SeeTrackers implements Observer{
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					SeeTrackers window = new SeeTrackers();
-					window.TrackersSee.setVisible(true);
-					controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
+					SeeSwarmsPane window = new SeeSwarmsPane();
+					window.SwarmsSee.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -54,14 +54,14 @@ public class SeeTrackers implements Observer{
 	/**
 	 * Create the application.
 	 */
-	public SeeTrackers() {
+	public SeeSwarmsPane() {
 		initialize();
 	}
 
-	public SeeTrackers(SeeTrackersController stc) {
-		this.controller = stc;
+	public SeeSwarmsPane(DashboardController dashboardController) {
+		this.controller = dashboardController;
 		initialize();
-		this.TrackersSee.setVisible(true);
+		this.SwarmsSee.setVisible(true);
 	}
 
 	/**
@@ -69,43 +69,28 @@ public class SeeTrackers implements Observer{
 	 */
 	@SuppressWarnings("serial")
 	private void initialize() {
-		TrackersSee = new JFrame();
-		TrackersSee.setMinimumSize(new Dimension(600, 480));
-		TrackersSee.setBounds(100, 100, 450, 300);
-		TrackersSee.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-		TrackersSee.getContentPane().setBackground(new Color(0, 102, 153));
-		TrackersSee.addWindowListener(new WindowAdapter() {
-			@Override
-			public void windowClosing(WindowEvent e) {
-				// Ask for confirmation before exiting the program.
-				int option = JOptionPane.showConfirmDialog(
-						TrackersSee, 
-						"Are you sure you want to close this tracker?",
-						"Exit confirmation", 
-						JOptionPane.YES_NO_OPTION, 
-						JOptionPane.QUESTION_MESSAGE);
-				if (option == JOptionPane.YES_OPTION) {
-					System.exit(0);
-				}
-			}
-		});
+		SwarmsSee = this;
+		SwarmsSee.setMinimumSize(new Dimension(600, 480));
+		SwarmsSee.setBounds(100, 100, 450, 300);
+		SwarmsSee.setBackground(new Color(0, 102, 153));
 		
-		JLabel lblSeeTrackers = new JLabel("See Trackers");
-		lblSeeTrackers.setHorizontalTextPosition(SwingConstants.CENTER);
-		lblSeeTrackers.setHorizontalAlignment(SwingConstants.CENTER);
-		lblSeeTrackers.setAlignmentX(Component.CENTER_ALIGNMENT);
-		lblSeeTrackers.setBorder(null);
-		lblSeeTrackers.setForeground(Color.WHITE);
-		lblSeeTrackers.setFont(new Font("Ubuntu", Font.BOLD, 34));
+		
+		JLabel lblSeeSwarms = new JLabel("See Swarms");
+		lblSeeSwarms.setHorizontalTextPosition(SwingConstants.CENTER);
+		lblSeeSwarms.setHorizontalAlignment(SwingConstants.CENTER);
+		lblSeeSwarms.setAlignmentX(Component.CENTER_ALIGNMENT);
+		lblSeeSwarms.setBorder(null);
+		lblSeeSwarms.setForeground(Color.WHITE);
+		lblSeeSwarms.setFont(new Font("Ubuntu", Font.BOLD, 34));
 		
 		JButton btnBack = new JButton("❰");
 		btnBack.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				Dashboard.show(true);
-				TrackersSee.dispose();
+				
 			}
 		});
+		
 		btnBack.setMargin(new Insets(0, 0, 0, 0));
 		btnBack.setFont(new Font("Dialog", Font.BOLD, 40));
 		btnBack.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -114,16 +99,17 @@ public class SeeTrackers implements Observer{
 		btnBack.setBorder(new LineBorder(new Color(0, 0, 0), 2));
 		btnBack.setBackground(Color.WHITE);
 		btnBack.setForeground(Color.BLACK);
+		btnBack.setVisible(false);
 		
 		JScrollPane scrollPane = new JScrollPane();
-		GroupLayout groupLayout = new GroupLayout(TrackersSee.getContentPane());
+		GroupLayout groupLayout = new GroupLayout(SwarmsSee);
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(12)
 					.addComponent(btnBack, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE)
 					.addGap(29)
-					.addComponent(lblSeeTrackers, GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
+					.addComponent(lblSeeSwarms, GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
 					.addGap(110))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(5)
@@ -139,51 +125,61 @@ public class SeeTrackers implements Observer{
 							.addComponent(btnBack, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE))
 						.addGroup(groupLayout.createSequentialGroup()
 							.addGap(27)
-							.addComponent(lblSeeTrackers)))
+							.addComponent(lblSeeSwarms)))
 					.addGap(40)
 					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 346, Short.MAX_VALUE)
 					.addGap(5))
 		);
 		
 		JTable table = new JTable();
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				if (e.getClickCount() == 2) {
+					JTable tempTable = (JTable)e.getSource();
+				    System.out.println("double clicked in row#" + (tempTable.rowAtPoint(e.getPoint()) + 1));
+				    SeePeers.main(null);
+				    SeePeersController.main(null);  
+				    controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
+				  }
+			}
+		});
 		table.setModel(new DefaultTableModel(
 			new Object[][] {
-				{null, null, null, null, null},
-				{null, null, null, null, null},
-				{null, null, null, null, null},
-				{null, null, null, null, null},
+				{"example", "example", "example", "example"},
+				{null, null, null, null},
+				{null, null, null, null},
+				{null, null, null, null},
 			},
 			new String[] {
-				"ID tracker", "IP", "Port", "Master?", "Last keepalive"
+				"Swarm content", "Size", "Total seeders", "Total leechers"
 			}
 		) {
 			boolean[] columnEditables = new boolean[] {
-				false, false, false, false, false
+				false, false, false, false
 			};
 			public boolean isCellEditable(int row, int column) {
 				return columnEditables[column];
 			}
 		});
-		table.getColumnModel().getColumn(0).setPreferredWidth(100);
-		table.getColumnModel().getColumn(0).setMinWidth(100);
-		table.getColumnModel().getColumn(1).setPreferredWidth(130);
-		table.getColumnModel().getColumn(1).setMinWidth(130);
-		table.getColumnModel().getColumn(2).setPreferredWidth(130);
-		table.getColumnModel().getColumn(2).setMinWidth(130);
-		table.getColumnModel().getColumn(3).setPreferredWidth(80);
-		table.getColumnModel().getColumn(3).setMinWidth(80);
-		table.getColumnModel().getColumn(4).setPreferredWidth(130);
-		table.getColumnModel().getColumn(4).setMinWidth(130);
+		table.getColumnModel().getColumn(0).setPreferredWidth(150);
+		table.getColumnModel().getColumn(0).setMinWidth(150);
+		table.getColumnModel().getColumn(1).setPreferredWidth(100);
+		table.getColumnModel().getColumn(1).setMinWidth(100);
+		table.getColumnModel().getColumn(2).setPreferredWidth(100);
+		table.getColumnModel().getColumn(2).setMinWidth(100);
+		table.getColumnModel().getColumn(3).setPreferredWidth(100);
+		table.getColumnModel().getColumn(3).setMinWidth(100);
 		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		table.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		scrollPane.setViewportView(table);
 		
-		TrackersSee.getContentPane().setLayout(groupLayout);
+		SwarmsSee.setLayout(groupLayout);
 	}
 
 	@Override
 	public void update(Observable o, Object arg) {
-		if( o instanceof DataModelTracker){
+		if( o instanceof DataModelSwarm){
 			//The update is related with the value that we are observing
 		}
 		
@@ -192,14 +188,14 @@ public class SeeTrackers implements Observer{
 	/**
 	 * @return the controller
 	 */
-	public SeeTrackersController getController() {
+	public DashboardController getController() {
 		return controller;
 	}
 
 	/**
 	 * @param controller the controller to set
 	 */
-	public static void setController(SeeTrackersController controller) {
-		SeeTrackers.controller = controller;
+	public static void setController(DashboardController controller) {
+		SeeSwarmsPane.controller = controller;
 	}
 }

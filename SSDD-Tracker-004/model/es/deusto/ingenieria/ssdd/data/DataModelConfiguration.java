@@ -16,6 +16,10 @@ public class DataModelConfiguration extends Observable{
 		this.id = id;
 	}
 
+	public DataModelConfiguration() {
+		
+	}
+
 	public String getIp() {
 		return ip;
 	}
