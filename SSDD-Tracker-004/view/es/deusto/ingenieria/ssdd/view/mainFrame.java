@@ -18,6 +18,7 @@ public class mainFrame extends JFrame{
 	{
 		this.dc = dc;
 		this.basicFrame = this;
+		basicFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		JTabbedPane tabbedPane = new JTabbedPane();
 
 		ConfigurationTrackerPane configuration = new ConfigurationTrackerPane(dc);
@@ -25,19 +26,19 @@ public class mainFrame extends JFrame{
 		tabbedPane.setMnemonicAt(0, KeyEvent.VK_1);
 		this.dc.setConfigurationObserver(configuration);
 
-		SeePeersPane peers = new SeePeersPane(dc);
-		tabbedPane.addTab("Peers",peers);
-		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
-		this.dc.setPeersObserver(peers);
+//		SeePeersPane peers = new SeePeersPane(dc);
+//		tabbedPane.addTab("Peers",peers);
+//		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
+//		this.dc.setPeersObserver(peers);
 		
 		SeeSwarmsPane swarms = new SeeSwarmsPane(dc);
 		tabbedPane.addTab("Swarms", swarms);
-		tabbedPane.setMnemonicAt(2, KeyEvent.VK_3);
+		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 		this.dc.setSwarmObserver(swarms);
 		
 		SeeTrackersPane trackers = new SeeTrackersPane(dc);
 		tabbedPane.addTab("Trackers", trackers);
-		tabbedPane.setMnemonicAt(3, KeyEvent.VK_4);
+		tabbedPane.setMnemonicAt(2, KeyEvent.VK_3);
 		this.dc.setTrackerObserver(trackers);
 		
 		this.setMinimumSize(new Dimension(600, 480));

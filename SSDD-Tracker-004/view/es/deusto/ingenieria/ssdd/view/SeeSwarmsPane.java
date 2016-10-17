@@ -141,8 +141,9 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 				if (e.getClickCount() == 2) {
 					JTable tempTable = (JTable)e.getSource();
 				    System.out.println("double clicked in row#" + (tempTable.rowAtPoint(e.getPoint()) + 1));
-				    SeePeers.main(null);
-				    SeePeersController.main(null);  
+				    SeePeersPane peers = new SeePeersPane(controller); // ME HE QUEDADO AQUI
+				    controller.setPeersObserver(peers); // ME HE QUEDADO AQUI
+				    SwarmsSee.setVisible(false); // ME HE QUEDADO AQUI
 				    controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
 				  }
 			}
