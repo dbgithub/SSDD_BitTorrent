@@ -2,10 +2,8 @@ package es.deusto.ingenieria.ssdd.view;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.EventQueue;
 import java.awt.Font;
 import javax.swing.GroupLayout;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
@@ -25,6 +23,7 @@ import es.deusto.ingenieria.ssdd.controllers.*;
 
 import es.deusto.ingenieria.ssdd.data.DataModelPeers;;
 
+@SuppressWarnings("serial")
 public class SeePeersPane extends JPanel implements Observer{
 
 	private JPanel PeersSee;
@@ -45,7 +44,6 @@ public class SeePeersPane extends JPanel implements Observer{
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	@SuppressWarnings("serial")
 	private void initialize() {
 		PeersSee = this;
 		PeersSee.setMinimumSize(new Dimension(600, 480));

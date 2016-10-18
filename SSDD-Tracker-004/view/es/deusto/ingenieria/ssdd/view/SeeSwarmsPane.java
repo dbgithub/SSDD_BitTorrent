@@ -14,12 +14,9 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
@@ -28,14 +25,15 @@ import javax.swing.JScrollPane;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 import es.deusto.ingenieria.ssdd.controllers.*;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 
+@SuppressWarnings("serial")
 public class SeeSwarmsPane extends JPanel implements Observer{
 
 	private JPanel SwarmsSee;
+	private JFrame mainFrame;
 	private static DashboardController controller;
 
 	/**
@@ -76,7 +74,6 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 		SwarmsSee.setMinimumSize(new Dimension(600, 480));
 		SwarmsSee.setBounds(100, 100, 450, 300);
 		SwarmsSee.setBackground(new Color(0, 102, 153));
-		
 		
 		JLabel lblSeeSwarms = new JLabel("See Swarms");
 		lblSeeSwarms.setHorizontalTextPosition(SwingConstants.CENTER);
@@ -141,9 +138,7 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 				if (e.getClickCount() == 2) {
 					JTable tempTable = (JTable)e.getSource();
 				    System.out.println("double clicked in row#" + (tempTable.rowAtPoint(e.getPoint()) + 1));
-				    SeePeersPane peers = new SeePeersPane(controller); // ME HE QUEDADO AQUI
-				    controller.setPeersObserver(peers); // ME HE QUEDADO AQUI
-				    SwarmsSee.setVisible(false); // ME HE QUEDADO AQUI
+				    ((mainFrame) mainFrame).addPeersListTab();
 				    controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
 				  }
 			}
@@ -206,5 +201,12 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 	 */
 	public static void setController(DashboardController controller) {
 		SeeSwarmsPane.controller = controller;
+	}
+
+	/**
+	 * @param mainFrame the mainFrame to set
+	 */
+	public void setMainFrame(JFrame mainFrame) {
+		this.mainFrame = mainFrame;
 	}
 }

@@ -5,11 +5,8 @@ import es.deusto.ingenieria.ssdd.data.DataModelPeers;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 import es.deusto.ingenieria.ssdd.view.ConfigurationTrackerPane;
-import es.deusto.ingenieria.ssdd.view.Dashboard;
 import es.deusto.ingenieria.ssdd.view.SeePeersPane;
-import es.deusto.ingenieria.ssdd.view.SeeSwarms;
 import es.deusto.ingenieria.ssdd.view.SeeSwarmsPane;
-import es.deusto.ingenieria.ssdd.view.SeeTrackers;
 import es.deusto.ingenieria.ssdd.view.SeeTrackersPane;
 import es.deusto.ingenieria.ssdd.view.mainFrame;
 
@@ -43,7 +40,7 @@ public class DashboardController {
 	}
 	
 	public void setPeersObserver(SeePeersPane spp) {
-		dms.addObserver(spp);
+		dmp.addObserver(spp);
 	}
 	
 	public static void main(String[]args)
