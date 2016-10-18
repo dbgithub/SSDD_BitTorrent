@@ -3,35 +3,30 @@ package es.deusto.ingenieria.ssdd.view;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
-import java.awt.Insets;
-
 import javax.swing.GroupLayout;
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
 import java.util.Observable;
 import java.util.Observer;
-
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-
 import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.controllers.*;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
+/**
+ * This class is part of the GUI. It corresponds to the inner content of one of the tabs
+ * of the main window
+ * @author aitor & kevin
+ *
+ */
 public class SeeTrackersPane extends JPanel implements Observer{
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel TrackersSee;
 	private DashboardController controller;
@@ -43,6 +38,11 @@ public class SeeTrackersPane extends JPanel implements Observer{
 		initialize();
 	}
 
+	/**
+	 * The View knows about the Controller, but no the other way around
+	 * Everything the View does, it has to communicate it to the Controller
+	 * @param stc
+	 */
 	public SeeTrackersPane(DashboardController stc) {
 		this.controller = stc;
 		initialize();
@@ -66,22 +66,6 @@ public class SeeTrackersPane extends JPanel implements Observer{
 		lblSeeTrackers.setBorder(null);
 		lblSeeTrackers.setForeground(Color.WHITE);
 		lblSeeTrackers.setFont(new Font("Ubuntu", Font.BOLD, 34));
-		
-		JButton btnBack = new JButton("❰");
-		btnBack.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-			}
-		});
-		btnBack.setMargin(new Insets(0, 0, 0, 0));
-		btnBack.setFont(new Font("Dialog", Font.BOLD, 40));
-		btnBack.setHorizontalTextPosition(SwingConstants.CENTER);
-		btnBack.setFocusPainted(false);
-		btnBack.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnBack.setBorder(new LineBorder(new Color(0, 0, 0), 2));
-		btnBack.setBackground(Color.WHITE);
-		btnBack.setForeground(Color.BLACK);
-		btnBack.setVisible(false);
 
 		
 		JScrollPane scrollPane = new JScrollPane();
@@ -89,28 +73,21 @@ public class SeeTrackersPane extends JPanel implements Observer{
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(12)
-					.addComponent(btnBack, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE)
-					.addGap(29)
-					.addComponent(lblSeeTrackers, GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
+					.addGap(111)
+					.addComponent(lblSeeTrackers, GroupLayout.DEFAULT_SIZE, 229, Short.MAX_VALUE)
 					.addGap(110))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(5)
-					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 576, Short.MAX_VALUE)
+					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)
 					.addGap(5))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(btnBack, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(27)
-							.addComponent(lblSeeTrackers)))
+					.addGap(27)
+					.addComponent(lblSeeTrackers)
 					.addGap(40)
-					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 346, Short.MAX_VALUE)
+					.addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE)
 					.addGap(5))
 		);
 		
@@ -150,6 +127,9 @@ public class SeeTrackersPane extends JPanel implements Observer{
 		TrackersSee.setLayout(groupLayout);
 	}
 
+	/**
+	 * This method is called from the Model side, to provoke certain changes in the View. 
+	 */
 	@SuppressWarnings("null")
 	@Override
 	public void update(Observable o, Object arg) {

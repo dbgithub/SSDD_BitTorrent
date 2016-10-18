@@ -11,6 +11,11 @@ import es.deusto.ingenieria.ssdd.controllers.DashboardController;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+/**
+ * This class is the main window. This JFrame contains the required tabs for the application
+ * @author aitor & kevin
+ *
+ */
 @SuppressWarnings("serial")
 public class mainFrame extends JFrame{
 	
@@ -19,12 +24,19 @@ public class mainFrame extends JFrame{
 	private JTabbedPane tabbedPane;
 	private SeePeersPane peers;
 	
+	/**
+	 * 'dc' is the controller from which the business logic will flow.
+	 * This Constructor creates every tab, assigns them the Controller and
+	 * guarantees that "Peers" tab is attached when needed.
+	 * @param dc
+	 */
 	public mainFrame(DashboardController dc)
 	{
 		this.dc = dc;
 		this.basicFrame = this;
 		basicFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		tabbedPane = new JTabbedPane();
+		// This listener ensures that the Peers tab disappear when it loses the focus.
 		tabbedPane.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent arg0) {
@@ -41,8 +53,6 @@ public class mainFrame extends JFrame{
 		this.dc.setConfigurationObserver(configuration);
 
 		peers = new SeePeersPane(dc);
-//		tabbedPane.addTab("Peers",peers);
-//		tabbedPane.setMnemonicAt(1, KeyEvent.VK_2);
 		this.dc.setPeersObserver(peers);
 		
 		SeeSwarmsPane swarms = new SeeSwarmsPane(dc);
@@ -61,6 +71,8 @@ public class mainFrame extends JFrame{
 		getContentPane().add(tabbedPane);
 		this.setVisible(true);
 		
+		
+		 // Here a prompt is defined to ensure the user really wants to exist the application
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -85,10 +97,6 @@ public class mainFrame extends JFrame{
 	public void addPeersListTab() {
 		tabbedPane.addTab("Peers",peers);
 		tabbedPane.setMnemonicAt(3, KeyEvent.VK_3);
-		tabbedPane.setSelectedIndex(3);
-		
+		tabbedPane.setSelectedIndex(3);	
 	}
-	
-	
-
 }

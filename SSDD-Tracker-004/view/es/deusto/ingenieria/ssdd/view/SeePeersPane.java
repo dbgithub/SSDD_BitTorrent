@@ -23,6 +23,12 @@ import es.deusto.ingenieria.ssdd.controllers.*;
 
 import es.deusto.ingenieria.ssdd.data.DataModelPeer;;
 
+/**
+ * This class is part of the GUI. It corresponds to the inner content of one of the tabs
+ * of the main window
+ * @author aitor & kevin
+ *
+ */
 @SuppressWarnings("serial")
 public class SeePeersPane extends JPanel implements Observer{
 
@@ -36,6 +42,11 @@ public class SeePeersPane extends JPanel implements Observer{
 		initialize();
 	}
 
+	/**
+	 * The View knows about the Controller, but no the other way around
+	 * Everything the View does, it has to communicate it to the Controller
+	 * @param dc
+	 */
 	public SeePeersPane(DashboardController dc) {
 		this.controller = dc;
 		initialize();
@@ -49,7 +60,6 @@ public class SeePeersPane extends JPanel implements Observer{
 		PeersSee = this;
 		PeersSee.setMinimumSize(new Dimension(600, 480));
 		PeersSee.setBounds(100, 100, 450, 300);
-		//PeersSee.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		PeersSee.setBackground(new Color(0, 102, 153));
 		
 		JLabel lblPeersList = new JLabel("List of peers");
@@ -119,6 +129,9 @@ public class SeePeersPane extends JPanel implements Observer{
 		PeersSee.setLayout(groupLayout);
 	}
 
+	/**
+	 * This method is called from the Model side, to provoke certain changes in the View. 
+	 */
 	@SuppressWarnings("null")
 	@Override
 	public void update(Observable o, Object arg) {

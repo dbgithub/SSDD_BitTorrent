@@ -2,6 +2,11 @@ package es.deusto.ingenieria.ssdd.data;
 
 import java.util.Observable;
 
+/**
+ * This class represents the business logic of what happens when the user configures the Tracker within the corresponding GUI
+ * @author aitor & kevin
+ *
+ */
 public class DataModelConfiguration extends Observable{
 	private String ip;
 	private int port;

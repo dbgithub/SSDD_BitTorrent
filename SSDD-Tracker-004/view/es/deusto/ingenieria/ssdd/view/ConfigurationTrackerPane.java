@@ -13,7 +13,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
 
@@ -30,11 +29,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import es.deusto.ingenieria.ssdd.controllers.*;
 
+/**
+ * This class is part of the GUI. It corresponds to the inner content of one of the tabs
+ * of the main window
+ * @author aitor & kevin
+ *
+ */
 public class ConfigurationTrackerPane extends JPanel implements Observer {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	private JPanel TrackerConfiguration;
 	private JTextField txtIP;
@@ -51,6 +53,11 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		initialize();
 	}
 
+	/**
+	 * The View knows about the Controller, but no the other way around
+	 * Everything the View does, it has to communicate it to the Controller
+	 * @param dashboardController
+	 */
 	public ConfigurationTrackerPane(DashboardController dashboardController) {
 		this.controller = dashboardController;
 		initialize();
@@ -64,7 +71,6 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		TrackerConfiguration = this;
 		TrackerConfiguration.setMinimumSize(new Dimension(600, 480));
 		TrackerConfiguration.setBounds(100, 100, 450, 300);
-		//TrackerConfiguration.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 		TrackerConfiguration.setBackground(new Color(0, 102, 153));
 		
 		JLabel lblTrackerConfiguring = new JLabel("Configuring Tracker");
@@ -79,25 +85,6 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.setBackground(Color.WHITE);
 		panel.setOpaque(false);
 		panel.setBorder(null);
-		
-		JButton btnBack = new JButton("❰");
-		btnBack.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				/*Dashboard.show(true);
-				TrackerConfiguration.dispose();*/
-			}
-		});
-		
-		btnBack.setMargin(new Insets(0, 0, 0, 0));
-		btnBack.setFont(new Font("Dialog", Font.BOLD, 40));
-		btnBack.setHorizontalTextPosition(SwingConstants.CENTER);
-		btnBack.setFocusPainted(false);
-		btnBack.setAlignmentX(Component.CENTER_ALIGNMENT);
-		btnBack.setBorder(new LineBorder(new Color(0, 0, 0), 2));
-		btnBack.setBackground(Color.WHITE);
-		btnBack.setForeground(Color.BLACK);
-		btnBack.setVisible(false);
 
 		
 		JButton btnTestFailure = new JButton("TEST CONNECTION FAILURE");
@@ -126,37 +113,30 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(12)
-					.addComponent(btnBack, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE)
-					.addGap(29)
-					.addComponent(lblTrackerConfiguring, GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
+					.addGap(111)
+					.addComponent(lblTrackerConfiguring, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 					.addGap(110))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addContainerGap()
 					.addComponent(btnTestFailure)
-					.addContainerGap(367, Short.MAX_VALUE))
+					.addContainerGap(310, Short.MAX_VALUE))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(62)
 					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(panel, GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE)
+						.addComponent(panel, GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
 						.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 222, GroupLayout.PREFERRED_SIZE))
 					.addGap(62))
 		);
 		groupLayout.setVerticalGroup(
 			groupLayout.createParallelGroup(Alignment.LEADING)
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-						.addGroup(groupLayout.createSequentialGroup()
-							.addContainerGap()
-							.addComponent(btnBack, GroupLayout.PREFERRED_SIZE, 70, GroupLayout.PREFERRED_SIZE))
-						.addGroup(groupLayout.createSequentialGroup()
-							.addGap(27)
-							.addComponent(lblTrackerConfiguring)))
+					.addGap(27)
+					.addComponent(lblTrackerConfiguring)
 					.addGap(31)
 					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 141, GroupLayout.PREFERRED_SIZE)
 					.addGap(72)
 					.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
-					.addPreferredGap(ComponentPlacement.RELATED, 34, Short.MAX_VALUE)
+					.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 					.addComponent(btnTestFailure)
 					.addContainerGap())
 		);
@@ -255,6 +235,9 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		TrackerConfiguration.setLayout(groupLayout);
 	}
 
+	/**
+	 * This method is called from the Model side, to provoke certain changes in the View. 
+	 */
 	@Override
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelConfiguration){

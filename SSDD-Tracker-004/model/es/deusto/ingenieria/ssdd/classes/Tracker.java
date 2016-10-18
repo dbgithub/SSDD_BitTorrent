@@ -2,11 +2,16 @@ package es.deusto.ingenieria.ssdd.classes;
 
 import java.util.Date;
 
+/**
+ * This class represents a Tracker
+ * @author aitor & kevin
+ *
+ */
 public class Tracker {
 	
-	private String id;
-	private String whoisMaster; //Master ID
-	private Date lastKeepAlive;
+	private String id; // Tracker ID
+	private String whoisMaster; // This is the ID of the Tracker Master
+	private Date lastKeepAlive; // Date representing when was the last time a KeepAlive was received
 	
 	
 	public String getId() {

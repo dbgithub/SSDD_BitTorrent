@@ -2,16 +2,16 @@ package es.deusto.ingenieria.ssdd.classes;
 
 /**
  * Class that represents a Swarm of the network
- * @author kevin
+ * @author kevin & aitor
  *
  */
 public class Swarm {
 	
-	private String infoHash;
-	private String swarmFile;
-	private int size;
-	private int totalSeeders;
-	private int totalLeecher;
+	private String infoHash; // This is the identification of the torrent this swarms is sharing (downloading and/or uploading)
+	private String swarmFile; // The name of the file this swarm is sharing (downloading and/or uploading)
+	private int size; // Size of the file
+	private int totalSeeders; // Peers who are uploading the file
+	private int totalLeecher; // Peers who are downloading the file
 	
 	
 	public String getInfoHash() {

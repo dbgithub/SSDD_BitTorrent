@@ -10,6 +10,12 @@ import es.deusto.ingenieria.ssdd.view.SeeSwarmsPane;
 import es.deusto.ingenieria.ssdd.view.SeeTrackersPane;
 import es.deusto.ingenieria.ssdd.view.mainFrame;
 
+/**
+ * This is the Controller for the application. Everything has to go through this class theoretically.
+ * Within this class, the DataModels corresponding to each and every View class are created.
+ * @author aitor & kevin
+ *
+ */
 public class DashboardController {
 	
 	private DataModelConfiguration dmc;
@@ -25,7 +31,7 @@ public class DashboardController {
 	}
 	
 	/**
-	 * Method that displays a Example Message, just to asure that the connection between the controller and the view is correct.
+	 * Method that displays a Example Message, just to ensure that the connection between the controller and the view is correct.
 	 */
 	public void showExampleMessage() {
 		System.out.println("This message is called by Dashboard and executed in DashboardController");
