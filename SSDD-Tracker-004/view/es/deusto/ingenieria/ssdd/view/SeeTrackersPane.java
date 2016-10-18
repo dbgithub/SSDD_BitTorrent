@@ -2,13 +2,11 @@ package es.deusto.ingenieria.ssdd.view;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Insets;
 
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
@@ -17,7 +15,6 @@ import javax.swing.SwingConstants;
 import java.util.Observable;
 import java.util.Observer;
 
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
@@ -25,35 +22,19 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
-import es.deusto.ingenieria.ssdd.classes.Swarm;
 import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.controllers.*;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
 public class SeeTrackersPane extends JPanel implements Observer{
 
-	private JPanel TrackersSee;
-	private static DashboardController controller;
-
 	/**
-	 * Launch the application.
+	 * 
 	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					SeeTrackersPane window = new SeeTrackersPane();
-					window.TrackersSee.setVisible(true);
-					controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	private static final long serialVersionUID = 1L;
+	private JPanel TrackersSee;
+	private DashboardController controller;
 
 	/**
 	 * Create the application.
@@ -72,6 +53,7 @@ public class SeeTrackersPane extends JPanel implements Observer{
 	 */
 	@SuppressWarnings("serial")
 	private void initialize() {
+		System.out.println(this.controller);
 		TrackersSee = this;
 		TrackersSee.setMinimumSize(new Dimension(600, 480));
 		TrackersSee.setBounds(100, 100, 450, 300);
@@ -168,6 +150,7 @@ public class SeeTrackersPane extends JPanel implements Observer{
 		TrackersSee.setLayout(groupLayout);
 	}
 
+	@SuppressWarnings("null")
 	@Override
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelTracker){
@@ -175,7 +158,8 @@ public class SeeTrackersPane extends JPanel implements Observer{
 			if(arg == null)
 			{
 				//This is the Tracker object that provoked the notification
-				Tracker p = (Tracker)arg;
+				Tracker t = (Tracker)arg;
+				System.out.println(t.toString());
 			}
 		}
 		

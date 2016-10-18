@@ -1,5 +1,10 @@
 package es.deusto.ingenieria.ssdd.classes;
 
+/**
+ * Class that represents a Swarm of the network
+ * @author kevin
+ *
+ */
 public class Swarm {
 	
 	private String infoHash;

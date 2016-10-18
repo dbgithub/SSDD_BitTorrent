@@ -1,6 +1,5 @@
 package es.deusto.ingenieria.ssdd.data;
 
-import java.sql.Date;
 import java.util.Observable;
 
 public class DataModelConfiguration extends Observable{

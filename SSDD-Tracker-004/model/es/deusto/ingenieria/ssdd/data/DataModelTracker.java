@@ -3,7 +3,6 @@ package es.deusto.ingenieria.ssdd.data;
 import java.util.HashMap;
 import java.util.Observable;
 
-import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.classes.Tracker;
 
 public class DataModelTracker extends Observable{

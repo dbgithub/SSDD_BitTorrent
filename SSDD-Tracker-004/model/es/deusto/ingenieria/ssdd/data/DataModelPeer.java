@@ -5,7 +5,7 @@ import java.util.Observable;
 
 import es.deusto.ingenieria.ssdd.classes.Peer;
 
-public class DataModelPeers extends Observable {
+public class DataModelPeer extends Observable {
 	
 	private HashMap<String, Peer> peerlist;
 	

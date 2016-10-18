@@ -2,7 +2,6 @@ package es.deusto.ingenieria.ssdd.view;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Insets;
 
@@ -34,23 +33,7 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 
 	private JPanel SwarmsSee;
 	private JFrame mainFrame;
-	private static DashboardController controller;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					SeeSwarmsPane window = new SeeSwarmsPane();
-					window.SwarmsSee.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	private DashboardController controller;
 
 	/**
 	 * Create the application.
@@ -68,7 +51,6 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 	/**
 	 * Initialize the contents of the frame.
 	 */
-	@SuppressWarnings("serial")
 	private void initialize() {
 		SwarmsSee = this;
 		SwarmsSee.setMinimumSize(new Dimension(600, 480));
@@ -176,6 +158,7 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 		SwarmsSee.setLayout(groupLayout);
 	}
 
+	@SuppressWarnings("null")
 	@Override
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelSwarm){
@@ -183,24 +166,11 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 			if(arg == null)
 			{
 				//This is the Swarm object that provoked the notification
-				Swarm p = (Swarm)arg;
+				Swarm s = (Swarm)arg;
+				System.out.println(s.toString());
 			}
 		}
 		
-	}
-
-	/**
-	 * @return the controller
-	 */
-	public DashboardController getController() {
-		return controller;
-	}
-
-	/**
-	 * @param controller the controller to set
-	 */
-	public static void setController(DashboardController controller) {
-		SeeSwarmsPane.controller = controller;
 	}
 
 	/**

@@ -1,5 +1,11 @@
 package es.deusto.ingenieria.ssdd.classes;
 
+/**
+ * Class that represents a peer at the network
+ * 
+ * @author kevin
+ *
+ */
 public class Peer {
 	
 	private String id;

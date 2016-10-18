@@ -21,13 +21,13 @@ import javax.swing.JScrollPane;
 import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.controllers.*;
 
-import es.deusto.ingenieria.ssdd.data.DataModelPeers;;
+import es.deusto.ingenieria.ssdd.data.DataModelPeer;;
 
 @SuppressWarnings("serial")
 public class SeePeersPane extends JPanel implements Observer{
 
 	private JPanel PeersSee;
-	private static DashboardController controller;
+	private DashboardController controller;
 
 	/**
 	 * Create the application.
@@ -45,6 +45,7 @@ public class SeePeersPane extends JPanel implements Observer{
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
+		System.out.println(this.controller);
 		PeersSee = this;
 		PeersSee.setMinimumSize(new Dimension(600, 480));
 		PeersSee.setBounds(100, 100, 450, 300);
@@ -118,14 +119,16 @@ public class SeePeersPane extends JPanel implements Observer{
 		PeersSee.setLayout(groupLayout);
 	}
 
+	@SuppressWarnings("null")
 	@Override
 	public void update(Observable o, Object arg) {
-		if( o instanceof DataModelPeers){
+		if( o instanceof DataModelPeer){
 			//The update is related with the value that we are observing
 			if(arg == null)
 			{
 				//This is the peer object that provoked the notification
 				Peer p = (Peer)arg;
+				System.out.println(p.toString());
 			}
 			
 			

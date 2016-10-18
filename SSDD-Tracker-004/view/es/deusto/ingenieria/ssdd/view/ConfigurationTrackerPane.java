@@ -2,7 +2,6 @@ package es.deusto.ingenieria.ssdd.view;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -11,15 +10,12 @@ import java.awt.Insets;
 import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.border.LineBorder;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
-import javax.swing.UIManager;
 
 import java.util.Observable;
 import java.util.Observer;
@@ -32,19 +28,21 @@ import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import javax.swing.JRadioButton;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import es.deusto.ingenieria.ssdd.controllers.*;
 
 public class ConfigurationTrackerPane extends JPanel implements Observer {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private JPanel TrackerConfiguration;
 	private JTextField txtIP;
 	private JTextField txtPort;
 	private JTextField txtId;
 	private JRadioButton rdbtnYes;
 	private JRadioButton rdbtnNo;
-	private static DashboardController controller;
+	private DashboardController controller;
 
 	/**
 	 * Create the application.
