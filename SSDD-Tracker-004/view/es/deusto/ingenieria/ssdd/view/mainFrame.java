@@ -85,6 +85,7 @@ public class mainFrame extends JFrame{
 	public void addPeersListTab() {
 		tabbedPane.addTab("Peers",peers);
 		tabbedPane.setMnemonicAt(3, KeyEvent.VK_3);
+		tabbedPane.setSelectedIndex(3);
 		
 	}
 	
