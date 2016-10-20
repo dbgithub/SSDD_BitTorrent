@@ -1,5 +1,7 @@
 package es.deusto.ingenieria.ssdd.classes;
 
+import java.util.HashMap;
+
 /**
  * Class that represents a Swarm of the network
  * @author kevin & aitor
@@ -12,6 +14,7 @@ public class Swarm {
 	private int size; // Size of the file
 	private int totalSeeders; // Peers who are uploading the file
 	private int totalLeecher; // Peers who are downloading the file
+	private HashMap<String, Peer> peerList;
 	
 	
 	public String getInfoHash() {
@@ -44,5 +47,12 @@ public class Swarm {
 	public void setTotalLeecher(int totalLeecher) {
 		this.totalLeecher = totalLeecher;
 	}
+	public HashMap<String, Peer> getPeerList() {
+		return peerList;
+	}
+	public void setPeerList(HashMap<String, Peer> peerList) {
+		this.peerList = peerList;
+	}
+	
 
 }
