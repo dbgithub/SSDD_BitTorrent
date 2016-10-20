@@ -14,7 +14,7 @@ public class Swarm {
 	private int size; // Size of the file
 	private int totalSeeders; // Peers who are uploading the file
 	private int totalLeecher; // Peers who are downloading the file
-	private HashMap<String, Peer> peerList;
+	private HashMap<String, Peer> peerList; //Peer list
 	
 	
 	public String getInfoHash() {
