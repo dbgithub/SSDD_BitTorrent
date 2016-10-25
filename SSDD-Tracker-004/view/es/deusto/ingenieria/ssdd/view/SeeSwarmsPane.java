@@ -102,7 +102,7 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 				if (e.getClickCount() == 2) {
 					JTable tempTable = (JTable)e.getSource();
 				    System.out.println("double clicked in row#" + (tempTable.rowAtPoint(e.getPoint()) + 1));
-				    ((mainFrame) mainFrame).addPeersListTab();
+				    ((MainFrame) mainFrame).addPeersListTab();
 				    controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
 				  }
 			}

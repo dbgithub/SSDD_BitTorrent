@@ -17,7 +17,7 @@ import java.awt.event.MouseEvent;
  *
  */
 @SuppressWarnings("serial")
-public class mainFrame extends JFrame{
+public class MainFrame extends JFrame{
 	
 	private JFrame basicFrame;
 	private DashboardController dc;
@@ -30,7 +30,7 @@ public class mainFrame extends JFrame{
 	 * guarantees that "Peers" tab is attached when needed.
 	 * @param dc
 	 */
-	public mainFrame(DashboardController dc)
+	public MainFrame(DashboardController dc)
 	{
 		this.dc = dc;
 		this.basicFrame = this;
@@ -98,5 +98,32 @@ public class mainFrame extends JFrame{
 		tabbedPane.addTab("Peers",peers);
 		tabbedPane.setMnemonicAt(3, KeyEvent.VK_3);
 		tabbedPane.setSelectedIndex(3);	
+	}
+	
+	public static void main(String[] args) {
+
+		DashboardController dc = new DashboardController();
+		try {
+			// Set cross-platform Java L&F (also called "Metal")
+			UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+		} catch (Exception ex) {
+			System.err.println("Error updating look & feel");
+
+		}
+
+		// Schedule a job for the event-dispatching thread: creating and showing
+
+		// this application's GUI.
+
+		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+
+			public void run() {
+
+				new MainFrame(dc);
+
+			}
+
+		});
+
 	}
 }

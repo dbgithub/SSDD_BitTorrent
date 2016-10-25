@@ -148,7 +148,7 @@ public class JMSXMLMessages {
 		Element type = new Element("type");
 		type.addContent("Update");
 		head.addContent(type);
-		
+		//
 		Element elresolution = new Element("resolution");
 		elresolution.addContent(resolution);
 		Element info = new Element("info");
