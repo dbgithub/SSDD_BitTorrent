@@ -15,13 +15,19 @@ public class DBManagerTEST {
 	static DBManager dbm;
 	
 	@BeforeClass
-	public static void setUp() throws Exception {
+	public static void setUpBeforeClass() throws Exception {
 		dbm = new DBManager("test/db/test.db");
 		dbm.initDB();
 	}
-
+	
+	@Before
+	public void setUp() throws Exception {
+		// not used for the moment
+	}
+	
 	@After
 	public void tearDown() throws Exception {
+		// not used for the moment
 	}
 
 	@Test
@@ -29,10 +35,9 @@ public class DBManagerTEST {
 		assertNotNull(dbm.getCon());
 	}
 
-
 	@Test
 	public void testInsertPeer() {
-		dbm.insertPeer(1234, "192.168.1.", 8080);
+		dbm.insertPeer(1234, "192.168.1.1", 8080);
 		assertNotEquals(-1, dbm.retrievePeers());
 	}
 
@@ -49,9 +54,9 @@ public class DBManagerTEST {
 	}
 	
 	@AfterClass
-	public static void testCloseDB() throws SQLException {
+	public static void tearDownAfterClass() throws SQLException {
 		dbm.resetDB();
-		dbm.getCon().close();
+		dbm.closeDB();
 		assertTrue(dbm.getCon().isClosed());
 	}
 

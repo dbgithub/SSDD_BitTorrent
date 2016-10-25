@@ -10,7 +10,7 @@ import java.sql.Statement;
 
 /**
  * DBManager will handle and manage the operations done against the database for every tracker.
- * @author aitor
+ * @author aitor & kevin
  *
  */
 public class DBManager {
@@ -49,26 +49,38 @@ public class DBManager {
 			Statement statement = con.createStatement();
 			statement.setQueryTimeout(15);  // a timeout of 15 secs
 			try {
-				statement.executeUpdate("CREATE TABLE IF NOT EXISTS Peer ("+
+				int resul1 = statement.executeUpdate("CREATE TABLE IF NOT EXISTS Peer ("+
 						"'IDpeer' INTEGER(20) NOT NULL," +
 						"'IP' TEXT,"+
 						"'Port' INTEGER(7),"+
 						"PRIMARY KEY (IDpeer)"+
 						")");
-				System.out.println("[DBManager] table was created successfuly ('Peer')");
+				if (resul1 >= 0) {
+					con.commit();
+					System.out.println("[DBManager] table was created successfuly ('Peer')");
+				} else {
+					con.rollback();
+					System.out.println("[DBManager] WARNING! A rollback was performed in CREATE 'peer'");
+				}
 			} catch (SQLException e) {
 				System.err.println("ERROR/EXCEPTION. Unable to CREATE table ('Peer'):" + e.getMessage());
 			}
 			try {
-				statement.executeUpdate("CREATE TABLE IF NOT EXISTS Torrent ("+
+				int resul2 = statement.executeUpdate("CREATE TABLE IF NOT EXISTS Torrent ("+
 						"'InfoHash' TEXT(20) NOT NULL,"+
 						"PRIMARY KEY (InfoHash))");		
-				System.out.println("[DBManager] table was created successfuly ('Torrent')");
+				if (resul2 >= 0) {
+					con.commit();
+					System.out.println("[DBManager] table was created successfuly ('Torrent')");
+				} else {
+					con.rollback();
+					System.out.println("[DBManager] WARNING! A rollback was performed in CREATE 'torrent'");
+				}
 			} catch (SQLException e) {
 				System.err.println("ERROR/EXCEPTION. Unable to CREATE table ('Torrent'):" + e.getMessage());
 			}
 			try {
-				statement.executeUpdate("CREATE TABLE IF NOT EXISTS Peer_Torrent ("+
+				int resul3 = statement.executeUpdate("CREATE TABLE IF NOT EXISTS Peer_Torrent ("+
 						"'FK_IDpeer' INTEGER(20) NOT NULL,"+
 						"'FK_InfoHash' TEXT(20) NOT NULL,"+
 						"'Uploaded' INTEGER(8),"+
@@ -78,7 +90,13 @@ public class DBManager {
 						"PRIMARY KEY (FK_IDpeer, FK_InfoHash)," +
 						"FOREIGN KEY (FK_IDpeer) REFERENCES peer(IDpeer),"+
 						"FOREIGN KEY (FK_InfoHash) REFERENCES torrent(InfoHash))");
-				System.out.println("[DBManager] table was created successfuly ('Peer_Torrent')");
+				if (resul3 >= 0) {
+					con.commit();
+					System.out.println("[DBManager] table was created successfuly ('Peer_Torrent')");
+				} else {
+					con.rollback();
+					System.out.println("[DBManager] WARNING! A rollback was performed in CREATE 'peer_torrent'");
+				}
 			} catch (SQLException e) {
 				System.err.println("ERROR/EXCEPTION. Unable to CREATE table ('Peer_torrent'):" + e.getMessage());
 			}
@@ -94,10 +112,16 @@ public class DBManager {
 		try {
 			Statement statement = con.createStatement();
 			statement.setQueryTimeout(15);  // a timeout of 15 secs
-			statement.executeUpdate("DROP TABLE IF EXISTS peer");
-			statement.executeUpdate("DROP TABLE IF EXISTS torrent");
-			statement.executeUpdate("DROP TABLE IF EXISTS peer_torrent");
-			System.out.println("[DBManager] tables within the database reseted successfuly");
+			int resul1 = statement.executeUpdate("DROP TABLE IF EXISTS peer");
+			int resul2 = statement.executeUpdate("DROP TABLE IF EXISTS torrent");
+			int resul3 = statement.executeUpdate("DROP TABLE IF EXISTS peer_torrent");
+			if (resul1 >= 0 && resul2 >= 0 && resul3 >=0) {
+				con.commit();
+				System.out.println("[DBManager] tables within the database reseted successfuly");				
+			} else {
+				con.rollback();
+				System.out.println("[DBManager] WARNING! A rollback was performed in resetDB method");
+			}
 		} catch (SQLTimeoutException etimeout) {
 			System.err.println("ERROR/EXCEPTION. Timeout exceeded when droping tables: " + etimeout.getMessage());
 		} catch (Exception e) {
@@ -121,7 +145,7 @@ public class DBManager {
 	// OPERATIONS & METHODS:
 	
 	public void insertPeer(Integer IDpeer, String IP, Integer Port) {
-		// TODO: validate parameteres
+		// TODO: validate parameters
 		
 		String sqlString = "INSERT INTO peer ('IDpeer', 'IP', 'Port') VALUES (?,?,?)";
 		
@@ -130,12 +154,12 @@ public class DBManager {
 			stmt.setString(2, IP);
 			stmt.setInt(3, Port);
 			
-			if (stmt.executeUpdate() == 1) {
-				System.out.println("[DBManager] a new record was saved into the database ('Peer')");
+			if (stmt.executeUpdate() >=0) {
 				con.commit();
+				System.out.println("[DBManager] a new record was saved into the database ('Peer')");
 			} else {
-				System.err.println("ERROR/EXCEPTION. Error inserting new 'Peer'!");
 				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in insertPeer method");
 			}	
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error inserting data into 'Peer'!" + e.getStackTrace());
@@ -150,12 +174,12 @@ public class DBManager {
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
 			stmt.setString(1, InfoHash);
 
-			if (stmt.executeUpdate() == 1) {
-				System.out.println("[DBManager] a new record was saved into the database ('Torrent')");
+			if (stmt.executeUpdate() >= 0) {
 				con.commit();
+				System.out.println("[DBManager] a new record was saved into the database ('Torrent')");
 			} else {
-				System.err.println("ERROR/EXCEPTION. Error inserting new 'Torrent'!");
 				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in insertTorrent method");
 			}	
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error inserting data into 'Torrent'!" + e.getMessage());
@@ -171,16 +195,16 @@ public class DBManager {
 			stmt.setInt(1, IDpeer);
 			stmt.setString(2, InfoHash);
 			stmt.setInt(3, uploaded);
-			stmt.setInt(3, downloaded);
-			stmt.setInt(3, left);
-			stmt.setInt(3, key);
+			stmt.setInt(4, downloaded);
+			stmt.setInt(5, left);
+			stmt.setInt(6, key);
 
-			if (stmt.executeUpdate() == 1) {
-				System.out.println("[DBManager] a new record was saved into the database ('Peer_torrent')");
+			if (stmt.executeUpdate() >= 0) {
 				con.commit();
+				System.out.println("[DBManager] a new record was saved into the database ('Peer_torrent')");
 			} else {
-				System.err.println("ERROR/EXCEPTION. Error inserting new 'Peer_torrent'!");
 				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in insertPeer_torrent method");
 			}	
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error inserting data into 'Peer_torrent'!" + e.getMessage());
@@ -188,56 +212,80 @@ public class DBManager {
 	}
 	
 	public int retrievePeers() {
+		// TODO: return a real and meaningful value
+		
 		String sqlString = "SELECT * FROM peer";
 		
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {			
 			ResultSet rs = stmt.executeQuery();
 			
-			System.out.println("[DBManager] all peers within 'peer':");
+			if (rs != null) {
+				con.commit();
+				System.out.println("[DBManager] all peers within 'peer':");
+				while(rs.next()) {
+					System.out.println(rs.getInt("IDpeer") +" | "+  rs.getString("IP") + " | " + rs.getInt("Port"));
+				}		
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in retrievePeers method");
+			}
 			
-			while(rs.next()) {
-				System.out.println("    " + rs.getInt("IDpeer") +" | "+  rs.getString("IP") + " | " + rs.getInt("Port"));
-			}		
-			return 0;
+			return 0; // to delete in the future. We should return meaningful value.
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error retrieving tuples in 'peer': " + e.getMessage());
-			return -1;
+			return -1; // to delete in the future. We should return meaningful value.
 		}
 	}
 	
 	public int retrieveTorrents() {
+		// TODO: return a real and meaningful value
+		
 		String sqlString = "SELECT * FROM torrent";
 		
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {			
 			ResultSet rs = stmt.executeQuery();
 			
-			System.out.println("[DBManager] all peers within 'torrent':");
+			if (rs != null) {
+				con.commit();
+				System.out.println("[DBManager] all peers within 'torrent':");
+				while(rs.next()) {
+					System.out.println(rs.getString("InfoHash"));
+				}			
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in retrieveTorrents method");
+			}
 			
-			while(rs.next()) {
-				System.out.println("    " + rs.getString("InfoHash"));
-			}			
-			return 0;
+			return 0; // to delete in the future. We should return meaningful value.
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error retrieving tuples in 'torrent': " + e.getMessage());
-			return -1;
+			return -1; // to delete in the future. We should return meaningful value.
 		}
 	}
 	
 	public int retrievePeerTorrent() {
+		// TODO: return a real and meaningful value
+		
 		String sqlString = "SELECT * FROM peer_torrent";
 		
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {			
 			ResultSet rs = stmt.executeQuery();
 			
-			System.out.println("[DBManager] all peers within 'peer_torrent':");
+			if (rs != null) {
+				con.commit();
+				System.out.println("[DBManager] all peers within 'peer_torrent':");
+				while(rs.next()) {
+					System.out.println(rs.getInt("downloaded") +" | "+  rs.getInt("uploaded") + " | " + rs.getInt("left") + " | " + rs.getInt("key"));
+				}	
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in retrievePeer_torrents method");
+			}
 			
-			while(rs.next()) {
-				System.out.println("    " + rs.getInt("downloaded") +" | "+  rs.getInt("uploaded") + " | " + rs.getInt("left") + " | " + rs.getInt("key"));
-			}	
-			return 0;
+			return 0; // to delete in the future. We should return meaningful value.
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error retrieving tuples in 'peer_torrent': " + e.getMessage());
-			return -1;
+			return -1; // to delete in the future. We should return meaningful value.
 		}
 	}
 }
