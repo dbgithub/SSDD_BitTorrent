@@ -5,15 +5,19 @@ import static org.junit.Assert.*;
 import java.sql.SQLException;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class DBManagerTEST {
 
-	DBManager dbm;
+	static DBManager dbm;
 	
-	@Before
-	public void setUp() throws Exception {
+	@BeforeClass
+	public static void setUp() throws Exception {
+		dbm = new DBManager("test/db/test.db");
+		dbm.initDB();
 	}
 
 	@After
@@ -22,14 +26,9 @@ public class DBManagerTEST {
 
 	@Test
 	public void testDBManager() throws SQLException {
-		dbm = new DBManager("test/db/test.db");
 		assertNotNull(dbm.getCon());
 	}
 
-	@Test
-	public void testInitDB() {
-		this.dbm.initDB();
-	}
 
 	@Test
 	public void testInsertPeer() {
@@ -49,13 +48,10 @@ public class DBManagerTEST {
 		assertNotEquals(-1, dbm.retrievePeerTorrent());
 	}
 	
-	@Test
-	public void testResetDB() {
+	@AfterClass
+	public static void testCloseDB() throws SQLException {
 		dbm.resetDB();
-	}
-	
-	@Test
-	public void testCloseDB() throws SQLException {
+		dbm.getCon().close();
 		assertTrue(dbm.getCon().isClosed());
 	}
 

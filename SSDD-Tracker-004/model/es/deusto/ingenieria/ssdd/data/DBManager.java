@@ -49,7 +49,7 @@ public class DBManager {
 			Statement statement = con.createStatement();
 			statement.setQueryTimeout(15);  // a timeout of 15 secs
 			try {
-				statement.executeUpdate("CREATE IF NOT EXISTS TABLE 'Peer' ("+
+				statement.executeUpdate("CREATE TABLE IF NOT EXISTS Peer ("+
 						"'IDpeer' INTEGER(20) NOT NULL," +
 						"'IP' TEXT,"+
 						"'Port' INTEGER(7),"+
@@ -60,7 +60,7 @@ public class DBManager {
 				System.err.println("ERROR/EXCEPTION. Unable to CREATE table ('Peer'):" + e.getMessage());
 			}
 			try {
-				statement.executeUpdate("CREATE TABLE 'Torrent' ("+
+				statement.executeUpdate("CREATE TABLE IF NOT EXISTS Torrent ("+
 						"'InfoHash' TEXT(20) NOT NULL,"+
 						"PRIMARY KEY (InfoHash))");		
 				System.out.println("[DBManager] table was created successfuly ('Torrent')");
@@ -68,7 +68,7 @@ public class DBManager {
 				System.err.println("ERROR/EXCEPTION. Unable to CREATE table ('Torrent'):" + e.getMessage());
 			}
 			try {
-				statement.executeUpdate("CREATE TABLE 'Peer_Torrent' ("+
+				statement.executeUpdate("CREATE TABLE IF NOT EXISTS Peer_Torrent ("+
 						"'FK_IDpeer' INTEGER(20) NOT NULL,"+
 						"'FK_InfoHash' TEXT(20) NOT NULL,"+
 						"'Uploaded' INTEGER(8),"+
@@ -138,7 +138,7 @@ public class DBManager {
 				con.rollback();
 			}	
 		} catch (Exception e) {
-			System.err.println("ERROR/EXCEPTION. Error inserting data into 'Peer'!" + e.getMessage());
+			System.err.println("ERROR/EXCEPTION. Error inserting data into 'Peer'!" + e.getStackTrace());
 		}
 	}
 	
@@ -165,7 +165,7 @@ public class DBManager {
 	public void insertPeer_Torrent(Integer IDpeer, String InfoHash, Integer uploaded, Integer downloaded, Integer left, Integer key) {
 		// TODO: validate parameteres
 
-		String sqlString = "INSERT INTO peer ('FK_IDpeer', 'FK_InfoHash', 'Uploaded', 'Downloaded', 'Left', 'Key') VALUES (?,?,?,?,?,?)";
+		String sqlString = "INSERT INTO peer_torrent ('FK_IDpeer', 'FK_InfoHash', 'Uploaded', 'Downloaded', 'Left', 'Key') VALUES (?,?,?,?,?,?)";
 
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
 			stmt.setInt(1, IDpeer);

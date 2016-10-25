@@ -175,6 +175,30 @@ public class JMSXMLMessages {
 		
 	}
 	
+	public String convertToStringMasterProclamation(String trackerid){
+		Document doc = new Document();
+		Element xml=new Element("message");
+		
+		Element head = new Element("head");
+		Element body = new Element("body");
+		
+		Element type = new Element("type");
+		type.addContent("MasterProclamation");
+		head.addContent(type);
+		//
+		Element id = new Element("id");
+		id.addContent(trackerid);
+		
+		body.addContent(id);
+		
+		xml.addContent(head);
+		xml.addContent(body);
+		doc.addContent(xml);
+		
+		return new XMLOutputter().outputString(doc);
+		
+	}
+	
 	public Document convertFromStringToXML(String xml){
 		SAXBuilder builder = new SAXBuilder();
 		InputStream stream = null;
