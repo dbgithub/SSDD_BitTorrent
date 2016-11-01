@@ -69,12 +69,6 @@ public class DashboardController {
 		dmp.addObserver(spp);
 	}
 	
-	public static void main(String[]args)
-	{
-		DashboardController dc = new DashboardController();
-		new MainFrame(dc);
-	}
-
 	/**
 	 * Method to display a test failure error. In next deliverables will be implemented correctly.
 	 * 
