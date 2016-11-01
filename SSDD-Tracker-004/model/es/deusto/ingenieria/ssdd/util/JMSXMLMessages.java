@@ -5,11 +5,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
+import org.xml.sax.SAXException;
 
 public class JMSXMLMessages {
 	
@@ -45,7 +50,7 @@ public class JMSXMLMessages {
 		
 	}
 	
-	public String convertToStringIDSelection(String id)
+	public String convertToStringIDSelection(int id)
 	{
 		Document doc = new Document();
 		Element xml=new Element("message");
@@ -58,7 +63,7 @@ public class JMSXMLMessages {
 		head.addContent(type);
 		
 		Element elid = new Element("id");
-		elid.addContent(id);
+		elid.addContent(id+"");
 		body.addContent(elid);
 		
 		xml.addContent(head);
@@ -199,10 +204,18 @@ public class JMSXMLMessages {
 		
 	}
 	
-	public Document convertFromStringToXML(String xml){
-		SAXBuilder builder = new SAXBuilder();
+	public org.w3c.dom.Document convertFromStringToXML(String xml){
+		DocumentBuilderFactory factory =
+		DocumentBuilderFactory.newInstance();
+		DocumentBuilder builder = null;
+		try {
+			builder = factory.newDocumentBuilder();
+		} catch (ParserConfigurationException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
 		InputStream stream = null;
-		Document anotherDocument = null;
+		org.w3c.dom.Document anotherDocument = null;
 		try {
 			stream = new ByteArrayInputStream(xml.getBytes("UTF-8"));
 		} catch (UnsupportedEncodingException e1) {
@@ -210,11 +223,17 @@ public class JMSXMLMessages {
 			e1.printStackTrace();
 		}
 		try {
-			anotherDocument = builder.build(stream);
-		} catch (JDOMException | IOException e) {
+			try {
+				anotherDocument = builder.parse(stream);
+			} catch (SAXException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		anotherDocument.getDocumentElement().normalize();
 		return anotherDocument;
 	}
 	
@@ -223,9 +242,9 @@ public class JMSXMLMessages {
 	public static void main(String[]args){
 		 String xml = new JMSXMLMessages().convertToStringKeepAlive("id1", "Master");
 		 System.out.println(xml);
-		 Document doc = new JMSXMLMessages().convertFromStringToXML(xml);
-		 System.out.println(doc);
-		 System.out.println(new XMLOutputter().outputString(doc));
+		 org.w3c.dom.Document doc = new JMSXMLMessages().convertFromStringToXML(xml);
+		 System.out.println(doc.getElementsByTagName("id").item(0).getTextContent());
+		 System.out.println(doc.toString());
 		
 	}
 

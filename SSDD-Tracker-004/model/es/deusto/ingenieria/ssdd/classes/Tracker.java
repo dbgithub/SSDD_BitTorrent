@@ -9,22 +9,28 @@ import java.util.Date;
  */
 public class Tracker {
 	
-	private String id; // Tracker ID
-	private String whoisMaster; // This is the ID of the Tracker Master
+	private int id; // Tracker ID
+	private boolean master; // This is the ID of the Tracker Master
 	private Date lastKeepAlive; // Date representing when was the last time a KeepAlive was received
 	
+	public Tracker(int id, boolean master, Date lastKeepAlive) {
+		super();
+		this.id = id;
+		this.master = master;
+		this.lastKeepAlive = lastKeepAlive;
+	}
 	
-	public String getId() {
+	public int getId() {
 		return id;
 	}
-	public void setId(String id) {
+	public void setId(int id) {
 		this.id = id;
 	}
-	public String getWhoisMaster() {
-		return whoisMaster;
+	public boolean getWhoisMaster() {
+		return master;
 	}
-	public void setWhoisMaster(String whoisMaster) {
-		this.whoisMaster = whoisMaster;
+	public void setWhoisMaster(boolean master) {
+		this.master = master;
 	}
 	public Date getLastKeepAlive() {
 		return lastKeepAlive;

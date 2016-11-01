@@ -140,6 +140,10 @@ public class SeeTrackersPane extends JPanel implements Observer{
 				//This is the Tracker object that provoked the notification
 				Tracker t = (Tracker)arg;
 				System.out.println(t.toString());
+				System.out.println("Ha cambiado un tracker");
+			}
+			else{
+				System.out.println("Ha cambiado algo.");
 			}
 		}
 		
