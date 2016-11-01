@@ -109,22 +109,30 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		btnStartStop.setBackground(new Color(50, 205, 50));
 		btnStartStop.setForeground(Color.WHITE);
 		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 30));
+		
+		JLabel lblfootnote = new JLabel("(*) Read-only values");
+		lblfootnote.setForeground(Color.WHITE);
+		lblfootnote.setFont(new Font("Symbola", Font.BOLD, 12));
 		GroupLayout groupLayout = new GroupLayout(TrackerConfiguration);
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(111)
-					.addComponent(lblTrackerConfiguring, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+					.addComponent(lblTrackerConfiguring, GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
 					.addGap(110))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addContainerGap()
 					.addComponent(btnTestFailure)
-					.addContainerGap(310, Short.MAX_VALUE))
+					.addContainerGap(446, Short.MAX_VALUE))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(62)
 					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(panel, GroupLayout.DEFAULT_SIZE, 419, Short.MAX_VALUE)
-						.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 222, GroupLayout.PREFERRED_SIZE))
+						.addComponent(panel, GroupLayout.DEFAULT_SIZE, 555, Short.MAX_VALUE)
+						.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+							.addGroup(groupLayout.createSequentialGroup()
+								.addGap(12)
+								.addComponent(lblfootnote, GroupLayout.PREFERRED_SIZE, 194, GroupLayout.PREFERRED_SIZE))
+							.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 222, GroupLayout.PREFERRED_SIZE)))
 					.addGap(62))
 		);
 		groupLayout.setVerticalGroup(
@@ -136,6 +144,8 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 141, GroupLayout.PREFERRED_SIZE)
 					.addGap(72)
 					.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
+					.addPreferredGap(ComponentPlacement.RELATED)
+					.addComponent(lblfootnote)
 					.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
 					.addComponent(btnTestFailure)
 					.addContainerGap())
@@ -158,7 +168,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(lblIp, gbc_lblIp);
 		
 		txtIP = new JTextField();
-		txtIP.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		txtIP.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 16));
 		GridBagConstraints gbc_txtIP = new GridBagConstraints();
 		gbc_txtIP.insets = new Insets(0, 0, 5, 0);
 		gbc_txtIP.fill = GridBagConstraints.HORIZONTAL;
@@ -178,7 +188,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(lblPort, gbc_lblPort);
 		
 		txtPort = new JTextField();
-		txtPort.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		txtPort.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 16));
 		GridBagConstraints gbc_txtPort = new GridBagConstraints();
 		gbc_txtPort.insets = new Insets(0, 0, 5, 0);
 		gbc_txtPort.fill = GridBagConstraints.HORIZONTAL;
@@ -187,7 +197,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(txtPort, gbc_txtPort);
 		txtPort.setColumns(10);
 		
-		JLabel lblID = new JLabel("ID");
+		JLabel lblID = new JLabel("ID*");
 		lblID.setForeground(Color.WHITE);
 		lblID.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		GridBagConstraints gbc_lblID = new GridBagConstraints();
@@ -198,7 +208,9 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(lblID, gbc_lblID);
 		
 		txtId = new JTextField();
-		txtId.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		txtId.setEnabled(false);
+		txtId.setEditable(false);
+		txtId.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 16));
 		GridBagConstraints gbc_txtId = new GridBagConstraints();
 		gbc_txtId.insets = new Insets(0, 0, 5, 0);
 		gbc_txtId.fill = GridBagConstraints.HORIZONTAL;
@@ -207,7 +219,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(txtId, gbc_txtId);
 		txtId.setColumns(10);
 		
-		JLabel lblMaster = new JLabel("Is master?");
+		JLabel lblMaster = new JLabel("Is master?*");
 		lblMaster.setForeground(Color.WHITE);
 		lblMaster.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		GridBagConstraints gbc_lblMaster = new GridBagConstraints();
@@ -225,8 +237,10 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(panel_radiobtns, gbc_panel_radiobtns);
 		
 		rdbtnYes = new JRadioButton("Yes");
+		rdbtnYes.setEnabled(false);
 		panel_radiobtns.add(rdbtnYes);
 		rdbtnNo = new JRadioButton("No");
+		rdbtnNo.setEnabled(false);
 		panel_radiobtns.add(rdbtnNo);
 		ButtonGroup group = new ButtonGroup();
 		group.add(rdbtnYes);
@@ -246,7 +260,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 			txtId.setText(dmc.getId());
 			txtIP.setText(dmc.getIp());
 			txtPort.setText(dmc.getPort()+"");
-			rdbtnYes.setSelected(dmc.isMaster());	
+			if (dmc.isMaster()) {rdbtnYes.setSelected(true);}  else {rdbtnNo.setSelected(true);};
 		}
 		
 	}

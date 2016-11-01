@@ -82,12 +82,12 @@ public class DashboardController {
 	 * and showing Observer functionality
 	 */
 	public void startStopFunction() {
-		System.out.println("Start/Stop Presset");
+		System.out.println("Start/Stop Pressed");
 		//This additional code is a prove that observer is working
 		dmc.setId("ID 1");
 		dmc.setIp("127.0.0.1");
 		dmc.setPort(8080);
-		dmc.setMaster(true);
+		dmc.setMaster(false);
 		dmt.startEntranceStep(dmc);
 	}
 	/**
