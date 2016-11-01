@@ -88,7 +88,7 @@ public class DashboardController {
 		dmc.setIp("127.0.0.1");
 		dmc.setPort(8080);
 		dmc.setMaster(true);
-		
+		dmt.startEntranceStep(dmc);
 	}
 	/**
 	 * Provisional method to populate with example data some of the tables
