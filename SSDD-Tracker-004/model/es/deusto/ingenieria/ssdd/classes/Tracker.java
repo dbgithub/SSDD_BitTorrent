@@ -10,7 +10,7 @@ import java.util.Date;
 public class Tracker {
 	
 	private int id; // Tracker ID
-	private boolean master; // This is the ID of the Tracker Master
+	private boolean master; // Identifies the tracker either as a master or not
 	private Date lastKeepAlive; // Date representing when was the last time a KeepAlive was received
 	
 	public Tracker(int id, boolean master, Date lastKeepAlive) {

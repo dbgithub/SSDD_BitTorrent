@@ -70,7 +70,7 @@ public class KeepALiveListener implements MessageListener{
 					case "NegativeIDReq":
 						//Check if the message is for this tracker
 						if(dmt.idRequestUniqueID.equals(message.getJMSMessageID())){
-							//this message is for me
+							//this message is not for me
 							idCorrect = false;
 						}
 					default:

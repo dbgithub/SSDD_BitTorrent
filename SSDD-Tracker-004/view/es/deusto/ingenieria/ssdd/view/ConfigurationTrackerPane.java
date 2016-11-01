@@ -197,7 +197,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(txtPort, gbc_txtPort);
 		txtPort.setColumns(10);
 		
-		JLabel lblID = new JLabel("ID*");
+		JLabel lblID = new JLabel("ID");
 		lblID.setForeground(Color.WHITE);
 		lblID.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		GridBagConstraints gbc_lblID = new GridBagConstraints();
@@ -208,8 +208,6 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(lblID, gbc_lblID);
 		
 		txtId = new JTextField();
-		txtId.setEnabled(false);
-		txtId.setEditable(false);
 		txtId.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 16));
 		GridBagConstraints gbc_txtId = new GridBagConstraints();
 		gbc_txtId.insets = new Insets(0, 0, 5, 0);
