@@ -15,9 +15,11 @@ public class Tracker {
 	private boolean master; // Identifies the tracker either as a master or not
 	private Date lastKeepAlive; // Date representing when was the last time a KeepAlive was received
 	
-	public Tracker(int id, boolean master, Date lastKeepAlive) {
+	public Tracker(int id, String ip, int port, boolean master, Date lastKeepAlive) {
 		super();
 		this.id = id;
+		this.ip = ip;
+		this.port = port;
 		this.master = master;
 		this.lastKeepAlive = lastKeepAlive;
 	}

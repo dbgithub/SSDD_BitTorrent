@@ -1,7 +1,5 @@
 package es.deusto.ingenieria.ssdd.tracker;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -12,17 +10,7 @@ import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.Topic;
-import javax.jms.TopicConnection;
-import javax.jms.TopicConnectionFactory;
-import javax.jms.TopicSession;
-import javax.jms.TopicSubscriber;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.activemq.broker.BrokerFactory;
-import org.apache.activemq.broker.BrokerService;
-
 import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
@@ -44,6 +32,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	
 	private DataModelConfiguration dmc;
 	private DataModelTracker dmt;
+	public static int trackerID; // This is the ID of the tracker, the purpose is to make it available publicly to catch it whenever we want.
 	
 	public EntranceAndKeepAlive(DataModelConfiguration dmc, DataModelTracker dmt){
 		this.dmc = dmc;
@@ -61,7 +50,7 @@ public class EntranceAndKeepAlive implements Runnable{
             
             // Consumer1 subscribes to KeepAliveTopic
             MessageConsumer consumer1 = session.createConsumer(topic);
-            consumer1.setMessageListener(new KeepALiveListener(dmt));
+            consumer1.setMessageListener(new KeepALiveListener(dmt, session, topic));
             
             connection.start();    
             
@@ -84,14 +73,14 @@ public class EntranceAndKeepAlive implements Runnable{
 	            dmt.idRequestUniqueID = msg.getJMSMessageID();
 	            MessageProducer producer = session.createProducer(topic);
 	            producer.send(msg);
-	            
+	            trackerID = randomID; 
 	            //Wait 5 seconds for master response
 	            Thread.sleep(5000);
 	            if(dmt.idCorrect){
 	            	//Masters response is positive, so you have a database now and the ID.
 	            	//¿Add also this tracker to the list?
 	            	dmc.setMaster(false);
-	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), false, new Date());
+	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), false, new Date());
 	            	dmt.trackerList.put(t.getId(), t);
 	            	//Start sending KeepALives
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
@@ -108,11 +97,11 @@ public class EntranceAndKeepAlive implements Runnable{
             	
             }
             else{
-            	// Available or Empty: this means that the current running tracker is the Master
-            	if(dmt.trackerList.isEmpty()){
+            	// Available or Empty: 
+            	if(dmt.trackerList.isEmpty()){ // Empty: this means that the current running tracker is the Master
             		// We create the tracker and add it to the tracker list:
             		dmc.setMaster(true);
-            		Tracker t = new Tracker(Integer.parseInt(dmc.getId()), true, new Date());
+            		Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), true, new Date());
             		dmt.trackerList.put(t.getId(), t);
             		//Initialize a new database
             		DBManager database = new DBManager("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_master.db");
@@ -121,6 +110,9 @@ public class EntranceAndKeepAlive implements Runnable{
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
+            	} else { // Available: this means the ID that the user assigned to the Tracker through the GUI, is not taken!
+            		// TODO: enviar el mensaje de la linea 82 pero sin RANDOM en este caso con el dmc.getID();
+            		trackerID = Integer.parseInt(dmc.getId());
             	}
             	
             }
