@@ -6,6 +6,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
@@ -30,23 +31,31 @@ public class KeepALiveSender implements Runnable{
 	
 	private DataModelConfiguration dmc;
 	private boolean idCorrect = false;
+	private MessageProducer producer;
+	private Session session;
 	
-	public KeepALiveSender(DataModelConfiguration dmc){
+	public KeepALiveSender(DataModelConfiguration dmc, MessageProducer producer, Session s){
 		this.dmc = dmc;
+		this.producer = producer;
+		this.session = s;
 	}
 
 	@Override
 	public void run() {
-		String keepalivestr = new JMSXMLMessages().convertToStringKeepAlive(dmc.getId(), (dmc.isMaster()) ? "Master" : "Slave");
-		
 		// TODO: copio y pego el CONNECTION, CONNECTION FACTORY y demas aqui? o lo paso como variable?
 		while(true) {
-			
+			String keepalivestr = new JMSXMLMessages().convertToStringKeepAlive(dmc.getId(), (dmc.isMaster()) ? "Master" : "Slave");
 			// TODO: send keepalive message
-//			Message msg = session.createTextMessage();
-//          System.out.println(msg.getJMSMessageID());
-//          MessageProducer producer = session.createProducer(topic);
-//          producer.send(msg);
+			Message msg;
+			try {
+				msg = session.createTextMessage();
+				System.out.println(msg.getJMSMessageID());
+		        producer.send(msg);
+			} catch (JMSException e1) {
+				System.out.println("Error JMS with the KeepALiveSender");
+				e1.printStackTrace();
+			}
+	        
 			try {
 				// Every second, the tracker will send a Keepalive message
 				Thread.sleep(1000);
