@@ -3,13 +3,20 @@ package es.deusto.ingenieria.ssdd.view;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.text.SimpleDateFormat;
+
 import javax.swing.GroupLayout;
 import javax.swing.JLabel;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
+import java.util.Vector;
+
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
@@ -30,6 +37,7 @@ public class SeeTrackersPane extends JPanel implements Observer{
 	private static final long serialVersionUID = 1L;
 	private JPanel TrackersSee;
 	private DashboardController controller;
+	private JTable trackerTable;
 
 	/**
 	 * Create the application.
@@ -91,8 +99,8 @@ public class SeeTrackersPane extends JPanel implements Observer{
 					.addGap(5))
 		);
 		
-		JTable table = new JTable();
-		table.setModel(new DefaultTableModel(
+		trackerTable = new JTable();
+		trackerTable.setModel(new DefaultTableModel(
 			new Object[][] {
 				{null, null, null, null, null},
 				{null, null, null, null, null},
@@ -110,19 +118,19 @@ public class SeeTrackersPane extends JPanel implements Observer{
 				return columnEditables[column];
 			}
 		});
-		table.getColumnModel().getColumn(0).setPreferredWidth(100);
-		table.getColumnModel().getColumn(0).setMinWidth(100);
-		table.getColumnModel().getColumn(1).setPreferredWidth(130);
-		table.getColumnModel().getColumn(1).setMinWidth(130);
-		table.getColumnModel().getColumn(2).setPreferredWidth(130);
-		table.getColumnModel().getColumn(2).setMinWidth(130);
-		table.getColumnModel().getColumn(3).setPreferredWidth(80);
-		table.getColumnModel().getColumn(3).setMinWidth(80);
-		table.getColumnModel().getColumn(4).setPreferredWidth(130);
-		table.getColumnModel().getColumn(4).setMinWidth(130);
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		table.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
-		scrollPane.setViewportView(table);
+		trackerTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+		trackerTable.getColumnModel().getColumn(0).setMinWidth(100);
+		trackerTable.getColumnModel().getColumn(1).setPreferredWidth(130);
+		trackerTable.getColumnModel().getColumn(1).setMinWidth(130);
+		trackerTable.getColumnModel().getColumn(2).setPreferredWidth(130);
+		trackerTable.getColumnModel().getColumn(2).setMinWidth(130);
+		trackerTable.getColumnModel().getColumn(3).setPreferredWidth(80);
+		trackerTable.getColumnModel().getColumn(3).setMinWidth(80);
+		trackerTable.getColumnModel().getColumn(4).setPreferredWidth(130);
+		trackerTable.getColumnModel().getColumn(4).setMinWidth(130);
+		trackerTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		trackerTable.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		scrollPane.setViewportView(trackerTable);
 		
 		TrackersSee.setLayout(groupLayout);
 	}
@@ -135,16 +143,21 @@ public class SeeTrackersPane extends JPanel implements Observer{
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelTracker){
 			//The update is related with the value that we are observing
-			if(arg == null)
-			{
-				//This is the Tracker object that provoked the notification
-				Tracker t = (Tracker)arg;
-				System.out.println(t.toString());
-				System.out.println("Ha cambiado un tracker");
+			System.out.println("Updating Tracker Table...");
+			DataModelTracker dmt = (DataModelTracker)o;
+			ArrayList<Tracker> trackers = (ArrayList<Tracker>) dmt.getPeerlist().values();
+			String[][] arrayTable = new String[trackers.size()][5];
+			for(int i =0; i<trackers.size(); i++){
+				Tracker temp = trackers.get(i);
+				arrayTable[i][0] = temp.getId()+"";
+				arrayTable[i][1] = temp.getIp();
+				arrayTable[i][2] = temp.getPort()+"";
+				arrayTable[i][3] = (temp.getMaster())? "Yes" : "No";
+				arrayTable[i][4] = new SimpleDateFormat("HH:mm:ss.S yyyy-MM-dd ").format(temp.getLastKeepAlive());
 			}
-			else{
-				System.out.println("Ha cambiado algo.");
-			}
+			trackerTable.setModel(new DefaultTableModel(arrayTable, new String[] {
+				"ID tracker", "IP", "Port", "Master?", "Last keepalive"
+			}));
 		}
 		
 	}

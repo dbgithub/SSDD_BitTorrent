@@ -44,7 +44,7 @@ public class KeepALiveSender implements Runnable{
 	public void run() {
 		// TODO: copio y pego el CONNECTION, CONNECTION FACTORY y demas aqui? o lo paso como variable?
 		while(true) {
-			String keepalivestr = new JMSXMLMessages().convertToStringKeepAlive(dmc.getId(), (dmc.isMaster()) ? "Master" : "Slave");
+			String keepalivestr = new JMSXMLMessages().convertToStringKeepAlive(dmc.getId(), (dmc.isMaster()) ? "Master" : "Slave", dmc.getIp(), dmc.getPort());
 			// TODO: send keepalive message
 			Message msg;
 			try {
