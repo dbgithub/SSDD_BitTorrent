@@ -94,7 +94,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), false, new Date());
 	            	dmt.trackerList.put(t.getId(), t);
 	            	//Start sending KeepALives
-            		KeepALiveSender kaps= new KeepALiveSender(dmc);
+            		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
 	            	// What do we do now with the database? where is it?
@@ -117,7 +117,8 @@ public class EntranceAndKeepAlive implements Runnable{
             		//Initialize a new database
             		DBManager database = new DBManager("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_master.db");
             		//Start sending KeepALives
-            		KeepALiveSender kaps= new KeepALiveSender(dmc);
+            		MessageProducer producer = session.createProducer(topic);
+            		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
             	}
