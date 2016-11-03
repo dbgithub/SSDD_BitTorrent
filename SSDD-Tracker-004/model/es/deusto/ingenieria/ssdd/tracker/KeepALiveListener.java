@@ -21,11 +21,9 @@ public class KeepALiveListener implements MessageListener{
 	
 	
 	private DataModelTracker dmt;
-	private boolean idCorrect;
 	
-	public KeepALiveListener(DataModelTracker dmt, boolean idCorrect) {
+	public KeepALiveListener(DataModelTracker dmt) {
 		this.dmt = dmt;
-		this.idCorrect = idCorrect;
 	}
 
 	@Override
@@ -58,20 +56,11 @@ public class KeepALiveListener implements MessageListener{
 							dmt.notifyTrackerChanged(newOne);
 						}
 						break;
-					case "PositiveIDReq":
-						//Check if the message is for this tracker
-						if(dmt.idRequestUniqueID.equals(message.getJMSMessageID())){
-							//this message is for me
-							idCorrect = true;
-							//Save database
-							BytesMessage databaseMessage = (BytesMessage) message;
-							
-						}
 					case "NegativeIDReq":
 						//Check if the message is for this tracker
 						if(dmt.idRequestUniqueID.equals(message.getJMSMessageID())){
 							//this message is not for me
-							idCorrect = false;
+							dmt.idCorrect = false;
 						}
 					default:
 						break;
@@ -80,6 +69,15 @@ public class KeepALiveListener implements MessageListener{
 					
 				} catch (Exception e) {
 					System.err.println("# KeepALiveListener error: " + e.getMessage());
+				}
+			} else {
+				//Check if the message is for this tracker
+				if(dmt.idRequestUniqueID.equals(message.getJMSMessageID())){
+					//this message is for me
+					dmt.idCorrect = true;
+					//Save database
+					BytesMessage databaseMessage = (BytesMessage) message;
+					
 				}
 			}
 		}

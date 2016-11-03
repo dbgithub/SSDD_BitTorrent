@@ -44,7 +44,6 @@ public class EntranceAndKeepAlive implements Runnable{
 	
 	private DataModelConfiguration dmc;
 	private DataModelTracker dmt;
-	private boolean idCorrect = false;
 	
 	public EntranceAndKeepAlive(DataModelConfiguration dmc, DataModelTracker dmt){
 		this.dmc = dmc;
@@ -62,7 +61,7 @@ public class EntranceAndKeepAlive implements Runnable{
             
             // Consumer1 subscribes to KeepAliveTopic
             MessageConsumer consumer1 = session.createConsumer(topic);
-            consumer1.setMessageListener(new KeepALiveListener(dmt, idCorrect));
+            consumer1.setMessageListener(new KeepALiveListener(dmt));
             
             connection.start();    
             
@@ -88,7 +87,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	            
 	            //Wait 5 seconds for master response
 	            Thread.sleep(5000);
-	            if(idCorrect){
+	            if(dmt.idCorrect){
 	            	//Masters response is positive, so you have a database now and the ID.
 	            	//¿Add also this tracker to the list?
 	            	dmc.setMaster(false);
