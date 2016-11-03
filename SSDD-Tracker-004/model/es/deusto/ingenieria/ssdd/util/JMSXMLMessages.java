@@ -22,7 +22,7 @@ public class JMSXMLMessages {
 		
 	}
 	
-	public String convertToStringKeepAlive(String idTracker, String typeTracker){
+	public String convertToStringKeepAlive(String idTracker, String typeTracker, String ipTracker, int portTracker){
 		Document doc = new Document();
 		Element xml=new Element("message");
 		
@@ -36,9 +36,15 @@ public class JMSXMLMessages {
 		Element source=new Element("source");
 		Element id = new Element("id");
 		id.addContent(idTracker);
+		Element ip = new Element("ip");
+		ip.addContent(ipTracker);
+		Element port = new Element("port");
+		port.addContent(portTracker+"");
 		Element typeofTracker = new Element("typeTracker");
 		typeofTracker.addContent(typeTracker);
 		source.addContent(id);
+		source.addContent(ip);
+		source.addContent(port);
 		source.addContent(typeofTracker);
 		body.addContent(source);
 		
@@ -240,7 +246,7 @@ public class JMSXMLMessages {
 	
 	
 	public static void main(String[]args){
-		 String xml = new JMSXMLMessages().convertToStringKeepAlive("id1", "Master");
+		 String xml = new JMSXMLMessages().convertToStringKeepAlive("id1", "Master", "127.0.0.1", 8080);
 		 System.out.println(xml);
 		 org.w3c.dom.Document doc = new JMSXMLMessages().convertFromStringToXML(xml);
 		 System.out.println(doc.getElementsByTagName("id").item(0).getTextContent());
