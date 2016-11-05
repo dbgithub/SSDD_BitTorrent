@@ -80,14 +80,16 @@ public class DashboardController {
 	/**
 	 * Method triggered when pushed the Start and Stop method, simulating a change at the model
 	 * and showing Observer functionality
+	 * @param ip 
+	 * @param id 
+	 * @param string 
 	 */
-	public void startStopFunction() {
+	public void startStopFunction(String ip, String id, String port) {
 		System.out.println("Start/Stop Pressed");
 		// This code will change in the future in accordance with the data inputed by the user.
-		dmc.setId("1");
-		dmc.setIp("127.0.0.1");
-		dmc.setPort(8080);
-		dmc.setMaster(true);
+		dmc.setId(id);
+		dmc.setIp(ip);
+		dmc.setPort(Integer.parseInt(port));
 		dmt.startEntranceStep(dmc);
 	}
 	/**

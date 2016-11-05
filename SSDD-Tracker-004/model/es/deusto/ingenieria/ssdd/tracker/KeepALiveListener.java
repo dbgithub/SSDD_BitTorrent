@@ -18,6 +18,7 @@ import javax.jms.Topic;
 import org.w3c.dom.Document;
 
 import es.deusto.ingenieria.ssdd.classes.Tracker;
+import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 import es.deusto.ingenieria.ssdd.util.JMSXMLMessages;
 
@@ -25,11 +26,13 @@ public class KeepALiveListener implements MessageListener{
 	
 	
 	private DataModelTracker dmt;
+	private DataModelConfiguration dmc;
 	private Session session;
 	private Topic topic;
 	
-	public KeepALiveListener(DataModelTracker dmt, Session s, Topic t) {
+	public KeepALiveListener(DataModelTracker dmt, DataModelConfiguration dmc,  Session s, Topic t) {
 		this.dmt = dmt;
+		this.dmc = dmc;
 		this.session = s;
 		this.topic = t;
 	}
@@ -39,9 +42,9 @@ public class KeepALiveListener implements MessageListener{
 		if (message != null) {
 			if(message instanceof TextMessage){
 				try {
-					System.out.println("Unique ID: "+message.getJMSMessageID());
+					//System.out.println("Unique ID: "+message.getJMSMessageID());
 					TextMessage txtmessage = (TextMessage) message;
-					System.out.println(txtmessage.getText());
+					//System.out.println(txtmessage.getText());
 					JMSXMLMessages parser = new JMSXMLMessages();
 					Document xml = parser.convertFromStringToXML(txtmessage.getText());
 					String type = xml.getElementsByTagName("type").item(0).getTextContent();
@@ -70,42 +73,60 @@ public class KeepALiveListener implements MessageListener{
 						break;
 					case "NegativeIDReq":
 						//Check if the message is for this tracker
-						if(dmt.idRequestUniqueID.equals(message.getJMSMessageID())){
+						if(DataModelTracker.idRequestUniqueID.equals(message.getJMSMessageID())){
 							//this message is not for me
 							dmt.idCorrect = false;
 						}
+						break;
 					case "IDSelection":
 						// **PREGUNTAR a Kevin si este 'case' esta bien definido aqui donde esta.
 						// This 'case' should check whether the ID requested from the new tracker is free or already taken.
 						// If it is not taken, then, the master sends back the database to the tracker slave.
-						int trackerid = Integer.parseInt(xml.getElementsByTagName("id").item(0).getTextContent());
-						if (!dmt.trackerList.containsKey(trackerid)) {
-							BytesMessage masterdb = session.createBytesMessage();
-							FileInputStream db_stream = new FileInputStream("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_"+EntranceAndKeepAlive.trackerID+".db");
-							int bytes_read;
-							byte[] buff = new byte[64];
-							while ((bytes_read = db_stream.read(buff)) != -1) {
-								masterdb.writeBytes(buff, 0, bytes_read);
-							}
-							MessageProducer producer = session.createProducer(topic);
-				            producer.send(masterdb);
+						if(dmc.isMaster()){
+							int trackerid = Integer.parseInt(xml.getElementsByTagName("id").item(0).getTextContent());
+							if (!dmt.trackerList.containsKey(trackerid)) {
+								BytesMessage masterdb = session.createBytesMessage();
+								masterdb.setStringProperty("JMSID", message.getJMSMessageID());
+								FileInputStream db_stream = new FileInputStream("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_"+EntranceAndKeepAlive.trackerID+".db");
+								int bytes_read;
+								byte[] buff = new byte[64];
+								while ((bytes_read = db_stream.read(buff)) != -1) {
+									masterdb.writeBytes(buff, 0, bytes_read);
+								}
+								MessageProducer producer = session.createProducer(topic);
+					            producer.send(masterdb);
 						}
+						
+						}
+						break;
+					case "MasterProclamation":
+						//Message that says that a new Tracker has been proclaimed
+						int trackerid = Integer.parseInt(xml.getElementsByTagName("id").item(0).getTextContent());
+						Tracker t = dmt.trackerList.get(trackerid);
+						t.setMaster(true);
+						dmt.notifyTrackerChanged(t);
+						break;	
 					default:
 						break;
 					}
 						
 					
 				} catch (Exception e) {
+					e.printStackTrace();
 					System.err.println("# KeepALiveListener error: " + e.getMessage());
 				}
 			} else {
 				// This 'else' statement will happen when the JMS message sent contains a 'body' entirely full of bytes, that is, not a text message.
+				BytesMessage messageBytes = (BytesMessage) message;
+				System.out.println(DataModelTracker.idRequestUniqueID + "   "+ messageBytes);
 				try {
 					//Check if the message is for this tracker
-					if(dmt.idRequestUniqueID.equals(message.getJMSMessageID())){
+					if(DataModelTracker.idRequestUniqueID.equals(messageBytes.getStringProperty("JMSID"))){
+						System.out.println("This message is for me.");
 						//this message is for me
 						dmt.idCorrect = true;
 						//Save database in a local file
+						System.out.println(">>>>>>>>>>>>>>>>>Sending DB.");
 						BytesMessage databaseMessage = (BytesMessage) message;
 						byte[] incomingDB = new byte[(int) databaseMessage.getBodyLength()];
 						databaseMessage.readBytes(incomingDB, (int)databaseMessage.getBodyLength());

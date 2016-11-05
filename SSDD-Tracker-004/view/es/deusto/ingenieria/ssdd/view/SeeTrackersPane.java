@@ -10,6 +10,7 @@ import javax.swing.JLabel;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -143,21 +144,25 @@ public class SeeTrackersPane extends JPanel implements Observer{
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelTracker){
 			//The update is related with the value that we are observing
-			System.out.println("Updating Tracker Table...");
+			//System.out.println("Updating Tracker Table...");
 			DataModelTracker dmt = (DataModelTracker)o;
-			ArrayList<Tracker> trackers = (ArrayList<Tracker>) dmt.getPeerlist().values();
-			String[][] arrayTable = new String[trackers.size()][5];
-			for(int i =0; i<trackers.size(); i++){
-				Tracker temp = trackers.get(i);
-				arrayTable[i][0] = temp.getId()+"";
-				arrayTable[i][1] = temp.getIp();
-				arrayTable[i][2] = temp.getPort()+"";
-				arrayTable[i][3] = (temp.getMaster())? "Yes" : "No";
-				arrayTable[i][4] = new SimpleDateFormat("HH:mm:ss.S yyyy-MM-dd ").format(temp.getLastKeepAlive());
-			}
-			trackerTable.setModel(new DefaultTableModel(arrayTable, new String[] {
-				"ID tracker", "IP", "Port", "Master?", "Last keepalive"
-			}));
+			ArrayList<Tracker> trackers = new ArrayList<Tracker>(dmt.getPeerlist().values());
+			//System.out.println("Size : "+ trackers.size());
+			SwingUtilities.invokeLater(new Runnable(){public void run(){
+				String[][] arrayTable = new String[trackers.size()][5];
+				for(int i =0; i<trackers.size(); i++){
+					Tracker temp = trackers.get(i);
+					arrayTable[i][0] = temp.getId()+"";
+					arrayTable[i][1] = temp.getIp();
+					arrayTable[i][2] = temp.getPort()+"";
+					arrayTable[i][3] = (temp.getMaster())? "Yes" : "No";
+					arrayTable[i][4] = new SimpleDateFormat("HH:mm:ss.S yyyy-MM-dd ").format(temp.getLastKeepAlive());
+				}
+				trackerTable.setModel(new DefaultTableModel(arrayTable, new String[] {
+					"ID tracker", "IP", "Port", "Master?", "Last keepalive"
+				}));
+			}});
+			
 		}
 		
 	}

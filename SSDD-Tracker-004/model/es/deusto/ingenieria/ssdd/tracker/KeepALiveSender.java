@@ -4,6 +4,8 @@ import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import es.deusto.ingenieria.ssdd.util.JMSXMLMessages;
 public class KeepALiveSender implements Runnable{
@@ -23,10 +25,11 @@ public class KeepALiveSender implements Runnable{
 		while(true) {
 			String keepalivestr = new JMSXMLMessages().convertToStringKeepAlive(dmc.getId(), (dmc.isMaster()) ? "Master" : "Slave", dmc.getIp(), dmc.getPort());
 			// TODO: send keepalive message
-			Message msg;
+			TextMessage msg;
 			try {
 				msg = session.createTextMessage();
-				System.out.println(msg.getJMSMessageID());
+				msg.setText(keepalivestr);
+				//System.out.println(msg.getJMSMessageID());
 		        producer.send(msg);
 			} catch (JMSException e1) {
 				System.out.println("Error JMS with the KeepALiveSender");

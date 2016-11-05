@@ -9,6 +9,7 @@ import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
+import javax.jms.TextMessage;
 import javax.jms.Topic;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import es.deusto.ingenieria.ssdd.classes.Tracker;
@@ -37,6 +38,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	public EntranceAndKeepAlive(DataModelConfiguration dmc, DataModelTracker dmt){
 		this.dmc = dmc;
 		this.dmt = dmt;
+		this.trackerID = Integer.parseInt(dmc.getId());
 	}
 
 	@Override
@@ -50,16 +52,19 @@ public class EntranceAndKeepAlive implements Runnable{
             
             // Consumer1 subscribes to KeepAliveTopic
             MessageConsumer consumer1 = session.createConsumer(topic);
-            consumer1.setMessageListener(new KeepALiveListener(dmt, session, topic));
+            consumer1.setMessageListener(new KeepALiveListener(dmt, dmc, session, topic));
             
             connection.start();    
             
-            //Wait for 3 seconds to listen the keepalive messages
+            //Wait for 5 seconds to listen the keepalive messages
             Thread.sleep(3000);
             
             //Look at DataModel if the user selected ID is available
-            if(dmt.trackerList.containsKey(dmc.getId()))
+            System.out.println(dmc.getId());
+            if(dmt.trackerList.get(Integer.parseInt(dmc.getId()))!=null)
             {
+            	System.out.println("The selected ID is in use. Taking Random one...");
+            	dmc.setMaster(false);
             	//unavailable
             	int randomID =0;
             	do {
@@ -68,11 +73,11 @@ public class EntranceAndKeepAlive implements Runnable{
             	
             	//Select ID
             	String idselect = new JMSXMLMessages().convertToStringIDSelection(randomID);
-	            Message msg = session.createTextMessage();
-	            System.out.println(msg.getJMSMessageID());
-	            dmt.idRequestUniqueID = msg.getJMSMessageID();
+            	TextMessage msg = session.createTextMessage();
+	            msg.setText(idselect);
 	            MessageProducer producer = session.createProducer(topic);
 	            producer.send(msg);
+	            DataModelTracker.idRequestUniqueID = msg.getJMSMessageID();
 	            trackerID = randomID; 
 	            //Wait 5 seconds for master response
 	            Thread.sleep(5000);
@@ -80,12 +85,16 @@ public class EntranceAndKeepAlive implements Runnable{
 	            	//Masters response is positive, so you have a database now and the ID.
 	            	//¿Add also this tracker to the list?
 	            	dmc.setMaster(false);
+	            	dmc.setId(randomID+"");
 	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), false, new Date());
 	            	dmt.trackerList.put(t.getId(), t);
 	            	//Start sending KeepALives
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
+	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
+            		dmt.threadKeepaliveChecker = new Thread(kaltc);
+	        		dmt.threadKeepaliveChecker.start();
 	            	// What do we do now with the database? where is it?
 	            }
 	            else{
@@ -104,15 +113,47 @@ public class EntranceAndKeepAlive implements Runnable{
             		Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), true, new Date());
             		dmt.trackerList.put(t.getId(), t);
             		//Initialize a new database
-            		DBManager database = new DBManager("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_master.db");
+            		DBManager database = new DBManager("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_"+EntranceAndKeepAlive.trackerID+".db");
             		//Start sending KeepALives
             		MessageProducer producer = session.createProducer(topic);
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
+	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc,  session, topic);
+            		dmt.threadKeepaliveChecker = new Thread(kaltc);
+	        		dmt.threadKeepaliveChecker.start();
             	} else { // Available: this means the ID that the user assigned to the Tracker through the GUI, is not taken!
             		// TODO: enviar el mensaje de la linea 82 pero sin RANDOM en este caso con el dmc.getID();
-            		trackerID = Integer.parseInt(dmc.getId());
+            		dmc.setMaster(false);
+            		String idselect = new JMSXMLMessages().convertToStringIDSelection(Integer.parseInt(dmc.getId()));
+    	            TextMessage msg = session.createTextMessage(idselect);
+    	            MessageProducer producer = session.createProducer(topic);
+    	            producer.send(msg);
+    	            DataModelTracker.idRequestUniqueID = msg.getJMSMessageID();
+    	            //Wait 5 seconds for master response
+    	            Thread.sleep(5000);
+    	            if(dmt.idCorrect){
+    	            	System.out.println("Correct! Your ID is available!");
+    	            	//Masters response is positive, so you have a database now and the ID.
+    	            	trackerID = Integer.parseInt(dmc.getId());
+    	            	dmc.setMaster(false);
+    	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), false, new Date());
+    	            	dmt.trackerList.put(t.getId(), t);
+    	            	//Start sending KeepALives
+                		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
+                		dmt.threadKeepaliveSender = new Thread(kaps);
+    	        		dmt.threadKeepaliveSender.start();
+    	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
+                		dmt.threadKeepaliveChecker = new Thread(kaltc);
+    	        		dmt.threadKeepaliveChecker.start();
+    	            }
+    	            else{
+    	            	System.out.println("Negative Response, search another ID!");
+    	            	//Master response is negative, so you have to start the process again
+    	            	EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt);
+    	        		dmt.threadKeepaliveListener = new Thread(keepalive);
+    	        		dmt.threadKeepaliveListener.start();
+    	            }
             	}
             	
             }
