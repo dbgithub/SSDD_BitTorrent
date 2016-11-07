@@ -43,8 +43,11 @@ public class DataModelTracker extends Observable{
 	public void startEntranceStep(DataModelConfiguration dmc) {
 		EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, this);
 		threadKeepaliveListener = new Thread(keepalive);
-		threadKeepaliveListener.start();
-		
+		threadKeepaliveListener.start();	
+	}
+	
+	public void stopEntranceStep() {
+//		if (threadKeepaliveListener.isAlive()) {threadKeepaliveListener.interrupt();}
 	}
 
 }

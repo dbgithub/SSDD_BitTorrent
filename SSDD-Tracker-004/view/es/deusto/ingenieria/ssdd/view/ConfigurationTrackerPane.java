@@ -44,7 +44,9 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 	private JTextField txtId;
 	private JRadioButton rdbtnYes;
 	private JRadioButton rdbtnNo;
+	private JButton btnStartStop;
 	private DashboardController controller;
+	private boolean trackerSetUpFinished = false;
 
 	/**
 	 * Create the application.
@@ -88,6 +90,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 
 		
 		JButton btnTestFailure = new JButton("TEST CONNECTION FAILURE");
+		btnTestFailure.setFocusPainted(false);
 		btnTestFailure.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -99,11 +102,19 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		btnTestFailure.setForeground(Color.WHITE);
 		btnTestFailure.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		
-		JButton btnStartStop = new JButton("Start / Stop");
+		btnStartStop = new JButton("Start / Stop");
+		btnStartStop.setFocusPainted(false);
 		btnStartStop.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				controller.startStopFunction(txtIP.getText(), txtId.getText(), txtPort.getText());
+				if (!trackerSetUpFinished) {
+					controller.startStopFunction(txtIP.getText(), txtId.getText(), txtPort.getText(), true);
+					btnStartStop.setBackground(new Color(128,0,0));
+					btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 14));
+					btnStartStop.setText("setup in progress....");
+				} else {
+					resetStartStopBtnState();
+				}
 			}
 		});
 		btnStartStop.setBackground(new Color(50, 205, 50));
@@ -250,6 +261,14 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		TrackerConfiguration.setLayout(groupLayout);
 	}
 
+	private void resetStartStopBtnState() {
+		controller.startStopFunction(null, null, null, false);
+		btnStartStop.setBackground(new Color(50, 205, 50));
+		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		btnStartStop.setText("Start / Stop");
+		trackerSetUpFinished = false;
+	}
+	
 	/**
 	 * This method is called from the Model side, to provoke certain changes in the View. 
 	 */
@@ -262,7 +281,9 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 			txtIP.setText(dmc.getIp());
 			txtPort.setText(dmc.getPort()+"");
 			if (dmc.isMaster()) {rdbtnYes.setSelected(true);}  else {rdbtnNo.setSelected(true);};
+			if (dmc.isTrackerSetUpFinished()) {trackerSetUpFinished = true; resetStartStopBtnState(); }
 		}
 		
 	}
+	
 }

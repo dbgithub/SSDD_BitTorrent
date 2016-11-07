@@ -12,12 +12,14 @@ public class DataModelConfiguration extends Observable{
 	private int port;
 	private String id;
 	private boolean master;
+	private boolean trackerSetUpFinished;
 	
 	public DataModelConfiguration(String ip, int port, String id) {
 		super();
 		this.ip = ip;
 		this.port = port;
 		this.id = id;
+		this.trackerSetUpFinished = false;
 	}
 
 	public DataModelConfiguration() {
@@ -63,9 +65,15 @@ public class DataModelConfiguration extends Observable{
 		setChanged();
 	    notifyObservers();
 	}
-	
-	
-	
-	
+
+	public boolean isTrackerSetUpFinished() {
+		return trackerSetUpFinished;
+	}
+
+	public void setTrackerSetUpFinished(boolean bol) {
+		this.trackerSetUpFinished = bol;
+		setChanged();
+	    notifyObservers();
+	}
 
 }

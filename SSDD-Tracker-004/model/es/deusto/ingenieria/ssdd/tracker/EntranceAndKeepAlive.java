@@ -21,12 +21,13 @@ import es.deusto.ingenieria.ssdd.util.JMSXMLMessages;
 /**
  * This class represents the initialization process of a tracker.
  * 1) This Runnable class gets access to the "KeepAliveTopic" topic through JMS
- * 2) Waits for 3 seconds listening to Keepalive messages
+ * 2) Waits for 5 seconds listening to Keepalive messages
  * 3) Evaluates whether the ID introduced by the user is taken or not comparing it with the tracker list
  * 		3.1) If the tracker list is empty, this means that the current tracker is actually the master: the tracker master is created + its own database
  * 		3.2) If the ID collides with an already existing one, a randomly chosen ID is selected + a JMS message (IDSelection) is sent to the master
  * 4) The trackers starts sending Keepalive messages 
- * @author kevin
+ * 5) Afterwards, a thread is started to check whether any of the trackers shutdown or not.
+ * @author kevin & aitor
  *
  */
 public class EntranceAndKeepAlive implements Runnable{
@@ -56,22 +57,22 @@ public class EntranceAndKeepAlive implements Runnable{
             
             connection.start();    
             
-            //Wait for 5 seconds to listen the keepalive messages
-            Thread.sleep(3000);
+            //Wait 5 seconds to listen the keepalive messages
+            Thread.sleep(5000);
             
             //Look at DataModel if the user selected ID is available
-            System.out.println(dmc.getId());
+            System.out.println("You have chosen the following ID='"+dmc.getId()+"', checking for ID availability...");
             if(dmt.trackerList.get(Integer.parseInt(dmc.getId()))!=null)
             {
-            	System.out.println("The selected ID is in use. Taking Random one...");
+            	// The tracker ID is not available, therefore, we assign a random one
+            	System.out.println("The selected ID is in use. Taking random one...");
             	dmc.setMaster(false);
-            	//unavailable
             	int randomID =0;
             	do {
             		randomID = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
 				} while (dmt.trackerList.containsKey(randomID));
             	
-            	//Select ID
+            	// JMS message: IDSelection
             	String idselect = new JMSXMLMessages().convertToStringIDSelection(randomID);
             	TextMessage msg = session.createTextMessage();
 	            msg.setText(idselect);
@@ -83,30 +84,32 @@ public class EntranceAndKeepAlive implements Runnable{
 	            Thread.sleep(5000);
 	            if(dmt.idCorrect){
 	            	//Masters response is positive, so you have a database now and the ID.
-	            	//¿Add also this tracker to the list?
 	            	dmc.setMaster(false);
 	            	dmc.setId(randomID+"");
 	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), false, new Date());
 	            	dmt.trackerList.put(t.getId(), t);
-	            	//Start sending KeepALives
+	            	//Start sending KeepALives:
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
+	        		//Start checking the availability of the rest of the trackers:
 	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
             		dmt.threadKeepaliveChecker = new Thread(kaltc);
 	        		dmt.threadKeepaliveChecker.start();
-	            	// What do we do now with the database? where is it?
+	        		System.out.println("Your randomly chosen ID was approved by the tracker master successfuly!");
+	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
 	            }
 	            else{
 	            	//Master response is negative, so you have to start the process again
-	            	EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt);
-	        		dmt.threadKeepaliveListener = new Thread(keepalive);
-	        		dmt.threadKeepaliveListener.start();
+	            	System.out.println("Tracker master has rejected your ID, write another ID and try again.");
+//	            	EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt);
+//	        		dmt.threadKeepaliveListener = new Thread(keepalive);
+//	        		dmt.threadKeepaliveListener.start();
 	            }
             	
             }
             else{
-            	// Available or Empty: 
+            	// The tracker ID is available, we still have to check whether there exists a master or not: 
             	if(dmt.trackerList.isEmpty()){ // Empty: this means that the current running tracker is the Master
             		// We create the tracker and add it to the tracker list:
             		dmc.setMaster(true);
@@ -119,11 +122,13 @@ public class EntranceAndKeepAlive implements Runnable{
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
+	        		//Start checking the availability of the rest of the trackers:
 	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc,  session, topic);
             		dmt.threadKeepaliveChecker = new Thread(kaltc);
 	        		dmt.threadKeepaliveChecker.start();
-            	} else { // Available: this means the ID that the user assigned to the Tracker through the GUI, is not taken!
-            		// TODO: enviar el mensaje de la linea 82 pero sin RANDOM en este caso con el dmc.getID();
+	        		System.out.println("Your ID is elegible and available!");
+	        		System.out.println("You are a TRACKER MASTER with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
+            	} else { // Available: this means the ID that the user assigned to the tracker through the GUI, is not taken!
             		dmc.setMaster(false);
             		String idselect = new JMSXMLMessages().convertToStringIDSelection(Integer.parseInt(dmc.getId()));
     	            TextMessage msg = session.createTextMessage(idselect);
@@ -146,13 +151,15 @@ public class EntranceAndKeepAlive implements Runnable{
     	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
                 		dmt.threadKeepaliveChecker = new Thread(kaltc);
     	        		dmt.threadKeepaliveChecker.start();
+    	        		System.out.println("Your randomly chosen ID was approved by the tracker master successfuly!");
+    	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
     	            }
     	            else{
-    	            	System.out.println("Negative Response, search another ID!");
     	            	//Master response is negative, so you have to start the process again
-    	            	EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt);
-    	        		dmt.threadKeepaliveListener = new Thread(keepalive);
-    	        		dmt.threadKeepaliveListener.start();
+    	            	System.out.println("Tracker master has rejected your ID, write another ID and try again.");
+//    	            	EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt);
+//    	        		dmt.threadKeepaliveListener = new Thread(keepalive);
+//    	        		dmt.threadKeepaliveListener.start();
     	            }
             	}
             	
@@ -164,9 +171,8 @@ public class EntranceAndKeepAlive implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		
-		
+		dmc.setTrackerSetUpFinished(true); // This indicates that the 'entrance-and-keep-alive' process has ended.
 	}
+	
 
 }

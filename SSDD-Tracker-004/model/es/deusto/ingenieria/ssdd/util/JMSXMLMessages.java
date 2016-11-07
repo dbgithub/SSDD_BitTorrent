@@ -16,6 +16,12 @@ import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
 import org.xml.sax.SAXException;
 
+/**
+ * This utility class is used to create XML documents from a String representation of a XML document with the corresponding
+ * elements and attributes
+ * @author aitor & kevin
+ *
+ */
 public class JMSXMLMessages {
 	
 	public JMSXMLMessages(){
@@ -241,17 +247,6 @@ public class JMSXMLMessages {
 		}
 		anotherDocument.getDocumentElement().normalize();
 		return anotherDocument;
-	}
-	
-	
-	
-	public static void main(String[]args){
-		 String xml = new JMSXMLMessages().convertToStringKeepAlive("id1", "Master", "127.0.0.1", 8080);
-		 System.out.println(xml);
-		 org.w3c.dom.Document doc = new JMSXMLMessages().convertFromStringToXML(xml);
-		 System.out.println(doc.getElementsByTagName("id").item(0).getTextContent());
-		 System.out.println(doc.toString());
-		
 	}
 
 }
