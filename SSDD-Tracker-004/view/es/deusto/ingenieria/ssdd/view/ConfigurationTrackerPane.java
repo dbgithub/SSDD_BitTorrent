@@ -46,7 +46,8 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 	private JRadioButton rdbtnNo;
 	private JButton btnStartStop;
 	private DashboardController controller;
-	private boolean trackerSetUpFinished = false;
+	private boolean workingOnIt = false;
+	private boolean threadSetUpFinished = false;
 
 	/**
 	 * Create the application.
@@ -102,19 +103,32 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		btnTestFailure.setForeground(Color.WHITE);
 		btnTestFailure.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		
-		btnStartStop = new JButton("Start / Stop");
+		btnStartStop = new JButton("Start");
 		btnStartStop.setFocusPainted(false);
 		btnStartStop.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if (!trackerSetUpFinished) {
+				if (!workingOnIt) {
 					controller.startStopFunction(txtIP.getText(), txtId.getText(), txtPort.getText(), true);
 					btnStartStop.setBackground(new Color(128,0,0));
 					btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 14));
 					btnStartStop.setText("setup in progress....");	
-					trackerSetUpFinished = true;
+					workingOnIt = true;
+					threadSetUpFinished = false;
 				} else {
-					resetStartStopBtnState();
+					if(threadSetUpFinished){
+						controller.interruptAllThreads();
+						resetStartStopBtnState();
+						threadSetUpFinished = false;
+						workingOnIt = false;
+						setStartState();
+					}
+					else{
+						setStartState();
+						threadSetUpFinished = false;
+						workingOnIt = false;
+					}
+					
 				}
 			}
 		});
@@ -267,7 +281,19 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		btnStartStop.setBackground(new Color(50, 205, 50));
 		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
 		btnStartStop.setText("Start / Stop");
-		trackerSetUpFinished = false;
+		workingOnIt = false;
+	}
+	
+	private void setStopState() {
+		btnStartStop.setBackground(new Color(255, 0, 0));
+		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		btnStartStop.setText("Stop");
+	}
+	
+	private void setStartState() {
+		btnStartStop.setBackground(new Color(50, 205, 50));
+		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		btnStartStop.setText("Start");
 	}
 	
 	/**
@@ -282,7 +308,10 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 			txtIP.setText(dmc.getIp());
 			txtPort.setText(dmc.getPort()+"");
 			if (dmc.isMaster()) {rdbtnYes.setSelected(true);}  else {rdbtnNo.setSelected(true);};
-			if (dmc.isTrackerSetUpFinished()) {trackerSetUpFinished = true; resetStartStopBtnState(); }
+			if (dmc.isTrackerSetUpFinished()) {
+				threadSetUpFinished = true; 
+				setStopState();
+			}
 		}
 		
 	}
