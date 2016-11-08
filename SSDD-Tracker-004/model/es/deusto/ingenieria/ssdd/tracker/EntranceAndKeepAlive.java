@@ -128,6 +128,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		dmt.threadKeepaliveChecker.start();
 	        		System.out.println("Your ID is elegible and available!");
 	        		System.out.println("You are a TRACKER MASTER with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
+	        		Topic topic2 = session.createTopic("RepositorySyncTopic"); 
             	} else { // Available: this means the ID that the user assigned to the tracker through the GUI, is not taken!
             		dmc.setMaster(false);
             		String idselect = new JMSXMLMessages().convertToStringIDSelection(Integer.parseInt(dmc.getId()));
