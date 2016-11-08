@@ -21,6 +21,7 @@ public class KeepALiveTimeChecker implements Runnable{
 	private DataModelConfiguration dmc;
 	private Session session;
 	private Topic topic;
+	volatile boolean cancel = false;
 	
 	public KeepALiveTimeChecker(DataModelTracker dmt, DataModelConfiguration dmc, Session s, Topic t) {
 		this.session = s;
@@ -32,7 +33,7 @@ public class KeepALiveTimeChecker implements Runnable{
 	@Override
 	public void run() {
 		boolean chooseMaster = false;
-		while(true){
+		while(!cancel){
 			try {
 				for (Iterator<Tracker> iterator = dmt.trackerList.values().iterator(); iterator.hasNext(); ) {
 				    Tracker t = iterator.next();
@@ -83,5 +84,9 @@ public class KeepALiveTimeChecker implements Runnable{
 		}
 		
 	}
+	
+	public void cancel() {
+        cancel = true;
+    }
 
 }

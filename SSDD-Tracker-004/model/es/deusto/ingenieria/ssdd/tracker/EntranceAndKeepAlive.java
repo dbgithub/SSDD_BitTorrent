@@ -90,11 +90,13 @@ public class EntranceAndKeepAlive implements Runnable{
 	            	dmt.trackerList.put(t.getId(), t);
 	            	//Start sending KeepALives:
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
+            		dmt.keepaliveSender = kaps;
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
 	        		//Start checking the availability of the rest of the trackers:
 	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
-            		dmt.threadKeepaliveChecker = new Thread(kaltc);
+            		dmt.keepaliveChecker = kaltc;
+	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
 	        		dmt.threadKeepaliveChecker.start();
 	        		System.out.println("Your randomly chosen ID was approved by the tracker master successfuly!");
 	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
@@ -120,11 +122,13 @@ public class EntranceAndKeepAlive implements Runnable{
             		//Start sending KeepALives
             		MessageProducer producer = session.createProducer(topic);
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
+            		dmt.keepaliveSender = kaps;
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
 	        		//Start checking the availability of the rest of the trackers:
 	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc,  session, topic);
-            		dmt.threadKeepaliveChecker = new Thread(kaltc);
+            		dmt.keepaliveChecker = kaltc;
+	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
 	        		dmt.threadKeepaliveChecker.start();
 	        		System.out.println("Your ID is elegible and available!");
 	        		System.out.println("You are a TRACKER MASTER with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
@@ -146,10 +150,12 @@ public class EntranceAndKeepAlive implements Runnable{
     	            	dmt.trackerList.put(t.getId(), t);
     	            	//Start sending KeepALives
                 		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
+                		dmt.keepaliveSender = kaps;
                 		dmt.threadKeepaliveSender = new Thread(kaps);
     	        		dmt.threadKeepaliveSender.start();
     	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
-                		dmt.threadKeepaliveChecker = new Thread(kaltc);
+                		dmt.keepaliveChecker = kaltc;
+    	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
     	        		dmt.threadKeepaliveChecker.start();
     	        		System.out.println("Your randomly chosen ID was approved by the tracker master successfuly!");
     	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");

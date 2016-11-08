@@ -103,8 +103,10 @@ public class KeepALiveListener implements MessageListener{
 						//Message that says that a new Tracker has been proclaimed
 						int trackerid = Integer.parseInt(xml.getElementsByTagName("id").item(0).getTextContent());
 						Tracker t = dmt.trackerList.get(trackerid);
-						t.setMaster(true);
-						dmt.notifyTrackerChanged(t);
+						if(t != null){
+							t.setMaster(true);
+							dmt.notifyTrackerChanged(t);
+						}
 						break;	
 					default:
 						break;

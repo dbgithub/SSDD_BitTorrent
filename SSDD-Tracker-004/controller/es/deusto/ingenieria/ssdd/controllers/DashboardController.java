@@ -1,5 +1,8 @@
 package es.deusto.ingenieria.ssdd.controllers;
 
+import java.util.HashMap;
+
+import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import es.deusto.ingenieria.ssdd.data.DataModelPeer;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
@@ -105,5 +108,11 @@ public class DashboardController {
 	public void populateWithExampleData()
 	{
 		
+	}
+
+	public void interruptAllThreads() {
+		dmt.keepaliveChecker.cancel();
+		dmt.keepaliveSender.cancel();
+		dmt.setPeerlist(new HashMap<Integer, Tracker>());
 	}
 }

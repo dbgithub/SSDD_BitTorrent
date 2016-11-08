@@ -13,6 +13,7 @@ public class KeepALiveSender implements Runnable{
 	private DataModelConfiguration dmc;
 	private MessageProducer producer;
 	private Session session;
+	volatile boolean cancel = false;
 	
 	public KeepALiveSender(DataModelConfiguration dmc, MessageProducer producer, Session s){
 		this.dmc = dmc;
@@ -22,7 +23,7 @@ public class KeepALiveSender implements Runnable{
 
 	@Override
 	public void run() {
-		while(true) {
+		while(!cancel) {
 			String keepalivestr = new JMSXMLMessages().convertToStringKeepAlive(dmc.getId(), (dmc.isMaster()) ? "Master" : "Slave", dmc.getIp(), dmc.getPort());
 			// TODO: send keepalive message
 			TextMessage msg;
@@ -47,5 +48,9 @@ public class KeepALiveSender implements Runnable{
 		
 		
 	}
+	
+	public void cancel() {
+        cancel = true;
+    }
 
 }
