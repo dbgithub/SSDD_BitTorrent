@@ -164,12 +164,12 @@ public class EntranceAndKeepAlive implements Runnable{
             	}
             	
             }
-            
-
-			
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+            		
+		} catch (InterruptedException e) {
+			System.out.println("Se ejecuta esto???");
+			Thread.currentThread().interrupt();
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 		dmc.setTrackerSetUpFinished(true); // This indicates that the 'entrance-and-keep-alive' process has ended.
 	}

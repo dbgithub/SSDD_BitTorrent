@@ -47,7 +47,8 @@ public class DataModelTracker extends Observable{
 	}
 	
 	public void stopEntranceStep() {
-//		if (threadKeepaliveListener.isAlive()) {threadKeepaliveListener.interrupt();}
+		System.out.println("Holaaaaaaaaa!");
+		if (threadKeepaliveListener.isAlive()) {threadKeepaliveListener.interrupt();}
 	}
 
 }

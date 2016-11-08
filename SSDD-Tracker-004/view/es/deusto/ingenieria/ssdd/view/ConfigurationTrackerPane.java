@@ -111,7 +111,8 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 					controller.startStopFunction(txtIP.getText(), txtId.getText(), txtPort.getText(), true);
 					btnStartStop.setBackground(new Color(128,0,0));
 					btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 14));
-					btnStartStop.setText("setup in progress....");
+					btnStartStop.setText("setup in progress....");	
+					trackerSetUpFinished = true;
 				} else {
 					resetStartStopBtnState();
 				}
