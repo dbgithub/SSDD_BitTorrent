@@ -48,6 +48,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 	private DashboardController controller;
 	private boolean workingOnIt = false;
 	private boolean threadSetUpFinished = false;
+	private boolean availabilityToReceiveUpdates = true;
 
 	/**
 	 * Create the application.
@@ -73,7 +74,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 	private void initialize() {
 		TrackerConfiguration = this;
 		TrackerConfiguration.setMinimumSize(new Dimension(600, 480));
-		TrackerConfiguration.setBounds(100, 100, 450, 300);
+		TrackerConfiguration.setBounds(100, 100, 600, 480);
 		TrackerConfiguration.setBackground(new Color(0, 102, 153));
 		
 		JLabel lblTrackerConfiguring = new JLabel("Configuring Tracker");
@@ -121,10 +122,9 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 						resetStartStopBtnState();
 						threadSetUpFinished = false;
 						workingOnIt = false;
-						setStartState();
 					}
 					else{
-						setStartState();
+						resetStartStopBtnState();
 						threadSetUpFinished = false;
 						workingOnIt = false;
 					}
@@ -278,21 +278,18 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 
 	private void resetStartStopBtnState() {
 		controller.startStopFunction(null, null, null, false);
-		btnStartStop.setBackground(new Color(50, 205, 50));
-		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
-		btnStartStop.setText("Start / Stop");
-		workingOnIt = false;
+		setStartState();
 	}
 	
 	private void setStopState() {
 		btnStartStop.setBackground(new Color(255, 0, 0));
-		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 30));
 		btnStartStop.setText("Stop");
 	}
 	
 	private void setStartState() {
 		btnStartStop.setBackground(new Color(50, 205, 50));
-		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 30));
 		btnStartStop.setText("Start");
 	}
 	
@@ -312,6 +309,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 				threadSetUpFinished = true; 
 				setStopState();
 			}
+			availabilityToReceiveUpdates = dmc.isAvailabilityToReceiveUpdates();
 		}
 		
 	}

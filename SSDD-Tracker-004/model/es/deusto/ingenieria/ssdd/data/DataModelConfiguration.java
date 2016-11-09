@@ -13,6 +13,7 @@ public class DataModelConfiguration extends Observable{
 	private String id;
 	private boolean master;
 	private boolean trackerSetUpFinished;
+	private boolean availabilityToReceiveUpdates;
 	
 	public DataModelConfiguration(String ip, int port, String id) {
 		super();
@@ -20,6 +21,7 @@ public class DataModelConfiguration extends Observable{
 		this.port = port;
 		this.id = id;
 		this.trackerSetUpFinished = false;
+		this.availabilityToReceiveUpdates = true;
 	}
 
 	public DataModelConfiguration() {
@@ -72,6 +74,16 @@ public class DataModelConfiguration extends Observable{
 
 	public void setTrackerSetUpFinished(boolean bol) {
 		this.trackerSetUpFinished = bol;
+		setChanged();
+	    notifyObservers();
+	}
+
+	public boolean isAvailabilityToReceiveUpdates() {
+		return availabilityToReceiveUpdates;
+	}
+
+	public void setAvailabilityToReceiveUpdates(boolean bol) {
+		this.availabilityToReceiveUpdates = bol;
 		setChanged();
 	    notifyObservers();
 	}

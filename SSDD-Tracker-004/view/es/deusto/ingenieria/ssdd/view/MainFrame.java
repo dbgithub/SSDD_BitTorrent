@@ -67,7 +67,7 @@ public class MainFrame extends JFrame{
 		this.dc.setTrackerObserver(trackers);
 		
 		this.setMinimumSize(new Dimension(600, 480));
-		this.setBounds(100, 100, 450, 300);
+		this.setBounds(100, 100, 600, 480);
 		getContentPane().add(tabbedPane);
 		this.setVisible(true);
 		

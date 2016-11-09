@@ -62,10 +62,9 @@ public class SeeTrackersPane extends JPanel implements Observer{
 	 */
 	@SuppressWarnings("serial")
 	private void initialize() {
-		System.out.println(this.controller);
 		TrackersSee = this;
 		TrackersSee.setMinimumSize(new Dimension(600, 480));
-		TrackersSee.setBounds(100, 100, 450, 300);
+		TrackersSee.setBounds(100, 100, 600, 480);
 		TrackersSee.setBackground(new Color(0, 102, 153));
 		
 		JLabel lblSeeTrackers = new JLabel("See Trackers");

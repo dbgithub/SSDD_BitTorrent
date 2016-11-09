@@ -34,13 +34,6 @@ public class DashboardController {
 	}
 	
 	/**
-	 * Method that displays a Example Message, just to ensure that the connection between the controller and the view is correct.
-	 */
-	public void showExampleMessage() {
-		System.out.println("This message is called by Dashboard and executed in DashboardController");
-	}
-	
-	/**
 	 * Method to add an observer to the DataModelConfiguration
 	 * @param ctp ConfigurationTrackerPane related with the DataModel
 	 */
@@ -90,29 +83,25 @@ public class DashboardController {
 	 */
 	public void startStopFunction(String ip, String id, String port, boolean start) {
 		if (start) {
-			System.out.println("Starting entrance-and-keep-alive process");
+			System.out.println("Starting entrance-and-keepalive process...");
 			// This code will change in the future in accordance with the data inputed by the user.
 			dmc.setId(id);
 			dmc.setIp(ip);
 			dmc.setPort(Integer.parseInt(port));
 			dmt.startEntranceStep(dmc);
 		} else {
-			System.out.println("Stoping entrance-and-keep-alive process");
+			System.out.println("Stoping entrance-and-keepalive process...");
 			dmt.stopEntranceStep();
 		}	
 	}
 	
-	/**
-	 * Provisional method to populate with example data some of the tables
-	 */
-	public void populateWithExampleData()
-	{
-		
-	}
-
 	public void interruptAllThreads() {
 		dmt.keepaliveChecker.cancel();
 		dmt.keepaliveSender.cancel();
 		dmt.setPeerlist(new HashMap<Integer, Tracker>());
+	}
+	
+	public void sendRepositoryUpdateRequestMessage() {
+		dmt.sendRepositoryUpdateRequestMessage();
 	}
 }

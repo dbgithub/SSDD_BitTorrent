@@ -56,10 +56,9 @@ public class SeePeersPane extends JPanel implements Observer{
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		System.out.println(this.controller);
 		PeersSee = this;
 		PeersSee.setMinimumSize(new Dimension(600, 480));
-		PeersSee.setBounds(100, 100, 450, 300);
+		PeersSee.setBounds(100, 100, 600, 480);
 		PeersSee.setBackground(new Color(0, 102, 153));
 		
 		JLabel lblPeersList = new JLabel("List of peers");

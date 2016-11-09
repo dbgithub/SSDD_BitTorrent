@@ -61,7 +61,7 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 	private void initialize() {
 		SwarmsSee = this;
 		SwarmsSee.setMinimumSize(new Dimension(600, 480));
-		SwarmsSee.setBounds(100, 100, 450, 300);
+		SwarmsSee.setBounds(100, 100, 600, 480);
 		SwarmsSee.setBackground(new Color(0, 102, 153));
 		
 		JLabel lblSeeSwarms = new JLabel("See Swarms");
@@ -103,7 +103,6 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 					JTable tempTable = (JTable)e.getSource();
 				    System.out.println("double clicked in row#" + (tempTable.rowAtPoint(e.getPoint()) + 1));
 				    ((MainFrame) mainFrame).addPeersListTab();
-				    controller.showExampleMessage(); // TO DELETE line, it's just for testing purposes
 				  }
 			}
 		});
