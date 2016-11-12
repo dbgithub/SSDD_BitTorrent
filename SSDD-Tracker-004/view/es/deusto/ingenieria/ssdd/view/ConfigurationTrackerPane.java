@@ -28,6 +28,8 @@ import javax.swing.JRadioButton;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import es.deusto.ingenieria.ssdd.controllers.*;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 /**
  * This class is part of the GUI. It corresponds to the inner content of one of the tabs
@@ -45,6 +47,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 	private JRadioButton rdbtnYes;
 	private JRadioButton rdbtnNo;
 	private JButton btnStartStop;
+	private JButton btnIncomingPeer;
 	private DashboardController controller;
 	private boolean workingOnIt = false;
 	private boolean threadSetUpFinished = false;
@@ -97,6 +100,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				controller.testFailure();
+				setStartState();
 			}
 		});
 		btnTestFailure.setBorder(new MatteBorder(3, 3, 3, 3, (Color) new Color(0, 0, 0)));
@@ -139,26 +143,44 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		JLabel lblfootnote = new JLabel("(*) Read-only values");
 		lblfootnote.setForeground(Color.WHITE);
 		lblfootnote.setFont(new Font("Symbola", Font.BOLD, 12));
+		
+		btnIncomingPeer = new JButton("SIMULATE NEW INCOMING PEER");
+		btnIncomingPeer.setEnabled(false);
+		btnIncomingPeer.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				controller.sendRepositoryUpdateRequestMessage();
+			}
+		});
+		btnIncomingPeer.setForeground(Color.WHITE);
+		btnIncomingPeer.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		btnIncomingPeer.setFocusPainted(false);
+		btnIncomingPeer.setBorder(new MatteBorder(3, 3, 3, 3, (Color) new Color(0, 0, 0)));
+		btnIncomingPeer.setBackground(new Color(153, 51, 204));
 		GroupLayout groupLayout = new GroupLayout(TrackerConfiguration);
 		groupLayout.setHorizontalGroup(
 			groupLayout.createParallelGroup(Alignment.TRAILING)
 				.addGroup(groupLayout.createSequentialGroup()
 					.addGap(111)
-					.addComponent(lblTrackerConfiguring, GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
+					.addComponent(lblTrackerConfiguring, GroupLayout.DEFAULT_SIZE, 379, Short.MAX_VALUE)
 					.addGap(110))
 				.addGroup(groupLayout.createSequentialGroup()
 					.addContainerGap()
 					.addComponent(btnTestFailure)
-					.addContainerGap(446, Short.MAX_VALUE))
+					.addPreferredGap(ComponentPlacement.UNRELATED)
+					.addComponent(btnIncomingPeer, GroupLayout.PREFERRED_SIZE, 265, GroupLayout.PREFERRED_SIZE)
+					.addContainerGap(90, Short.MAX_VALUE))
 				.addGroup(groupLayout.createSequentialGroup()
-					.addGap(62)
 					.addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-						.addComponent(panel, GroupLayout.DEFAULT_SIZE, 555, Short.MAX_VALUE)
-						.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-							.addGroup(groupLayout.createSequentialGroup()
-								.addGap(12)
-								.addComponent(lblfootnote, GroupLayout.PREFERRED_SIZE, 194, GroupLayout.PREFERRED_SIZE))
-							.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 222, GroupLayout.PREFERRED_SIZE)))
+						.addGroup(groupLayout.createSequentialGroup()
+							.addGap(62)
+							.addComponent(panel, GroupLayout.DEFAULT_SIZE, 476, Short.MAX_VALUE))
+						.addGroup(groupLayout.createSequentialGroup()
+							.addContainerGap()
+							.addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+								.addGroup(groupLayout.createSequentialGroup()
+									.addGap(12)
+									.addComponent(lblfootnote, GroupLayout.PREFERRED_SIZE, 194, GroupLayout.PREFERRED_SIZE))
+								.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 222, GroupLayout.PREFERRED_SIZE))))
 					.addGap(62))
 		);
 		groupLayout.setVerticalGroup(
@@ -168,12 +190,14 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 					.addComponent(lblTrackerConfiguring)
 					.addGap(31)
 					.addComponent(panel, GroupLayout.PREFERRED_SIZE, 141, GroupLayout.PREFERRED_SIZE)
-					.addGap(72)
+					.addGap(43)
 					.addComponent(btnStartStop, GroupLayout.PREFERRED_SIZE, 77, GroupLayout.PREFERRED_SIZE)
 					.addPreferredGap(ComponentPlacement.RELATED)
 					.addComponent(lblfootnote)
-					.addPreferredGap(ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-					.addComponent(btnTestFailure)
+					.addPreferredGap(ComponentPlacement.RELATED, 59, Short.MAX_VALUE)
+					.addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+						.addComponent(btnTestFailure)
+						.addComponent(btnIncomingPeer, GroupLayout.PREFERRED_SIZE, 31, GroupLayout.PREFERRED_SIZE))
 					.addContainerGap())
 		);
 		GridBagLayout gbl_panel = new GridBagLayout();
@@ -285,6 +309,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		btnStartStop.setBackground(new Color(255, 0, 0));
 		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 30));
 		btnStartStop.setText("Stop");
+		btnIncomingPeer.setEnabled(true);
 	}
 	
 	private void setStartState() {
@@ -309,9 +334,8 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 				threadSetUpFinished = true; 
 				setStopState();
 			}
-			availabilityToReceiveUpdates = dmc.isAvailabilityToReceiveUpdates();
+			availabilityToReceiveUpdates = dmc.isAvailableToReceiveUpdates();
 		}
 		
 	}
-	
 }

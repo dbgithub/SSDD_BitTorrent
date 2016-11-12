@@ -1,6 +1,11 @@
 package es.deusto.ingenieria.ssdd.data;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Observable;
+
+import es.deusto.ingenieria.ssdd.tracker.EntranceAndKeepAlive;
 
 /**
  * This class represents the business logic of what happens when the user configures the Tracker within the corresponding GUI
@@ -13,7 +18,7 @@ public class DataModelConfiguration extends Observable{
 	private String id;
 	private boolean master;
 	private boolean trackerSetUpFinished;
-	private boolean availabilityToReceiveUpdates;
+	private boolean availableToReceiveUpdates;
 	
 	public DataModelConfiguration(String ip, int port, String id) {
 		super();
@@ -21,11 +26,12 @@ public class DataModelConfiguration extends Observable{
 		this.port = port;
 		this.id = id;
 		this.trackerSetUpFinished = false;
-		this.availabilityToReceiveUpdates = true;
+		this.availableToReceiveUpdates = true;
 	}
 
 	public DataModelConfiguration() {
-		
+		this.trackerSetUpFinished = false;
+		this.availableToReceiveUpdates = true;
 	}
 
 	public String getIp() {
@@ -78,14 +84,28 @@ public class DataModelConfiguration extends Observable{
 	    notifyObservers();
 	}
 
-	public boolean isAvailabilityToReceiveUpdates() {
-		return availabilityToReceiveUpdates;
+	public boolean isAvailableToReceiveUpdates() {
+		return availableToReceiveUpdates;
 	}
 
 	public void setAvailabilityToReceiveUpdates(boolean bol) {
-		this.availabilityToReceiveUpdates = bol;
+		this.availableToReceiveUpdates = bol;
 		setChanged();
 	    notifyObservers();
+	}
+	
+	/**
+	 * Destroys/Eliminates the database of the corresponding tracker given the fact that the tracker has shutdown.
+	 */
+	public void destroyDataRepository() {
+		File f = new File("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_"+this.id+".db");
+		try {
+			Files.deleteIfExists(f.toPath());
+			System.out.println("Database from tracker with ID='"+this.id+"' removed successfuly! :)");
+		} catch (IOException e) {
+			System.err.println("ERROR deleting the database in 'destroyDataRepository' method!!");
+			e.printStackTrace();
+		}
 	}
 
 }

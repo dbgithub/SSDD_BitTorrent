@@ -16,6 +16,14 @@ public class Swarm {
 	private int totalLeecher; // Peers who are downloading the file
 	private HashMap<String, Peer> peerList; //Peer list
 	
+	public Swarm(String infoHash, String file, int size) {
+		this.infoHash = infoHash;
+		this.swarmFile = file;
+		this.size = size;
+		this.totalLeecher = 0;
+		this.totalSeeders = 0;
+		this.peerList = new HashMap<String, Peer>();
+	}
 	
 	public String getInfoHash() {
 		return infoHash;
@@ -52,6 +60,9 @@ public class Swarm {
 	}
 	public void setPeerList(HashMap<String, Peer> peerList) {
 		this.peerList = peerList;
+	}
+	public void addPeerToList(String PeerID, Peer p) {
+		this.peerList.put(PeerID, p);
 	}
 	
 

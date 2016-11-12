@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.Observable;
 
 import es.deusto.ingenieria.ssdd.classes.Tracker;
+import es.deusto.ingenieria.ssdd.redundancy.RepositorySyncListener;
 import es.deusto.ingenieria.ssdd.tracker.EntranceAndKeepAlive;
 import es.deusto.ingenieria.ssdd.tracker.KeepALiveSender;
 import es.deusto.ingenieria.ssdd.tracker.KeepALiveTimeChecker;
-import es.deusto.ingenieria.ssdd.tracker.RepositorySyncListener;
 
 /**
  * This class deals with the business logic of everything related to the list of Trackers
@@ -16,26 +16,25 @@ import es.deusto.ingenieria.ssdd.tracker.RepositorySyncListener;
  */
 public class DataModelTracker extends Observable{
 	
-	public HashMap<Integer, Tracker> trackerList; // This is a list of key-value pairs for each and every tracker
-	public static String idRequestUniqueID = ""; // This is the ID of the JMS message to make sure that the message from the master goes just to the corresponding tracker.
+	public HashMap<Integer, Tracker> trackerList; // A list of key-value pairs for each and every tracker
+	public static String idRequestUniqueID = ""; // The ID of the JMS message to make sure that the message from the master goes just to the corresponding tracker.
 	public boolean idCorrect; // this boolean indicates at the end, whether the master has rejected the message or not. That is, if the message the tracker was reading was actually issued to him or not.
 	public Thread threadKeepaliveListener; // The current tracker launches a Thread to handle (listen) for incoming Keepalive messages.
-	public Thread threadKeepaliveSender;
-	public Thread threadKeepaliveChecker;
-	public KeepALiveSender keepaliveSender; // After the tracker has been assigned an ID and saved within the tracker list, now, the tracker 
-	// launches a Thread to handle the process of sending Keepalive messages
-	public KeepALiveTimeChecker keepaliveChecker;
-	public RepositorySyncListener repositorySyncListener;
+	public Thread threadKeepaliveSender; // The current tracker launches a Thread that sends Keepalive messages periodically
+	public Thread threadKeepaliveChecker; // The current tracker launches a Thread that makes sure that old or lost trackers are removed from the trackers' list.
+	public KeepALiveSender keepaliveSender; // Runnable class that handles the process of sending Keepalive messages.
+	public KeepALiveTimeChecker keepaliveChecker; // Runnable class that ensures no old or lost trackers remains in the trackers' list.
+	public RepositorySyncListener repositorySyncListener; // JMS listener class that handles the process of sending Keepalive messages.
 	
 	public DataModelTracker(){
 		trackerList = new HashMap<Integer, Tracker>();
 	}
 	
-	public HashMap<Integer, Tracker> getPeerlist() {
+	public HashMap<Integer, Tracker> getTrackerlist() {
 		return trackerList;
 	}
 
-	public void setPeerlist(HashMap<Integer, Tracker> trackerList) {
+	public void setTrackerlist(HashMap<Integer, Tracker> trackerList) {
 		this.trackerList = trackerList;
 		setChanged();
 	    notifyObservers();
@@ -46,8 +45,8 @@ public class DataModelTracker extends Observable{
 		notifyObservers(t);
 	}
 
-	public void startEntranceStep(DataModelConfiguration dmc) {
-		EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, this);
+	public void startEntranceStep(DataModelConfiguration dmc, DataModelSwarm dms) {
+		EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, this, dms);
 		threadKeepaliveListener = new Thread(keepalive);
 		threadKeepaliveListener.start();	
 	}

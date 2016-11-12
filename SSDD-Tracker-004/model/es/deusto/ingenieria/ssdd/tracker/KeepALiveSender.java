@@ -25,7 +25,6 @@ public class KeepALiveSender implements Runnable{
 	public void run() {
 		while(!cancel) {
 			String keepalivestr = new JMSXMLMessages().convertToStringKeepAlive(dmc.getId(), (dmc.isMaster()) ? "Master" : "Slave", dmc.getIp(), dmc.getPort());
-			// TODO: send keepalive message
 			TextMessage msg;
 			try {
 				msg = session.createTextMessage();
@@ -41,7 +40,7 @@ public class KeepALiveSender implements Runnable{
 				// Every second, the tracker will send a Keepalive message
 				Thread.sleep(1000);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
+				System.out.println("ERRRO with Thread sleep in 'KeepALiveSender' class");
 				e.printStackTrace();
 			}
 		}

@@ -15,7 +15,9 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
+import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
+import es.deusto.ingenieria.ssdd.redundancy.RepositorySyncListener;
 import es.deusto.ingenieria.ssdd.util.JMSXMLMessages;
 
 /**
@@ -27,6 +29,7 @@ import es.deusto.ingenieria.ssdd.util.JMSXMLMessages;
  * 		3.2) If the ID collides with an already existing one, a randomly chosen ID is selected + a JMS message (IDSelection) is sent to the master
  * 4) The trackers starts sending Keepalive messages 
  * 5) Afterwards, a thread is started to check whether any of the trackers shutdown or not.
+ * 6) Independently of being a slave or master, both have to subscribe to a new topic which will handle the updates related to upcoming peers.
  * @author kevin & aitor
  *
  */
@@ -34,11 +37,14 @@ public class EntranceAndKeepAlive implements Runnable{
 	
 	private DataModelConfiguration dmc;
 	private DataModelTracker dmt;
-	public static int trackerID; // This is the ID of the tracker, the purpose is to make it available publicly to catch it whenever we want.
+	private DataModelSwarm dms;
+	public static int trackerID; // The ID of the tracker, it is static to make it publicly available.
 	
-	public EntranceAndKeepAlive(DataModelConfiguration dmc, DataModelTracker dmt){
+	@SuppressWarnings("static-access")
+	public EntranceAndKeepAlive(DataModelConfiguration dmc, DataModelTracker dmt, DataModelSwarm dms){
 		this.dmc = dmc;
 		this.dmt = dmt;
+		this.dms = dms;
 		this.trackerID = Integer.parseInt(dmc.getId());
 	}
 
@@ -61,7 +67,7 @@ public class EntranceAndKeepAlive implements Runnable{
             //Wait 5 seconds to listen the keepalive messages
             Thread.sleep(5000);
             
-            //Look at DataModel if the user selected ID is available
+            // Check whether the user selected ID is available or not
             System.out.println("You have chosen the following ID='"+dmc.getId()+"', checking for ID availability...");
             if(dmt.trackerList.get(Integer.parseInt(dmc.getId()))!=null)
             {
@@ -103,9 +109,9 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
 	        		// The slave must subscribe to the JMS topic that handles the incoming peers and their information.
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
-	        		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = 'IncomingFromMaster'", false);
+	        		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = 'IncomingFromMaster'", false); // We want to filter just messages coming from master
 	        		MessageProducer producer_slave = session.createProducer(topic2);
-	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, producer_slave, session);
+	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session);
 	        		dmt.repositorySyncListener = rsl;
 	        		consumer_slave.setMessageListener(rsl);
 	        		System.out.println("You, as a slave with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
@@ -143,14 +149,15 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		System.out.println("You are a TRACKER MASTER with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
 	        		// The tracker master must subscribe to a new JMS topic in order to handle the upcoming peers and their information.
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
-	        		MessageConsumer consumer_master = session.createConsumer(topic2);
+	        		MessageConsumer consumer_master = session.createConsumer(topic2, "Filter = 'IncomingFromSlave'", false); // We want to filter just messages coming from slaves
 	        		MessageProducer producer_master = session.createProducer(topic2);
-	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, producer_master, session);
+	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_master, session);
 	        		dmt.repositorySyncListener = rsl;
 	        		consumer_master.setMessageListener(rsl);
 	        		System.out.println("You, as a master with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
             	} else { // Available: this means the ID that the user assigned to the tracker through the GUI, is not taken!
             		dmc.setMaster(false);
+            		// JMS message: IDSelection
             		String idselect = new JMSXMLMessages().convertToStringIDSelection(Integer.parseInt(dmc.getId()));
     	            TextMessage msg = session.createTextMessage(idselect);
     	            MessageProducer producer = session.createProducer(topic);
@@ -170,6 +177,7 @@ public class EntranceAndKeepAlive implements Runnable{
                 		dmt.keepaliveSender = kaps;
                 		dmt.threadKeepaliveSender = new Thread(kaps);
     	        		dmt.threadKeepaliveSender.start();
+    	        		//Start checking the availability of the rest of the trackers:
     	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
                 		dmt.keepaliveChecker = kaltc;
     	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
@@ -178,9 +186,9 @@ public class EntranceAndKeepAlive implements Runnable{
     	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
     	        		// The slave must subscribe to the JMS topic that handles the incoming peers and their information.
     	        		// Every tracker (either slave or master) should be able to send and receive messages:
-    	        		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = 'IncomingFromMaster'", false);
+    	        		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = 'IncomingFromMaster'", false); // We want to filter just messages coming from master
     	        		MessageProducer producer_slave = session.createProducer(topic2);
-    	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, producer_slave, session);
+    	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session);
     	        		dmt.repositorySyncListener = rsl;
     	        		consumer_slave.setMessageListener(rsl);
     	        		System.out.println("You, as a slave with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");

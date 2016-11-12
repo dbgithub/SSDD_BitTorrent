@@ -11,7 +11,6 @@ import es.deusto.ingenieria.ssdd.view.ConfigurationTrackerPane;
 import es.deusto.ingenieria.ssdd.view.SeePeersPane;
 import es.deusto.ingenieria.ssdd.view.SeeSwarmsPane;
 import es.deusto.ingenieria.ssdd.view.SeeTrackersPane;
-import es.deusto.ingenieria.ssdd.view.MainFrame;
 
 /**
  * This is the Controller for the application. Everything has to go through this class theoretically.
@@ -70,7 +69,9 @@ public class DashboardController {
 	 * 
 	 */
 	public void testFailure() {
-		System.out.println("Test Failure Button");
+		System.out.println("Test-Failure-Button pressed!");
+		dmt.stopEntranceStep();
+		this.interruptAllThreads();
 	}
 
 	/**
@@ -88,7 +89,7 @@ public class DashboardController {
 			dmc.setId(id);
 			dmc.setIp(ip);
 			dmc.setPort(Integer.parseInt(port));
-			dmt.startEntranceStep(dmc);
+			dmt.startEntranceStep(dmc, dms);
 		} else {
 			System.out.println("Stoping entrance-and-keepalive process...");
 			dmt.stopEntranceStep();
@@ -98,7 +99,8 @@ public class DashboardController {
 	public void interruptAllThreads() {
 		dmt.keepaliveChecker.cancel();
 		dmt.keepaliveSender.cancel();
-		dmt.setPeerlist(new HashMap<Integer, Tracker>());
+		dmt.setTrackerlist(new HashMap<Integer, Tracker>());
+		dmc.destroyDataRepository();
 	}
 	
 	public void sendRepositoryUpdateRequestMessage() {
