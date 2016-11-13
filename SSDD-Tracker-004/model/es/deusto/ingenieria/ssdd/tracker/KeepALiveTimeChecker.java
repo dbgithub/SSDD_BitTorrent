@@ -11,7 +11,10 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
+import org.sqlite.core.DB;
+
 import es.deusto.ingenieria.ssdd.classes.Tracker;
+import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
@@ -25,13 +28,15 @@ public class KeepALiveTimeChecker implements Runnable{
 	private DataModelSwarm dms;
 	private Session session;
 	private Topic topic;
+	private DBManager database;
 	volatile boolean cancel = false;
 	
-	public KeepALiveTimeChecker(DataModelTracker dmt, DataModelConfiguration dmc, Session s, Topic t) {
+	public KeepALiveTimeChecker(DataModelTracker dmt, DataModelConfiguration dmc, Session s, Topic t, DBManager database) {
 		this.session = s;
 		this.topic = t;
 		this.dmt = dmt;
 		this.dmc = dmc;
+		this.database = database;
 	}
 
 	@Override
@@ -78,7 +83,7 @@ public class KeepALiveTimeChecker implements Runnable{
 					        Topic topic2 = session.createTopic("RepositorySyncTopic"); 
 					        MessageConsumer consumer_master = session.createConsumer(topic2, "Filter = 'IncomingFromSlave'", false); // We want to filter just messages coming from slaves
 					        MessageProducer producer_master = session.createProducer(topic2);
-				      		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_master, session);
+				      		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_master, session, database);
 			        		dmt.repositorySyncListener = rsl;
 			        		consumer_master.setMessageListener(rsl);
 			        		System.out.println("You, as a master with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");

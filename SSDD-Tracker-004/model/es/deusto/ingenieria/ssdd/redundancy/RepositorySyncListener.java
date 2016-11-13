@@ -14,6 +14,7 @@ import org.w3c.dom.Document;
 
 import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
+import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
@@ -34,14 +35,16 @@ public class RepositorySyncListener implements MessageListener{
 	private HashMap<String, Boolean> slaveResponseAvailabilityHashMap; // This HashMap stores True or False depending on the availability of the tracker slave
 	private RepositorySyncTimeout repoSyncTimeout; // Runnable class that ensures that the communication between the master and slaves is not broken. After the timeout is fired, the same message is sent to the master!
 	private Thread timeout; // Tracker slave will launch this Thread to ensure that the communication between the master and slaves is not broken.
+	private DBManager database;
 	
-	public RepositorySyncListener(DataModelTracker dmt, DataModelConfiguration dmc, DataModelSwarm dms, MessageProducer p, Session s) {
+	public RepositorySyncListener(DataModelTracker dmt, DataModelConfiguration dmc, DataModelSwarm dms, MessageProducer p, Session s, DBManager db) {
 		this.dmt = dmt;
 		this.dmc = dmc;
 		this.dms = dms;
 		this.producer = p;
 		this.session = s;
 		this.slaveResponseAvailabilityHashMap = new HashMap<String, Boolean>();
+		this.database = db;
 	}
 	
 	@Override
@@ -189,6 +192,12 @@ public class RepositorySyncListener implements MessageListener{
 		System.out.println("Peer ID: " + peerID);
 		System.out.println("Peer IP: " + peerIP);
 		System.out.println("Peer Port: " + peerPort);
+		
+		//Adding to database
+		database.insertTorrent(infoHash);
+		database.insertPeer(Integer.parseInt(peerID), peerIP, peerPort);
+		//How to UPDATE the bytes downloaded and left?
+		database.insertPeer_Torrent(Integer.parseInt(peerID), infoHash, 0, 0, 0, 0);
 		
 	}
 	

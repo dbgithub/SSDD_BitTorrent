@@ -91,6 +91,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	            Thread.sleep(5000);
 	            if(dmt.idCorrect){
 	            	//Masters response is positive, so you have a database now and the ID.
+					DBManager database = new DBManager("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_"+EntranceAndKeepAlive.trackerID+".db");
 	            	dmc.setMaster(false);
 	            	dmc.setId(randomID+"");
 	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), false, new Date());
@@ -101,7 +102,7 @@ public class EntranceAndKeepAlive implements Runnable{
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
 	        		//Start checking the availability of the rest of the trackers:
-	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
+	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic, database);
             		dmt.keepaliveChecker = kaltc;
 	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
 	        		dmt.threadKeepaliveChecker.start();
@@ -111,7 +112,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
 	        		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = 'IncomingFromMaster'", false); // We want to filter just messages coming from master
 	        		MessageProducer producer_slave = session.createProducer(topic2);
-	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session);
+	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session, database);
 	        		dmt.repositorySyncListener = rsl;
 	        		consumer_slave.setMessageListener(rsl);
 	        		System.out.println("You, as a slave with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
@@ -134,6 +135,7 @@ public class EntranceAndKeepAlive implements Runnable{
             		dmt.trackerList.put(t.getId(), t);
             		//Initialize a new database
             		DBManager database = new DBManager("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_"+EntranceAndKeepAlive.trackerID+".db");
+            		database.initDB();
             		//Start sending KeepALives
             		MessageProducer producer = session.createProducer(topic);
             		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
@@ -141,7 +143,7 @@ public class EntranceAndKeepAlive implements Runnable{
             		dmt.threadKeepaliveSender = new Thread(kaps);
 	        		dmt.threadKeepaliveSender.start();
 	        		//Start checking the availability of the rest of the trackers:
-	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc,  session, topic);
+	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc,  session, topic, database);
             		dmt.keepaliveChecker = kaltc;
 	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
 	        		dmt.threadKeepaliveChecker.start();
@@ -151,7 +153,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
 	        		MessageConsumer consumer_master = session.createConsumer(topic2, "Filter = 'IncomingFromSlave'", false); // We want to filter just messages coming from slaves
 	        		MessageProducer producer_master = session.createProducer(topic2);
-	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_master, session);
+	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_master, session, database);
 	        		dmt.repositorySyncListener = rsl;
 	        		consumer_master.setMessageListener(rsl);
 	        		System.out.println("You, as a master with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
@@ -168,6 +170,7 @@ public class EntranceAndKeepAlive implements Runnable{
     	            if(dmt.idCorrect){
     	            	System.out.println("Correct! Your ID is available!");
     	            	//Masters response is positive, so you have a database now and the ID.
+						DBManager database = new DBManager("model/es/deusto/ingenieria/ssdd/redundancy/databases/TrackerDB_"+EntranceAndKeepAlive.trackerID+".db");
     	            	trackerID = Integer.parseInt(dmc.getId());
     	            	dmc.setMaster(false);
     	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), false, new Date());
@@ -178,7 +181,7 @@ public class EntranceAndKeepAlive implements Runnable{
                 		dmt.threadKeepaliveSender = new Thread(kaps);
     	        		dmt.threadKeepaliveSender.start();
     	        		//Start checking the availability of the rest of the trackers:
-    	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic);
+    	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic, database);
                 		dmt.keepaliveChecker = kaltc;
     	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
     	        		dmt.threadKeepaliveChecker.start();
@@ -188,7 +191,7 @@ public class EntranceAndKeepAlive implements Runnable{
     	        		// Every tracker (either slave or master) should be able to send and receive messages:
     	        		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = 'IncomingFromMaster'", false); // We want to filter just messages coming from master
     	        		MessageProducer producer_slave = session.createProducer(topic2);
-    	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session);
+    	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session, database);
     	        		dmt.repositorySyncListener = rsl;
     	        		consumer_slave.setMessageListener(rsl);
     	        		System.out.println("You, as a slave with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
