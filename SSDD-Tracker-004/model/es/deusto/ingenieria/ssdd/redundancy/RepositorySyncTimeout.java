@@ -26,7 +26,9 @@ public class RepositorySyncTimeout implements Runnable{
 		while(!cancel) {
 			try {
 				Thread.sleep(3000);
-				producer.send(txtmsg);
+				if(!cancel){
+					producer.send(txtmsg);
+				}
 			} catch (InterruptedException e) {
 				System.out.println("ERROR in 'RepositorySyncTimeout' runnable class");
 				e.printStackTrace();

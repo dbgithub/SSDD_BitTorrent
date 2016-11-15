@@ -11,8 +11,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 import javax.jms.Topic;
 
-import org.sqlite.core.DB;
-
 import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;

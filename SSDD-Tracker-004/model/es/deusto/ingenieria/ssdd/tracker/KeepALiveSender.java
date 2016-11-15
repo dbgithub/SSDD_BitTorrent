@@ -1,7 +1,6 @@
 package es.deusto.ingenieria.ssdd.tracker;
 
 import javax.jms.JMSException;
-import javax.jms.Message;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;

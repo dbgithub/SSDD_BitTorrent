@@ -18,7 +18,6 @@ import javax.jms.Topic;
 import org.w3c.dom.Document;
 
 import es.deusto.ingenieria.ssdd.classes.Tracker;
-import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 import es.deusto.ingenieria.ssdd.util.JMSXMLMessages;
@@ -96,6 +95,7 @@ public class KeepALiveListener implements MessageListener{
 								}
 								MessageProducer producer = session.createProducer(topic);
 					            producer.send(masterdb);
+					            db_stream.close();
 						}
 						
 						}

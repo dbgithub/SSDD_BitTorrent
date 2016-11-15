@@ -2,6 +2,7 @@ package es.deusto.ingenieria.ssdd.redundancy;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.jms.Message;
@@ -13,6 +14,7 @@ import javax.jms.TextMessage;
 import org.w3c.dom.Document;
 
 import es.deusto.ingenieria.ssdd.classes.Peer;
+import es.deusto.ingenieria.ssdd.classes.PeerTrackerTemplate;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
@@ -32,7 +34,8 @@ public class RepositorySyncListener implements MessageListener{
 	private DataModelSwarm dms;
 	private MessageProducer producer;
 	private Session session;
-	private HashMap<String, Boolean> slaveResponseAvailabilityHashMap; // This HashMap stores True or False depending on the availability of the tracker slave
+	private HashMap<Integer, HashMap<String, Boolean>> slaveResponseAvailabilityHashMap; // This HashMap stores True or False depending on the availability of the tracker slave
+	private HashMap<Integer, PeerTrackerTemplate> updatePeerList;
 	private RepositorySyncTimeout repoSyncTimeout; // Runnable class that ensures that the communication between the master and slaves is not broken. After the timeout is fired, the same message is sent to the master!
 	private Thread timeout; // Tracker slave will launch this Thread to ensure that the communication between the master and slaves is not broken.
 	private DBManager database;
@@ -43,7 +46,8 @@ public class RepositorySyncListener implements MessageListener{
 		this.dms = dms;
 		this.producer = p;
 		this.session = s;
-		this.slaveResponseAvailabilityHashMap = new HashMap<String, Boolean>();
+		this.slaveResponseAvailabilityHashMap = new HashMap<Integer, HashMap<String, Boolean>>();
+		this.updatePeerList = new HashMap<Integer, PeerTrackerTemplate>();
 		this.database = db;
 	}
 	
@@ -78,15 +82,15 @@ public class RepositorySyncListener implements MessageListener{
 						String slaveAvailability = xml.getElementsByTagName("status").item(0).getTextContent(); // Either "OK" or "ERROR"
 						// The master stores the availability value for every Slave:
 						System.out.println("SlaveResponse received from tracker with ID='"+slaveID+"', now cheking whether the majority of slaves are ready to receive updates...");
-						slaveResponseAvailabilityHashMap.put(slaveID, (slaveAvailability.equals("OK"))? true : false);
+						slaveResponseAvailabilityHashMap.get(updateID).put(slaveID, (slaveAvailability.equals("OK"))? true : false);
 						// Now, in case that the amount of responses that the master receives is the same as the number of slaves, then
 						// the master will continue executing its code. Otherwise, it should wait until it receives every answer:
-						if (slaveResponseAvailabilityHashMap.size() == (dmt.getTrackerlist().size()-1)) {
+						if (slaveResponseAvailabilityHashMap.get(updateID).size() == (dmt.getTrackerlist().size()-1)) {
 							// Now the master has to evaluate whether it is worth or not to send an the pending update message.
 							// To do this, a 80% of the answers should be a positive response:
-							int admissionRate = (int) Math.round(slaveResponseAvailabilityHashMap.size() * 0.8);
+							int admissionRate = (int) Math.round(slaveResponseAvailabilityHashMap.get(updateID).size() * 0.8);
 							int amountPositiveAnswers = 0;
-							Iterator<Boolean> itera = slaveResponseAvailabilityHashMap.values().iterator();
+							Iterator<Boolean> itera = slaveResponseAvailabilityHashMap.get(updateID).values().iterator();
 							while (itera.hasNext()) {
 								boolean hola = itera.next();
 								System.out.println("itera.next() = " + hola);
@@ -99,15 +103,19 @@ public class RepositorySyncListener implements MessageListener{
 							if (amountPositiveAnswers >= admissionRate) {
 								System.out.println("The majority of the tracker slaves are ready to receive updates!");
 								// JMS message: Update UDPATE
-								updateMsg = new JMSXMLMessages().convertToStringUpdate("Update", "EXAMPLE_InfoHash", "EXAMPLE_PeerID", "EXAMPLE_PeerIP", 0000);
-								this.integrateNewPeer("EXAMPLE_InfoHash", "EXAMPLE_PeerID", "EXAMPLE_PeerIP", 0000);
+								PeerTrackerTemplate updateInformation = updatePeerList.get(updateID);
+								updateMsg = new JMSXMLMessages().convertToStringUpdate("Update", updateInformation.getInfoHash(), updateInformation.getId(), updateInformation.getIp(), updateInformation.getPort());
+								this.integrateNewPeer(updateInformation.getInfoHash(), updateInformation.getId(), updateInformation.getIp(), updateInformation.getPort());
 								System.out.println("Sending UPDATE JMS message...");
 							} else {
 								System.out.println("The majority of the tracker slaves are NOT ready to receive updated :( (update declined)");
 								// JMS message: Update ABORT
-								updateMsg = new JMSXMLMessages().convertToStringUpdate("Abort", "", "", "", -1);
+								updateMsg = new JMSXMLMessages().convertToStringUpdate("Abort", "", 1, "", -1);
 								System.out.println("Sending ABORT JMS message...");
 							}
+							slaveResponseAvailabilityHashMap.remove(updateID);
+							updatePeerList.remove(updateID);
+							
 							TextMessage txtmsg_updateabort = session.createTextMessage();
 							txtmsg_updateabort.setText(updateMsg);
 							txtmsg_updateabort.setStringProperty("Filter", "IncomingFromMaster");
@@ -128,7 +136,7 @@ public class RepositorySyncListener implements MessageListener{
 							String peerID = xml.getElementsByTagName("peerid").item(0).getTextContent();
 							String peerIP = xml.getElementsByTagName("ip").item(0).getTextContent();
 							int peerPort = Integer.parseInt(xml.getElementsByTagName("port").item(0).getTextContent()); 
-							this.integrateNewPeer(infoHash, peerID, peerIP, peerPort);
+							this.integrateNewPeer(infoHash, Integer.parseInt(peerID), peerIP, peerPort);
 						} else if (resolution.equals("Abort")) {
 							// The master has aborted the updating process. No slave will be getting updates.
 							System.out.println("Less than 80% of the tracker slaves are ready to receive updates. Then, NO updates are sent!");	
@@ -155,7 +163,17 @@ public class RepositorySyncListener implements MessageListener{
 		System.out.println("UpdateRequest JMS message sent!");
 		try {
 			// JMS message: UpdateRequest
-			String updateReq = new JMSXMLMessages().convertToStringUpdateRequest(ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE));
+			int updateId =0;
+			do{
+				updateId = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+			}while(slaveResponseAvailabilityHashMap.containsKey(updateId));
+			String ip = UUID.randomUUID().toString();
+			String infohash = UUID.randomUUID().toString();
+			int id = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+			int port = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+			updatePeerList.put(updateId, new PeerTrackerTemplate(id, ip, port, infohash));
+			String updateReq = new JMSXMLMessages().convertToStringUpdateRequest(updateId);
+			slaveResponseAvailabilityHashMap.put(updateId, new HashMap<String, Boolean>());
 			TextMessage txtmsg = session.createTextMessage();
 			txtmsg.setText(updateReq);
 			txtmsg.setStringProperty("Filter", "IncomingFromMaster");
@@ -173,7 +191,7 @@ public class RepositorySyncListener implements MessageListener{
 	 * @param peerIP
 	 * @param peerPort
 	 */
-	private void integrateNewPeer(String infoHash, String peerID, String peerIP, int peerPort) {
+	private void integrateNewPeer(String infoHash, int peerID, String peerIP, int peerPort) {
 		// -------------------------------------------
 		// The following will CHANGE IN THE FUTURE when facing the implementation of the peers:							
 		// First we check if the current swarm list contains the swarm related to this InfoHash (torrent):
@@ -195,9 +213,10 @@ public class RepositorySyncListener implements MessageListener{
 		
 		//Adding to database
 		database.insertTorrent(infoHash);
-		database.insertPeer(Integer.parseInt(peerID), peerIP, peerPort);
+		System.out.println(">>>>>>>>>>>>>>>>"+peerID);
+		database.insertPeer(peerID, peerIP, peerPort);
 		//How to UPDATE the bytes downloaded and left?
-		database.insertPeer_Torrent(Integer.parseInt(peerID), infoHash, 0, 0, 0, 0);
+		database.insertPeer_Torrent(peerID, infoHash, 0, 0, 0, 0);
 		
 	}
 	

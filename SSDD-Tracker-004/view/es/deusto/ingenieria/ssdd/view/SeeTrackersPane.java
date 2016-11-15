@@ -13,10 +13,8 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Observable;
 import java.util.Observer;
-import java.util.Vector;
 
 import javax.swing.JPanel;
 import javax.swing.ListSelectionModel;
@@ -37,6 +35,7 @@ public class SeeTrackersPane extends JPanel implements Observer{
 
 	private static final long serialVersionUID = 1L;
 	private JPanel TrackersSee;
+	@SuppressWarnings("unused")
 	private DashboardController controller;
 	private JTable trackerTable;
 
@@ -138,7 +137,6 @@ public class SeeTrackersPane extends JPanel implements Observer{
 	/**
 	 * This method is called from the Model side, to provoke certain changes in the View. 
 	 */
-	@SuppressWarnings("null")
 	@Override
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelTracker){

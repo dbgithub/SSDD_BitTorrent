@@ -8,13 +8,13 @@ package es.deusto.ingenieria.ssdd.classes;
  */
 public class Peer {
 	
-	private String id;
+	private int id;
 	private String ip;
 	private int port;
 	private int downloaded;
 	private int uploaded;
 	
-	public Peer(String id, String ip, int port, int downloaded, int uploaded) {
+	public Peer(int id, String ip, int port, int downloaded, int uploaded) {
 		super();
 		this.id = id;
 		this.ip = ip;
@@ -23,11 +23,11 @@ public class Peer {
 		this.uploaded = uploaded;
 	}
 
-	public String getId() {
+	public int getId() {
 		return id;
 	}
 
-	public void setId(String id) {
+	public void setId(int id) {
 		this.id = id;
 	}
 

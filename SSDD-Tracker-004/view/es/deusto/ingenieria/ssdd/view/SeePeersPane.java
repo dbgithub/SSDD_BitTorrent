@@ -33,6 +33,7 @@ import es.deusto.ingenieria.ssdd.data.DataModelPeer;;
 public class SeePeersPane extends JPanel implements Observer{
 
 	private JPanel PeersSee;
+	@SuppressWarnings("unused")
 	private DashboardController controller;
 
 	/**

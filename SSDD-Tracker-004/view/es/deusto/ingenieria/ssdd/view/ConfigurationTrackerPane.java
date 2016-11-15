@@ -27,6 +27,7 @@ import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import javax.swing.JRadioButton;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import es.deusto.ingenieria.ssdd.controllers.*;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -51,6 +52,8 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 	private DashboardController controller;
 	private boolean workingOnIt = false;
 	private boolean threadSetUpFinished = false;
+	//Boolean to specify if a slave is prepared to receive an update ¿What evidence do we use to determine this behavior?
+	@SuppressWarnings("unused")
 	private boolean availabilityToReceiveUpdates = true;
 
 	/**
@@ -309,7 +312,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		btnStartStop.setBackground(new Color(255, 0, 0));
 		btnStartStop.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 30));
 		btnStartStop.setText("Stop");
-		btnIncomingPeer.setEnabled(true);
+		//btnIncomingPeer.setEnabled(true);
 	}
 	
 	private void setStartState() {
@@ -329,7 +332,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 			txtId.setText(dmc.getId());
 			txtIP.setText(dmc.getIp());
 			txtPort.setText(dmc.getPort()+"");
-			if (dmc.isMaster()) {rdbtnYes.setSelected(true);}  else {rdbtnNo.setSelected(true);};
+			if (dmc.isMaster()) {rdbtnYes.setSelected(true); btnIncomingPeer.setEnabled(true);}  else {rdbtnNo.setSelected(true); btnIncomingPeer.setEnabled(false);};
 			if (dmc.isTrackerSetUpFinished()) {
 				threadSetUpFinished = true; 
 				setStopState();

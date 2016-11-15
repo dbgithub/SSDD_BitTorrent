@@ -32,6 +32,7 @@ public class MainFrame extends JFrame{
 	 */
 	public MainFrame(DashboardController dc)
 	{
+
 		this.dc = dc;
 		this.basicFrame = this;
 		basicFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);

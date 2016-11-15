@@ -30,6 +30,13 @@ public class DashboardController {
 		dmt = new DataModelTracker();
 		dms = new DataModelSwarm();
 		dmp = new DataModelPeer();
+		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						dmc.destroyDataRepository();
+					}
+		}));
 	}
 	
 	/**

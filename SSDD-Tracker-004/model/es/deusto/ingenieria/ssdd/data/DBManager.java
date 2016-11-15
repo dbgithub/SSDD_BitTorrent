@@ -182,6 +182,7 @@ public class DBManager {
 				System.err.println("[DBManager] WARNING! A rollback was performed in insertTorrent method");
 			}	
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.err.println("ERROR/EXCEPTION. Error inserting data into 'Torrent'!" + e.getMessage());
 		}
 	}

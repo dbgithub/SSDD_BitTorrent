@@ -11,8 +11,6 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.jdom2.Document;
 import org.jdom2.Element;
-import org.jdom2.JDOMException;
-import org.jdom2.input.SAXBuilder;
 import org.jdom2.output.XMLOutputter;
 import org.xml.sax.SAXException;
 
@@ -155,7 +153,7 @@ public class JMSXMLMessages {
 		return new XMLOutputter().outputString(doc);
 	}
 	
-	public String convertToStringUpdate(String resolution, String infoHash, String peerID, String ip, int port){
+	public String convertToStringUpdate(String resolution, String infoHash, int peerID, String ip, int port){
 		Document doc = new Document();
 		Element xml=new Element("message");
 		
@@ -171,7 +169,7 @@ public class JMSXMLMessages {
 		Element info = new Element("info");
 		info.setAttribute("torrentHash", infoHash);
 		Element peerid = new Element("peerid");
-		peerid.addContent(peerID);
+		peerid.addContent(peerID+"");
 		Element elip = new Element("ip");
 		elip.addContent(ip);
 		Element elport = new Element("port");

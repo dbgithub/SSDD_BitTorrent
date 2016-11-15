@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Observable;
 
-import es.deusto.ingenieria.ssdd.tracker.EntranceAndKeepAlive;
 
 /**
  * This class represents the business logic of what happens when the user configures the Tracker within the corresponding GUI

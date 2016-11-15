@@ -35,6 +35,7 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 
 	private JPanel SwarmsSee;
 	private JFrame mainFrame;
+	@SuppressWarnings("unused")
 	private DashboardController controller;
 
 	/**
