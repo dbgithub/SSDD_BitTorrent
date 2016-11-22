@@ -5,6 +5,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
+import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
@@ -96,32 +97,22 @@ public class EntranceAndKeepAlive implements Runnable{
 	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), false, new Date());
 	            	dmt.trackerList.put(t.getId(), t);
 	            	//Start sending KeepALives:
-            		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
-            		dmt.keepaliveSender = kaps;
-            		dmt.threadKeepaliveSender = new Thread(kaps);
-	        		dmt.threadKeepaliveSender.start();
+	            	keepAliveSenderThreadStart(producer, session);
+	        		
 	        		//Start checking the availability of the rest of the trackers:
-	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic, database);
-            		dmt.keepaliveChecker = kaltc;
-	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
-	        		dmt.threadKeepaliveChecker.start();
+	        		keepAliveCheckerThreadStart(producer, session, topic, database);
 	        		System.out.println("Your randomly chosen ID was approved by the tracker master successfuly!");
 	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
+	        		
 	        		// The slave must subscribe to the JMS topic that handles the incoming peers and their information.
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
-	        		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = 'IncomingFromMaster'", false); // We want to filter just messages coming from master
-	        		MessageProducer producer_slave = session.createProducer(topic2);
-	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session, database);
-	        		dmt.repositorySyncListener = rsl;
-	        		consumer_slave.setMessageListener(rsl);
+	        		repositorySyncTopicCreation("IncomingFromMaster", session, database, topic2);
 	        		System.out.println("You, as a slave with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
 	            }
 	            else{
 	            	//Master response is negative, so you have to start the process again
 	            	System.out.println("Tracker master has rejected your ID, write another ID and try again.");
-//	            	EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt);
-//	        		dmt.threadKeepaliveListener = new Thread(keepalive);
-//	        		dmt.threadKeepaliveListener.start();
+	            	restartEntranceProcess(dmt, dmc, dms);
 	            }
             	
             }
@@ -137,24 +128,17 @@ public class EntranceAndKeepAlive implements Runnable{
             		database.initDB();
             		//Start sending KeepALives
             		MessageProducer producer = session.createProducer(topic);
-            		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
-            		dmt.keepaliveSender = kaps;
-            		dmt.threadKeepaliveSender = new Thread(kaps);
-	        		dmt.threadKeepaliveSender.start();
+            		keepAliveSenderThreadStart(producer, session);
+            		
 	        		//Start checking the availability of the rest of the trackers:
-	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc,  session, topic, database);
-            		dmt.keepaliveChecker = kaltc;
-	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
-	        		dmt.threadKeepaliveChecker.start();
+            		keepAliveCheckerThreadStart(producer, session, topic, database);
+            		
 	        		System.out.println("Your ID is elegible and available!");
 	        		System.out.println("You are a TRACKER MASTER with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
+	        		
 	        		// The tracker master must subscribe to a new JMS topic in order to handle the upcoming peers and their information.
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
-	        		MessageConsumer consumer_master = session.createConsumer(topic2, "Filter = 'IncomingFromSlave'", false); // We want to filter just messages coming from slaves
-	        		MessageProducer producer_master = session.createProducer(topic2);
-	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_master, session, database);
-	        		dmt.repositorySyncListener = rsl;
-	        		consumer_master.setMessageListener(rsl);
+	        		repositorySyncTopicCreation("IncomingFromSlave", session, database, topic2);
 	        		System.out.println("You, as a master with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
             	} else { // Available: this means the ID that the user assigned to the tracker through the GUI, is not taken!
             		dmc.setMaster(false);
@@ -174,33 +158,25 @@ public class EntranceAndKeepAlive implements Runnable{
     	            	dmc.setMaster(false);
     	            	Tracker t = new Tracker(Integer.parseInt(dmc.getId()), dmc.getIp(), dmc.getPort(), false, new Date());
     	            	dmt.trackerList.put(t.getId(), t);
+    	            	
     	            	//Start sending KeepALives
-                		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
-                		dmt.keepaliveSender = kaps;
-                		dmt.threadKeepaliveSender = new Thread(kaps);
-    	        		dmt.threadKeepaliveSender.start();
+    	            	keepAliveSenderThreadStart(producer, session);
+    	            	
     	        		//Start checking the availability of the rest of the trackers:
-    	        		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic, database);
-                		dmt.keepaliveChecker = kaltc;
-    	        		dmt.threadKeepaliveChecker = new Thread(kaltc);
-    	        		dmt.threadKeepaliveChecker.start();
+    	        		keepAliveCheckerThreadStart(producer, session, topic, database);
+    	        		
     	        		System.out.println("Your randomly chosen ID was approved by the tracker master successfuly!");
     	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
+    	        		
     	        		// The slave must subscribe to the JMS topic that handles the incoming peers and their information.
     	        		// Every tracker (either slave or master) should be able to send and receive messages:
-    	        		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = 'IncomingFromMaster'", false); // We want to filter just messages coming from master
-    	        		MessageProducer producer_slave = session.createProducer(topic2);
-    	        		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session, database);
-    	        		dmt.repositorySyncListener = rsl;
-    	        		consumer_slave.setMessageListener(rsl);
+    	        		repositorySyncTopicCreation("IncomingFromMaster", session, database, topic2);
     	        		System.out.println("You, as a slave with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
     	            }
     	            else{
     	            	//Master response is negative, so you have to start the process again
     	            	System.out.println("Tracker master has rejected your ID, write another ID and try again.");
-//    	            	EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt);
-//    	        		dmt.threadKeepaliveListener = new Thread(keepalive);
-//    	        		dmt.threadKeepaliveListener.start();
+    	            	restartEntranceProcess(dmt, dmc, dms);
     	            }
             	}
             	
@@ -212,6 +188,34 @@ public class EntranceAndKeepAlive implements Runnable{
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+	}
+
+	private void restartEntranceProcess(DataModelTracker dmt2, DataModelConfiguration dmc2, DataModelSwarm dms2) {
+		EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt, dms);
+		dmt.threadKeepaliveListener = new Thread(keepalive);
+		dmt.threadKeepaliveListener.start();
+	}
+	
+	private void keepAliveSenderThreadStart(MessageProducer producer, Session session){
+		KeepALiveSender kaps= new KeepALiveSender(dmc, producer, session);
+		dmt.keepaliveSender = kaps;
+		dmt.threadKeepaliveSender = new Thread(kaps);
+		dmt.threadKeepaliveSender.start();
+	}
+	
+	private void keepAliveCheckerThreadStart(MessageProducer producer, Session session, Topic topic, DBManager database){
+		KeepALiveTimeChecker kaltc= new KeepALiveTimeChecker(dmt, dmc, session, topic, database);
+		dmt.keepaliveChecker = kaltc;
+		dmt.threadKeepaliveChecker = new Thread(kaltc);
+		dmt.threadKeepaliveChecker.start();
+	}
+	
+	private void repositorySyncTopicCreation(String filter, Session session, DBManager database, Topic topic2) throws JMSException{
+		MessageConsumer consumer_slave = session.createConsumer(topic2, "Filter = '"+filter+"'", false); // We want to filter just messages coming from master
+		MessageProducer producer_slave = session.createProducer(topic2);
+		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session, database);
+		dmt.repositorySyncListener = rsl;
+		consumer_slave.setMessageListener(rsl);
 	}
 	
 
