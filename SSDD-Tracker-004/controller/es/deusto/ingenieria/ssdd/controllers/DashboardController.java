@@ -106,6 +106,7 @@ public class DashboardController {
 	public void interruptAllThreads() {
 		dmt.keepaliveChecker.cancel();
 		dmt.keepaliveSender.cancel();
+		dmt.multicastSocketTracker.cancel();
 		dmt.setTrackerlist(new HashMap<Integer, Tracker>());
 		dmc.destroyDataRepository();
 	}

@@ -1,5 +1,8 @@
 package es.deusto.ingenieria.ssdd.tracker;
 
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.util.Date;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -108,6 +111,9 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
 	        		repositorySyncTopicCreation("IncomingFromMaster", session, database, topic2);
 	        		System.out.println("You, as a slave with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
+	        		
+	        		// Initiate, open and join a multicast socket in order to be informed about incoming peers' messages:
+	        		multicastSocketStart();
 	            }
 	            else{
 	            	//Master response is negative, so you have to start the process again
@@ -140,6 +146,9 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
 	        		repositorySyncTopicCreation("IncomingFromSlave", session, database, topic2);
 	        		System.out.println("You, as a master with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
+	        		
+	        		// Initiate, open and join a multicast socket in order to be informed about incoming peers' messages:
+	        		multicastSocketStart();
             	} else { // Available: this means the ID that the user assigned to the tracker through the GUI, is not taken!
             		dmc.setMaster(false);
             		// JMS message: IDSelection
@@ -172,6 +181,9 @@ public class EntranceAndKeepAlive implements Runnable{
     	        		// Every tracker (either slave or master) should be able to send and receive messages:
     	        		repositorySyncTopicCreation("IncomingFromMaster", session, database, topic2);
     	        		System.out.println("You, as a slave with ID='"+dmc.getId()+"', have joined to a new JMS topic regarding repository synchronization!");
+    	        		
+    	        		// Initiate, open and join a multicast socket in order to be informed about incoming peers' messages:
+    	        		multicastSocketStart();
     	            }
     	            else{
     	            	//Master response is negative, so you have to start the process again
@@ -216,6 +228,13 @@ public class EntranceAndKeepAlive implements Runnable{
 		RepositorySyncListener rsl = new RepositorySyncListener(dmt, dmc, dms, producer_slave, session, database);
 		dmt.repositorySyncListener = rsl;
 		consumer_slave.setMessageListener(rsl);
+	}
+	
+	// Starts a new thread to manage the joining process to a multicast group and it handles the messages. 
+	private void multicastSocketStart() {
+		MulticastSocketTracker ms = new MulticastSocketTracker(dmc.getPort(), dmc.getIp(), dmc.isMaster());
+		dmt.multicastSocketTracker = ms;
+		dmt.threadMulticastSocketTracker = new Thread(ms); 
 	}
 	
 
