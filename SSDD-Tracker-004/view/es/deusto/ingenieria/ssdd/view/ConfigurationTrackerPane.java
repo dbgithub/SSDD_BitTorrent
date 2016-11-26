@@ -221,7 +221,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(lblIp, gbc_lblIp);
 		
 		txtIP = new JTextField();
-		txtIP.setText("127.0.0.1");
+		txtIP.setText("228.5.6.7");
 		txtIP.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 16));
 		GridBagConstraints gbc_txtIP = new GridBagConstraints();
 		gbc_txtIP.insets = new Insets(0, 0, 5, 0);
@@ -242,7 +242,7 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		panel.add(lblPort, gbc_lblPort);
 		
 		txtPort = new JTextField();
-		txtPort.setText("8080");
+		txtPort.setText("9000");
 		txtPort.setFont(new Font("Noto Sans CJK JP Regular", Font.BOLD, 16));
 		GridBagConstraints gbc_txtPort = new GridBagConstraints();
 		gbc_txtPort.insets = new Insets(0, 0, 5, 0);

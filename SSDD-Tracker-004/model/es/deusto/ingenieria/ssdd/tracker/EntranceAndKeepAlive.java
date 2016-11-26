@@ -235,6 +235,7 @@ public class EntranceAndKeepAlive implements Runnable{
 		MulticastSocketTracker ms = new MulticastSocketTracker(dmc.getPort(), dmc.getIp(), dmc.isMaster());
 		dmt.multicastSocketTracker = ms;
 		dmt.threadMulticastSocketTracker = new Thread(ms); 
+		dmt.threadMulticastSocketTracker.start();
 	}
 	
 

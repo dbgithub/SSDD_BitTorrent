@@ -8,6 +8,8 @@ import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 
+import bitTorrent.tracker.protocol.udp.AnnounceRequest;
+
 /**
  * This runnable class represents a thread that will be executed which its main purpose will be handling:
  * · Creating a multicast group
@@ -67,6 +69,10 @@ public class MulticastSocketTracker implements Runnable {
 				System.out.println("Sender's Port: " + incomingMessage.getPort()); // This might be either an port from the multicast group or peer's port.
 				System.out.println("Sender's message length: " + incomingMessage.getLength());
 				System.out.println("Sender's data: " + new String(incomingMessage.getData()));
+				AnnounceRequest ar = new AnnounceRequest();
+				ar.parse(incomingMessage.getData());
+				System.out.println("---Announce Request---");
+				System.out.println("Peer ID: "+ar.getConnectionId());
 				if (ismaster && !incomingMessage.getAddress().equals(group)) {
 					// In this case, the incoming message comes from  an IP different from any tracker's IP, then, it is NOT a message from withing the multicast group.
 					// Since we are interested in the incoming peers' IPs, we will save any interesting data:
