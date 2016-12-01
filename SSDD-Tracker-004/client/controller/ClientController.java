@@ -3,6 +3,7 @@ package controller;
 import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
@@ -54,7 +55,7 @@ public class ClientController {
 	private void sendRequestToMulticastGroup(MetainfoHandlerSingleFile single) {
 		
 		//I PUT THE PORT HARDCODED HERE AS STATIC VARIABLE
-		try (MulticastSocket socket = new MulticastSocket(DEFAULT_PORT)) {
+		try (DatagramSocket socket = new DatagramSocket(DEFAULT_PORT)) {
 			InetAddress group = InetAddress.getByName(single.getMetainfo().getAnnounce());
 			//socket.joinGroup(group);			
 			
