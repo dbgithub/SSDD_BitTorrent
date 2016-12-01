@@ -56,7 +56,7 @@ public class ClientController {
 		//I PUT THE PORT HARDCODED HERE AS STATIC VARIABLE
 		try (MulticastSocket socket = new MulticastSocket(DEFAULT_PORT)) {
 			InetAddress group = InetAddress.getByName(single.getMetainfo().getAnnounce());
-			socket.joinGroup(group);			
+			//socket.joinGroup(group);			
 			
 			AnnounceRequest ar = new AnnounceRequest();
 			PeerInfo pI = ar.getPeerInfo();
