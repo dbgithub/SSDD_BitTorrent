@@ -7,8 +7,22 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.concurrent.ThreadLocalRandom;
 
+import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest;
+import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
+import controller.ConnectionIdRenewer;
+import bitTorrent.tracker.protocol.udp.BitTorrentUDPRequestMessage;
+import bitTorrent.tracker.protocol.udp.ConnectRequest;
+import bitTorrent.tracker.protocol.udp.ConnectResponse;
+import bitTorrent.tracker.protocol.udp.PeerInfo;
+import bitTorrent.tracker.protocol.udp.AnnounceRequest.Event;
+import es.deusto.ingenieria.ssdd.classes.Peer;
+import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
+import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
 /**
  * This runnable class represents a thread that will be executed which its main purpose will be handling:
@@ -30,8 +44,19 @@ public class MulticastSocketTracker implements Runnable {
 	private DatagramPacket incomingMessage;
 	volatile boolean cancel = false;
 	private boolean ismaster;
+	public HashMap<Long, Peer> connectPeerList = new HashMap<>();
+	public HashMap<Long, Peer> peerList = new HashMap<>();
+	private DataModelTracker trackersInfo;
+	private DataModelSwarm swarmsInfo;
 	
-	public MulticastSocketTracker(int port, String IP, boolean ismaster) {
+	//THREAD
+	private ConnectionIdChecker connectionChecker;
+	private Thread connectionCheckerThread;
+	
+	
+	public MulticastSocketTracker(int port, String IP, boolean ismaster, DataModelTracker dmt, DataModelSwarm dms) {
+		this.trackersInfo = dmt;
+		this.swarmsInfo = dms;
 		try {
 			this.socketMulticast = new MulticastSocket(port);
 			this.group = InetAddress.getByName(IP);
@@ -55,6 +80,7 @@ public class MulticastSocketTracker implements Runnable {
 				e.printStackTrace();
 			}
 		}
+		startConnectionIdChecker();
 	}
 	
 	@Override
@@ -69,10 +95,10 @@ public class MulticastSocketTracker implements Runnable {
 				System.out.println("Sender's Port: " + incomingMessage.getPort()); // This might be either an port from the multicast group or peer's port.
 				System.out.println("Sender's message length: " + incomingMessage.getLength());
 				System.out.println("Sender's data: " + new String(incomingMessage.getData()));
-				AnnounceRequest ar = new AnnounceRequest();
-				ar.parse(incomingMessage.getData());
-				System.out.println("---Announce Request---");
-				System.out.println("Peer ID: "+ar.getConnectionId());
+//				AnnounceRequest ar = new AnnounceRequest();
+//				ar.parse(incomingMessage.getData());
+//				System.out.println("---Announce Request---");
+//				System.out.println("Peer ID: "+ar.getConnectionId());
 				if (ismaster && !incomingMessage.getAddress().equals(group)) {
 					// In this case, the incoming message comes from  an IP different from any tracker's IP, then, it is NOT a message from withing the multicast group.
 					// Since we are interested in the incoming peers' IPs, we will save any interesting data:
@@ -82,6 +108,49 @@ public class MulticastSocketTracker implements Runnable {
 					// TODO Enviar un mensaje JMS, UpdateRequest, a todos los SLAVES que estan escuchando para valorar si el master envia o no actualizacion de datos.
 					// TODO Independientemente de la respuesta de los trackers SLAVES en cuanto al UpdateRequest, el master ha de devolver la lista de PEERS en relacion
 					//		al SWARM en cuestion, de vuelta al peer solicitante. Para eso, enviar los bytes mediante el UDP socket, no el multicast.
+					switch(incomingMessage.getLength()){
+					case 16:
+						//If length is 16 bytes, then it's a ConnectRequest
+						String ip = incomingMessage.getAddress().getHostAddress();
+						int originPort = incomingMessage.getPort();
+						int destinationPort = originPort;
+						ConnectRequest request = ConnectRequest.parse(incomingMessage.getData());
+						long connectionId = request.getConnectionId();
+						int transacctionId = request.getTransactionId();
+						Action action = request.getAction();
+						if(action.compareTo(Action.CONNECT) == 0 && connectionId == 41727101980L){
+							//Then is the first connection to the tracker
+							//So we have to add to a list and response if we are the master
+							//First create a peer
+							Peer p = new Peer();
+							p.setIp(ip);
+							p.setPort(destinationPort);
+							p.setTransaction_id(transacctionId);
+							p.setConnection_id_lastupdate(new Date());
+							peerList.put(p.getTransaction_id(), p);
+							
+							//We have to response to the peer with a connection_id
+							//Create Response
+							ConnectResponse response = prepareConnectResponse(connectionId, transacctionId);
+							p.setConnection_id(response.getConnectionId());
+							
+							//Once is created the message, we send it	
+							sendUDPMessage(response, ip, destinationPort);
+							
+						}
+						else{
+							//Then is trying to renew its connectionId
+							Peer selected = peerList.get(transacctionId);
+							//We have to response to the peer with a new connection_id
+							ConnectResponse response = prepareConnectResponse(connectionId, transacctionId);
+							selected.setConnection_id(response.getConnectionId());
+							selected.setConnection_id_lastupdate(new Date());
+							
+							//Once is created the message, we send it	
+							sendUDPMessage(response, ip, destinationPort);
+						}
+						break;
+					}
 				}
 			} catch (IOException e) {
 				System.out.println("ERROR reciving an incoming message in 'MulticastSocketTracker'!");
@@ -104,7 +173,7 @@ public class MulticastSocketTracker implements Runnable {
 	
 	// Sends a message to the node/party in the other side of the UDP socket.
 	// This message will NOT go to the multicast group
-	public void sendUDPMessage(String msg, String IP, int port) {
+	public void sendUDPMessage(BitTorrentUDPRequestMessage msg, String IP, int port) {
 		InetAddress serverHost;
 		try {
 			serverHost = InetAddress.getByName(IP);
@@ -128,5 +197,21 @@ public class MulticastSocketTracker implements Runnable {
 			e.printStackTrace();
 		}
     }
+	
+	public ConnectResponse prepareConnectResponse(long connectionId, int transactionId){
+		ConnectResponse response = new ConnectResponse();
+		response.setAction(Action.CONNECT);
+		response.setTransactionId(transactionId);
+		connectionId = ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE);
+		response.setConnectionId(connectionId);
+		return response;
+	}
+	
+	private void startConnectionIdChecker() {
+		ConnectionIdChecker checker = new ConnectionIdChecker(this);
+		connectionChecker = checker;
+		connectionCheckerThread = new Thread(checker); 
+		connectionCheckerThread.start();
+	}
 
 }

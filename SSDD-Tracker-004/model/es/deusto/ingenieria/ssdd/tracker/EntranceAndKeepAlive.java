@@ -232,7 +232,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	
 	// Starts a new thread to manage the joining process to a multicast group and it handles the messages. 
 	private void multicastSocketStart() {
-		MulticastSocketTracker ms = new MulticastSocketTracker(dmc.getPort(), dmc.getIp(), dmc.isMaster());
+		MulticastSocketTracker ms = new MulticastSocketTracker(dmc.getPort(), dmc.getIp(), dmc.isMaster(), dmt, dms);
 		dmt.multicastSocketTracker = ms;
 		dmt.threadMulticastSocketTracker = new Thread(ms); 
 		dmt.threadMulticastSocketTracker.start();
