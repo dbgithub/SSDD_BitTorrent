@@ -12,6 +12,7 @@ public class Peer {
 	
 	private long connection_id;
 	private Date connection_id_lastupdate;
+	private Date announceRequest_lastupdate;
 	private long transaction_id;
 	private int id;
 	private String ip;
@@ -86,6 +87,14 @@ public class Peer {
 
 	public void setConnection_id_lastupdate(Date connection_id_lastupdate) {
 		this.connection_id_lastupdate = connection_id_lastupdate;
+	}
+
+	public Date getAnnounceRequest_lastupdate() {
+		return announceRequest_lastupdate;
+	}
+
+	public void setAnnounceRequest_lastupdate(Date announceRequest_lastupdate) {
+		this.announceRequest_lastupdate = announceRequest_lastupdate;
 	}
 	
 	

@@ -30,7 +30,7 @@ public class ConnectionIdRenewer implements Runnable{
 		while(!cancel) {
 			try {
 				Thread.sleep(60000);
-				controller.sendAndWaitUntilConnectResponseReceivedLoop(single, socketSend, socketReceive);
+				controller.sendAndWaitUntilConnectResponseReceivedLoop(single, socketSend, socketReceive, false);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

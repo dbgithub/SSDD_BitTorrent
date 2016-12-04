@@ -25,6 +25,10 @@ public class Swarm {
 		this.peerList = new HashMap<Integer, Peer>();
 	}
 	
+	public Swarm(String infohash2) {
+		this.infoHash = infohash2;
+	}
+
 	public String getInfoHash() {
 		return infoHash;
 	}
