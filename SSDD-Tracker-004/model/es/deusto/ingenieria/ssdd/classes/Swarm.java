@@ -1,6 +1,9 @@
 package es.deusto.ingenieria.ssdd.classes;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import bitTorrent.tracker.protocol.udp.PeerInfo;
 
 /**
  * Class that represents a Swarm of the network
@@ -59,14 +62,27 @@ public class Swarm {
 	public void setTotalLeecher(int totalLeecher) {
 		this.totalLeecher = totalLeecher;
 	}
-	public HashMap<Integer, Peer> getPeerList() {
+	public HashMap<Integer, Peer> getPeerListHashMap() {
 		return peerList;
 	}
-	public void setPeerList(HashMap<Integer, Peer> peerList) {
+	public void setPeerListHashMap(HashMap<Integer, Peer> peerList) {
 		this.peerList = peerList;
 	}
 	public void addPeerToList(int PeerID, Peer p) {
 		this.peerList.put(PeerID, p);
+	}
+	public ArrayList<PeerInfo> getPeerInfoList() {
+		ArrayList<PeerInfo> resul = new ArrayList<PeerInfo>();
+		if (!peerList.isEmpty()) {
+			for (Peer p : peerList.values()) {
+				PeerInfo pf = new PeerInfo();
+				pf.setIpAddress(Integer.parseInt(p.getIp()));
+				pf.setPort(p.getPort());
+				resul.add(pf);
+			}		
+			return resul;
+		}
+		return null;
 	}
 	
 

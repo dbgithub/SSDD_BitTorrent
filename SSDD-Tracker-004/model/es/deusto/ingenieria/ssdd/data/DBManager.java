@@ -399,14 +399,14 @@ public class DBManager {
 	 * @param left
 	 * @return 1 if the operation was successful, if not, it returns -1
 	 */
-	public int updatePeerTorrent(Integer IDpeer, String InfoHash, Integer uploaded, Integer downloaded, Integer left){
+	public int updatePeerTorrent(Integer IDpeer, String InfoHash, long uploaded, long downloaded, long left){
 		// TODO: Validate input parameters, check for NULL values
 		String sqlString = "UPDATE peer_torrent SET Uploaded=?, Downloaded=?, Left=? WHERE FK_IDpeer ="+IDpeer + " AND FK_InfoHash='"+InfoHash+"'";
 
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
-			stmt.setInt(1, uploaded);
-			stmt.setInt(2, downloaded);
-			stmt.setInt(3, left);
+			stmt.setLong(1, uploaded);
+			stmt.setLong(2, downloaded);
+			stmt.setLong(3, left);
 
 			if (stmt.executeUpdate() >= 0) {
 				con.commit();

@@ -32,7 +32,7 @@ import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
 /**
- * This runnable class represents a thread that will be executed which its main purpose will be handling:
+ * This runnable class represents a thread that will be executed, taking care of the folllowing:
  * · Creating a multicast group
  * · Join the corresponding tracker (the one who is launching this thread) to the multicast group.
  * · Handle incoming messages from the multicast group (send & receive)
@@ -54,8 +54,7 @@ public class MulticastSocketTracker implements Runnable {
 	public HashMap<Long, Peer> peerList = new HashMap<>(); //Saves the peers that 
 	private DataModelTracker trackersInfo;
 	private DataModelSwarm swarmsInfo;
-	
-	private int interval = 60; //number of seconds to wait
+	private int interval = 60; // number of seconds to wait before receiving another AnnounceRequest from a peer.
 	
 	//THREAD
 	private ConnectionIdChecker connectionChecker;
@@ -106,29 +105,25 @@ public class MulticastSocketTracker implements Runnable {
 				
 				
 				if (!incomingMessage.getAddress().equals(group)) {
-					// In this case, the incoming message comes from  an IP different from any tracker's IP, then, it is NOT a message from withing the multicast group.
+					// In this case, the incoming message comes from  an IP different from any tracker's IP, then, it is NOT a message from within the multicast group.
 					// Since we are interested in the incoming peers' IPs, we will save any interesting data:
 					
-					// TODO Acceder al SWARM y comprobar que el infoHash que nos manda el peer esta o no metido en el hashmap del SWARM.
-					// 		Si no lo está entonces, metemos el infoHash nuevo y guardamos la direccion IP y puerto del peer en cuestion.
 					// TODO Enviar un mensaje JMS, UpdateRequest, a todos los SLAVES que estan escuchando para valorar si el master envia o no actualizacion de datos.
-					// TODO Independientemente de la respuesta de los trackers SLAVES en cuanto al UpdateRequest, el master ha de devolver la lista de PEERS en relacion
-					//		al SWARM en cuestion, de vuelta al peer solicitante. Para eso, enviar los bytes mediante el UDP socket, no el multicast.
 					String ip = incomingMessage.getAddress().getHostAddress();
 					int originPort = incomingMessage.getPort();
 					int destinationPort = originPort;
 					switch(incomingMessage.getLength()){
 						case 16:
 							//If length is 16 bytes, then it's a ConnectRequest
-							
+							System.out.println("The UDP message received was a ConnectionRequest");
 							ConnectRequest request = ConnectRequest.parse(incomingMessage.getData());
 							long connectionId = request.getConnectionId();
 							int transacctionId = request.getTransactionId();
 							Action action = request.getAction();
 							if(action.compareTo(Action.CONNECT) == 0 && connectionId == 41727101980L){
-								//Then is the first connection to the tracker
-								//So we have to add to a list and response if we are the master
-								//First create a peer
+								//Then, this means the first connection between the peer and the tracker
+								//So, we have to add the peer to a list and response back to the peer if we are the master
+								//First, create a peer
 								Peer p = new Peer();
 								p.setIp(ip);
 								p.setAnnounceRequest_lastupdate(null);
@@ -137,22 +132,22 @@ public class MulticastSocketTracker implements Runnable {
 								p.setConnection_id_lastupdate(new Date());
 								peerList.put(p.getTransaction_id(), p);
 								
-								//We have to response to the peer with a connection_id
+								// If the current tracker is the master. Then, it has to response to the peer with a connection_id
 								if(ismaster){
 									//Create Response
-									ConnectResponse response = prepareConnectResponse(connectionId, transacctionId);
+									ConnectResponse response = prepareConnectResponse(transacctionId);
 									p.setConnection_id(response.getConnectionId());
 									
-									//Once is created the message, we send it	
+									//Once the message is created, we send it	
 									sendUDPMessage(response, ip, destinationPort);
-								}
-								
+									System.out.println("Sending ConnectResponse UPD message back to the peer...");
+								}	
 							}
 							else{
 								//Then is trying to renew its connectionId
 								Peer selected = peerList.get(transacctionId);
 								//We have to response to the peer with a new connection_id
-								ConnectResponse response = prepareConnectResponse(connectionId, transacctionId);
+								ConnectResponse response = prepareConnectResponse(transacctionId);
 								selected.setConnection_id(response.getConnectionId());
 								selected.setConnection_id_lastupdate(new Date());
 								
@@ -161,39 +156,55 @@ public class MulticastSocketTracker implements Runnable {
 							}
 							break;
 						case 98:
-							//If length is 98 bytes, then it's an AnnounceResponse
+							//If length is 98 bytes, then it's an AnnounceRequest
 							AnnounceRequest announcerequest = AnnounceRequest.parse(incomingMessage.getData());
-							System.out.println("Announce Request: "+ announcerequest.getHexInfoHash());
+							System.out.println("The UDP message received was a AnnounceRequests (InfoHash: "+announcerequest.getHexInfoHash()+")");
 							Peer temp = peerList.get(announcerequest.getTransactionId());
+							String infoHash = announcerequest.getHexInfoHash();
 							int transacctionIdA = announcerequest.getTransactionId();
 							long connectionIdA = announcerequest.getConnectionId();
+							long downloaded = announcerequest.getDownloaded();
+							long uploaded = announcerequest.getUploaded();
+							long left = announcerequest.getLeft();
 							if(temp != null){
-								//Check if all is correct
-								if(temp.getConnection_id() == announcerequest.getConnectionId() && announcerequest.getAction().compareTo(Action.ANNOUNCE) == 0){
+								// This means that the communication is going on the right path.
+								// The tracker knew about the transaction ID, so we continue with the process.
+								// Check if the information is coherent:
+								if(temp.getConnection_id() == transacctionIdA && announcerequest.getAction().compareTo(Action.ANNOUNCE) == 0){
 									if(temp.getAnnounceRequest_lastupdate() == null){
-										//This means that it is the first time in sending the request
-										//Then we send an AnnounceResponse
-										//TODO: add the peer to the swarm, manage the information to de DATABASE and response
-										// to the client
+										// This means that it is the first time in receiving an AnnounceRequest.
+										// Then, we send an AnnounceResponse (checking the swarm is done within the following method):
+										AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, announcerequest.getInfoHash(), infoHash, downloaded, uploaded, left, temp);
+										
+										if (ismaster) {
+											//Once the message is created, we send it	
+											sendUDPMessage(ann_response, ip, destinationPort);
+											System.out.println("Sending AnnounceResponse UPD message back to the peer...");	
+										}
 									}
 									else{
-										//Compare if have passed the time required 
+										//Check if the required amount of time has elapsed so as to accept or not the message from the peer:
 									    Date last = temp.getAnnounceRequest_lastupdate();
 										long diffInMillies = new Date().getTime() - last.getTime();
 									    long secondsPassed = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
 									    if(secondsPassed >= 60){
-									    	//This means that has passed one minute or more
-									    	//Then we send an AnnounceResponse
-									    	Peer p = peerList.get(transacctionIdA);
-									    	p.setId(Integer.parseInt(announcerequest.getPeerId()));
-									    	if(p != null){
-									    		//TODO: add the peer to the swarm, manage the information to de DATABASE and response
-												// to the client
+									    	// This means that one minute or more has elapsed 
+									    	// Then, we send an AnnounceResponse (checking the swarm is done within the following method):
+											AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, announcerequest.getInfoHash(), infoHash, downloaded, uploaded, left, temp);
+											
+											if (ismaster) {
+												//Once the message is created, we send it	
+												sendUDPMessage(ann_response, ip, destinationPort);
+												System.out.println("Sending AnnounceResponse UPD message back to the peer...");	
+											}
+//									    	Peer p = peerList.get(transacctionIdA);
+//									    	if(p != null){
+//									    		p.setId(Integer.parseInt(announcerequest.getPeerId()));
 									    		//AnnounceResponse aresponse = prepareAnnounceResponse(connectionIdA, transacctionIdA, announcerequest.getInfoHash(), announcerequest.getHexInfoHash(), p);
-									    	}
+//									    	}
 									    }
 									    else{
-									    	//if not, send error
+									    	// Less than one minute has elapsed. Such a short time to receive another request from the peer so soon. Send error!
 									    	Error error = prepareError("Error: need to wait the time specified", transacctionIdA);
 									    	sendUDPMessage(error, ip, destinationPort);
 									    }
@@ -249,32 +260,45 @@ public class MulticastSocketTracker implements Runnable {
 		}
     }
 	
-	public ConnectResponse prepareConnectResponse(long connectionId, int transactionId){
+	public ConnectResponse prepareConnectResponse(int transactionId){
 		ConnectResponse response = new ConnectResponse();
 		response.setAction(Action.CONNECT);
 		response.setTransactionId(transactionId);
-		connectionId = ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE);
-		response.setConnectionId(connectionId);
+		response.setConnectionId(ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE));
 		return response;
 	}
 	
-	public AnnounceResponse prepareAnnounceResponse(long connectionId, int transactionId, byte[] infohash, String stringinfohash, Peer peer){
+	public AnnounceResponse prepareAnnounceResponse(long connectionId, int transactionId, byte[] infohash, String stringinfohash, long downloaded, long uploaded, long left, Peer peer){
 		AnnounceResponse response = new AnnounceResponse();
 		response.setAction(Action.ANNOUNCE);
 		response.setTransactionId(transactionId);
 		response.setInterval(interval);
-		if(swarmsInfo.getSwarmList().containsKey(infohash)){
-			//The swarm exists, so there is at least another peer
-			response.setPeers(new ArrayList(swarmsInfo.getSwarmList().get(infohash).getPeerList().values()));
-		}
-		else{
-			//The first peer asking for that swarm
-			Swarm newone = new Swarm(stringinfohash);
-			newone.addPeerToList(peer.getId(), peer);
-			
-			response.setLeechers(0);
-		}
 		
+		// Now, it is compulsory to check whether the peer we are communicating with has already been interested in the swarm.
+		// In other words, check if the swarm already exists or not.
+		if (swarmsInfo.getSwarmList().containsKey(stringinfohash)) {
+			// IF YES, then we already knew about that swarm.
+			// First, we send back the response to the peer and we will handle the update process (concerning all trackers) afterwards:
+			Swarm temp = swarmsInfo.getSwarmList().get(stringinfohash);
+			response.setLeechers(temp.getTotalLeecher());
+			response.setSeeders(temp.getTotalSeeders());
+			response.setPeers(temp.getPeerInfoList());
+			// So now, it is necessary to tell the rest of the trackers to update the information repository:
+			trackersInfo.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash, downloaded, uploaded, left, true);
+		} else {
+			// IF NO, then we did NOT know about that swarm before.
+			response.setLeechers(0);
+			response.setSeeders(0);
+			ArrayList<PeerInfo> temp = new ArrayList<PeerInfo>();
+			PeerInfo pf = new PeerInfo();
+			pf.setIpAddress(Integer.parseInt(peer.getIp()));
+			pf.setPort(peer.getPort());
+			temp.add(pf);
+			response.setPeers(temp);
+			// So, this means that it is the first time a peer requests the mentioned swarm.
+			// We need to include/save the new swarm and inform the rest of the trackers:
+			trackersInfo.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash, downloaded, uploaded, left, false);
+		}
 		return response;
 	}
 	

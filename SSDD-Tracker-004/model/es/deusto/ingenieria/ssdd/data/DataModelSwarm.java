@@ -12,7 +12,7 @@ import es.deusto.ingenieria.ssdd.classes.Swarm;
  */
 public class DataModelSwarm extends Observable{
 	
-	private HashMap<String, Swarm> swarmList; // A list of Swarms, each one strictly related to a certain content shared
+	private HashMap<String, Swarm> swarmList; // A list of Swarms, each one strictly related to a certain content shared. Key represents the InfoHash.
 	
 	public DataModelSwarm() {
 		this.swarmList = new HashMap<String, Swarm>();
