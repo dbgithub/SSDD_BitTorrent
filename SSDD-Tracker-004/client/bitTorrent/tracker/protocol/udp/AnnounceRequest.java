@@ -106,7 +106,7 @@ public class AnnounceRequest extends BitTorrentUDPRequestMessage {
 		    
 		    AnnounceRequest msg = new AnnounceRequest();
 		    
-		    msg.setConnectionId(buffer.getInt(0));
+		    msg.setConnectionId(buffer.getLong(0));
 		    msg.setAction(Action.valueOf(buffer.getInt(8)));
 		    msg.setTransactionId(buffer.getInt(12));
 		    buffer.position(16);
@@ -125,7 +125,7 @@ public class AnnounceRequest extends BitTorrentUDPRequestMessage {
 		    pI.setIpAddress(buffer.getInt(84));
 		    msg.setKey(buffer.getInt(88));
 		    msg.setNumWant(buffer.getInt(92));
-		    pI.setPort(buffer.getInt(96));
+		    pI.setPort(buffer.getShort(96));
 		    msg.setPeerInfo(pI);    
 			
 			return msg;
