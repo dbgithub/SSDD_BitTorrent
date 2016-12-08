@@ -112,6 +112,6 @@ public class DashboardController {
 	}
 	
 	public void sendRepositoryUpdateRequestMessage() {
-		dmt.sendRepositoryUpdateRequestMessage();
+//		dmt.sendRepositoryUpdateRequestMessage();
 	}
 }
