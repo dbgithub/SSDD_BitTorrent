@@ -1,5 +1,10 @@
 package bitTorrent.tracker.protocol.udp;
 
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
+import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
+
 /**
  * 
  * Offset  Size            	Name            	Value
@@ -19,14 +24,37 @@ public class Error extends BitTorrentUDPMessage {
 	
 	@Override
 	public byte[] getBytes() {
-		//TODO: Complete this method
+		ByteBuffer buffer = ByteBuffer.allocate(98);
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		
+		buffer.putLong(0, super.getAction().value());
+		buffer.putInt(4, super.getTransactionId());
+		buffer.put(message.getBytes());
+		
+		buffer.flip();
 			
-		return null;
+		return buffer.array();
 	}
 	
 	public static Error parse(byte[] byteArray) {
 		//TODO: Complete this method
-		
+		try {
+	    	ByteBuffer buffer = ByteBuffer.wrap(byteArray);
+		    buffer.order(ByteOrder.BIG_ENDIAN);
+		    
+		    Error msg = new Error();
+		    
+		    msg.setAction(Action.valueOf(buffer.getInt(0)));	    
+		    msg.setTransactionId(buffer.getInt(4));
+		    buffer.position(8);
+		    byte[] msgB = new byte[byteArray.length-8];
+		    buffer.get(msgB);
+		    msg.setMessage(new String(msgB));	    
+			
+			return msg;
+		} catch (Exception ex) {
+			System.out.println("# Error parsing AnnounceResponse message: " + ex.getMessage());
+		}
 		return null;
 	}
 	
