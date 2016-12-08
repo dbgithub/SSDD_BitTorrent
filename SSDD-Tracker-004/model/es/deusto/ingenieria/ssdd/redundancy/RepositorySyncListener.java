@@ -2,7 +2,6 @@ package es.deusto.ingenieria.ssdd.redundancy;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import javax.jms.Message;
@@ -13,9 +12,7 @@ import javax.jms.TextMessage;
 
 import org.w3c.dom.Document;
 
-import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.classes.PeerTrackerTemplate;
-import es.deusto.ingenieria.ssdd.classes.Swarm;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
@@ -37,7 +34,7 @@ public class RepositorySyncListener implements MessageListener{
 	private HashMap<Integer, HashMap<String, Boolean>> slaveResponseAvailabilityHashMap; // This HashMap stores True or False depending on the availability of the tracker slave for each and every peer request that is made.
 																						// The first Key represents the UpdateID of the peer (so as to identify who is (which peer) requesting anything).
 																						// The second Key represents a tracker.
-	private HashMap<Integer, PeerTrackerTemplate> updateInformationPeerList; // Information related to any incoming peer that NEEDS to be updated and transmited to every tracker. 
+	private HashMap<Integer, PeerTrackerTemplate> updateInformationPeerList; // Information related to any incoming peer that NEEDS to be updated and transmitted to every tracker. 
 	private RepositorySyncTimeout repoSyncTimeout; // Runnable class that ensures that the communication between the master and slaves is not broken. After the timeout is fired, the same message is sent to the master!
 	private Thread timeout; // Tracker slave will launch this Thread to ensure that the communication between the master and slaves is not broken.
 	private DBManager database;

@@ -12,6 +12,9 @@ public class PeerTrackerTemplate {
 	private String ip;
 	private int port;
 	private String infoHash;
+	private long downloaded;
+	private long uploaded;
+	private long left;
 	
 	public PeerTrackerTemplate(int id, String ip, int port, String infoHash) {
 		super();
@@ -19,6 +22,13 @@ public class PeerTrackerTemplate {
 		this.ip = ip;
 		this.port = port;
 		this.infoHash = infoHash;
+	}
+	
+	public PeerTrackerTemplate(String infohash, long uploaded, long downloaded, long left) {
+		this.infoHash = infohash;
+		this.downloaded = downloaded;
+		this.uploaded = uploaded;
+		this.left = left;
 	}
 	public int getId() {
 		return id;
@@ -43,6 +53,24 @@ public class PeerTrackerTemplate {
 	}
 	public void setInfoHash(String infoHash) {
 		this.infoHash = infoHash;
+	}
+	public long getDownloaded() {
+		return downloaded;
+	}
+	public void setDownloaded(long downloaded) {
+		this.downloaded = downloaded;
+	}
+	public long getUploaded() {
+		return uploaded;
+	}
+	public void setUploaded(long uploaded) {
+		this.uploaded = uploaded;
+	}
+	public long getLeft() {
+		return left;
+	}
+	public void setLeft(long left) {
+		this.left = left;
 	}
 
 }
