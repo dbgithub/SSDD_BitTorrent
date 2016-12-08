@@ -1,11 +1,5 @@
 package es.deusto.ingenieria.ssdd.classes;
 
-/**
- * Class that represents the relation between a peer and a torrent.
- * This class contains information regarding the details of the torrent current status for a given peer.
- * @author aitor & kevin
- *
- */
 public class PeerTorrent {
 	private String infoHash;
 	private int uploaded;

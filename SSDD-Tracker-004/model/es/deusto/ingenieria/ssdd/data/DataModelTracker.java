@@ -58,8 +58,8 @@ public class DataModelTracker extends Observable{
 		if (threadKeepaliveListener.isAlive()) {threadKeepaliveListener.interrupt(); System.out.println("Entrance-and-keepalive process STOPPED! :)");}
 	}
 	
-	public void sendRepositoryUpdateRequestMessage(String IP, int port, int peerID, String infohash, long downloaded, long uploaded, long left, boolean update) {
-		this.repositorySyncListener.sendUpdateRequestMessage(IP,port,peerID,infohash, downloaded, uploaded, left, update);
+	public void sendRepositoryUpdateRequestMessage(String IP, int port, int peerID, String infohash) {
+		this.repositorySyncListener.sendUpdateRequestMessage(IP,port,peerID,infohash);
 	}
 
 }

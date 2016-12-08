@@ -1,26 +1,24 @@
 package es.deusto.ingenieria.ssdd.classes;
 
+/**
+ * Class that represents the relation between a peer and a torrent.
+ * This class contains information regarding the details of the torrent current status for a given peer.
+ * @author aitor & kevin
+ *
+ */
 public class PeerTrackerTemplate {
 	
 	private int id;
 	private String ip;
 	private int port;
 	private String infoHash;
-	private long uploaded;
-	private long downloaded;
-	private long left;
-	private boolean update; // specifies whether to do and UPDATE or not. If not, this means that a new INSERT has to be done in the database.
 	
-	public PeerTrackerTemplate(int id, String ip, int port, String infoHash, long uploaded, long downloaded, long left, boolean update) {
+	public PeerTrackerTemplate(int id, String ip, int port, String infoHash) {
 		super();
 		this.id = id;
 		this.ip = ip;
 		this.port = port;
 		this.infoHash = infoHash;
-		this.uploaded = uploaded;
-		this.downloaded = downloaded;
-		this.left = left;
-		this.update = update;
 	}
 	public int getId() {
 		return id;
@@ -46,31 +44,5 @@ public class PeerTrackerTemplate {
 	public void setInfoHash(String infoHash) {
 		this.infoHash = infoHash;
 	}
-	public long getUploaded() {
-		return uploaded;
-	}
-	public void setUploaded(int uploaded) {
-		this.uploaded = uploaded;
-	}
-	public long getDownloaded() {
-		return downloaded;
-	}
-	public void setDownloaded(int downloaded) {
-		this.downloaded = downloaded;
-	}
-	public long getLeft() {
-		return left;
-	}
-	public void setLeft(int left) {
-		this.left = left;
-	}
-	public boolean isUpdate() {
-		return update;
-	}
-	public void setUpdate(boolean update) {
-		this.update = update;
-	}
-	
-	
 
 }

@@ -67,7 +67,7 @@ public class RepositorySyncListener implements MessageListener{
 						System.out.println("UpdateRequest from tracker master received! Now, sending SlaveResponse...");
 						// JMS message: SlaveResponse
 						int updateId = Integer.parseInt(xml.getElementsByTagName("updateid").item(0).getTextContent());
-						System.out.println("Is avaialbe to recieve updates??????????????????? " + dmc.isAvailableToReceiveUpdates());
+						System.out.println("Is avaialbe to recieve updates??? -> " + dmc.isAvailableToReceiveUpdates());
 						String slaveresponse = new JMSXMLMessages().convertToStringSlaveResponse(updateId, dmc.getId(), dmc.isAvailableToReceiveUpdates() ? "OK" : "ERROR");
 						TextMessage txtmsg_update = session.createTextMessage();
 						txtmsg_update.setText(slaveresponse);
@@ -108,7 +108,7 @@ public class RepositorySyncListener implements MessageListener{
 								PeerTrackerTemplate updateInformation = updateInformationPeerList.get(updateID);
 								updateMsg = new JMSXMLMessages().convertToStringUpdate("Update", updateInformation.getInfoHash(), updateInformation.getId(), updateInformation.getIp(), updateInformation.getPort());
 								// We make sure the master ALSO updates the information:
-								this.integrateNewPeer(updateInformation.getInfoHash(), updateInformation.getId(), updateInformation.getIp(), updateInformation.getPort(), updateInformation.getDownloaded(), updateInformation.getUploaded(), updateInformation.getLeft(), updateInformation.isUpdate());
+								this.integrateNewPeer(updateInformation.getInfoHash(), updateInformation.getId(), updateInformation.getIp(), updateInformation.getPort());
 								System.out.println("Sending UPDATE JMS message...");
 							} else {
 								System.out.println("The majority of the tracker slaves are NOT ready to receive updated :( (update declined)");
@@ -138,7 +138,7 @@ public class RepositorySyncListener implements MessageListener{
 							String peerID = xml.getElementsByTagName("peerid").item(0).getTextContent();
 							String peerIP = xml.getElementsByTagName("ip").item(0).getTextContent();
 							int peerPort = Integer.parseInt(xml.getElementsByTagName("port").item(0).getTextContent()); 
-//							this.integrateNewPeer(infoHash, Integer.parseInt(peerID), peerIP, peerPort); // TODO: check this method. REDISEÑAR EL XML?
+							this.integrateNewPeer(infoHash, Integer.parseInt(peerID), peerIP, peerPort);
 						} else if (resolution.equals("Abort")) {
 							// The master has aborted the updating process. No slave will be getting updates.
 							System.out.println("Less than 80% of the tracker slaves are ready to receive updates. Then, NO updates are sent!");	
@@ -161,19 +161,14 @@ public class RepositorySyncListener implements MessageListener{
 	 * the information regarding the new peer.
 	 * This method will be called whenever the master (cluster of trackers) receives a new incoming peer.
 	 */
-	public void sendUpdateRequestMessage(String IP, int port, int peerID, String infohash, long downloaded, long uploaded, long left, boolean update) {
+	public void sendUpdateRequestMessage(String IP, int port, int peerID, String infohash) {
 		try {
 			// JMS message: UpdateRequest
 			int updateId =0;
 			do{
 				updateId = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
 			}while(slaveResponseAvailabilityHashMap.containsKey(updateId));
-			// LO QUE HABIA ANTES PARA PROBAR UN HIPOTETICO PEER:
-//			String ip = UUID.randomUUID().toString();
-//			String infohash = UUID.randomUUID().toString();
-//			int id = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
-//			int port = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
-			updateInformationPeerList.put(updateId, new PeerTrackerTemplate(peerID, IP, port, infohash, downloaded, uploaded, left, update)); // We save in memory the information to be updated
+			updateInformationPeerList.put(updateId, new PeerTrackerTemplate(peerID, IP, port, infohash)); // We save in memory the information to be updated
 			slaveResponseAvailabilityHashMap.put(updateId, new HashMap<String, Boolean>()); // We introduce the UpdateID of the peer in the hashmap that will be used later on.
 			String updateReq = new JMSXMLMessages().convertToStringUpdateRequest(updateId);
 			TextMessage txtmsg = session.createTextMessage();
@@ -187,14 +182,14 @@ public class RepositorySyncListener implements MessageListener{
 	}
 	
 	/**
-	 * Checks if exists the swarm related to the torrent. If not, a new swarm is created.
-	 * Adds the incoming peer to the Peers' list of the swarm
+	 * Save in the database the information that is stored in memory regarding the incoming peer.
+	 * There is no need to check if the swarm exist or anything like that. All that was taken into account before.
 	 * @param infoHash
 	 * @param peerID
 	 * @param peerIP
 	 * @param peerPort
 	 */
-	private void integrateNewPeer(String infoHash, int peerID, String peerIP, int peerPort, long downloaded, long uploaded, long left, boolean update) {
+	private void integrateNewPeer(String infoHash, int peerID, String peerIP, int peerPort) {
 //		Peer p = new Peer(peerID, peerIP, peerPort, 0, 0);
 //		if (!dms.getSwarmList().containsKey(infoHash)) {
 //			Swarm s = new Swarm(infoHash, "EXAMPLE_FILENAME", 200);
@@ -204,21 +199,16 @@ public class RepositorySyncListener implements MessageListener{
 //			dms.getSwarmList().get(infoHash).addPeerToList(peerID, p);
 //			dms.notifySwarmChanged(dms.getSwarmList().get(infoHash));
 //		}
-		// Console outputs:
-		System.out.println("The properties of incoming Peer are:");
-		System.out.println("infoHash (Torrent): " + infoHash);
-		System.out.println("Peer ID: " + peerID);
-		System.out.println("Peer IP: " + peerIP);
-		System.out.println("Peer Port: " + peerPort);
-		
-		if (update) {
-			database.updatePeerTorrent(peerID, infoHash, uploaded, downloaded, left);
-		} else {
-			// Insert as new:
-			database.insertTorrent(infoHash);
-			database.insertPeer(peerID, peerIP, peerPort);
+		System.out.println("Saving data in the database: PeerID-> "+peerID+" | Peer IP-> "+peerIP+" | Peer port-> "+peerPort+" | InfoHash-> "+infoHash);
+		// TODO: INSERT IF NOT EXISTS o UPDATE IF EXISTS ...
+//		if (update) {
+//			database.updatePeerTorrent(peerID, infoHash, uploaded, downloaded, left);
+//		} else {
+//			// Insert as new:
+//			database.insertTorrent(infoHash);
+//			database.insertPeer(peerID, peerIP, peerPort);
 //		database.insertPeer_Torrent(peerID, infoHash, uploaded, downloaded, left); // INT <--> LONG ¿cambiar?
-		}
+//		}
 		
 	}
 
