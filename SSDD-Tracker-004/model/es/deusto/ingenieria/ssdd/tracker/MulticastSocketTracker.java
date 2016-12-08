@@ -69,6 +69,7 @@ public class MulticastSocketTracker implements Runnable {
 				System.out.println("Sender's Port: " + incomingMessage.getPort()); // This might be either an port from the multicast group or peer's port.
 				System.out.println("Sender's message length: " + incomingMessage.getLength());
 				System.out.println("Sender's data: " + new String(incomingMessage.getData()));
+				// TODO: En base al tamaño del mensaje que recibes (los bytes), sabremos si es Announce o Connect request
 				AnnounceRequest ar = new AnnounceRequest();
 				ar.parse(incomingMessage.getData());
 				System.out.println("---Announce Request---");

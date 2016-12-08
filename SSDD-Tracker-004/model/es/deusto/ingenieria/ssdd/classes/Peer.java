@@ -1,9 +1,11 @@
 package es.deusto.ingenieria.ssdd.classes;
 
+import java.util.HashMap;
+
 /**
  * Class that represents a peer at the network
  * 
- * @author kevin
+ * @author kevin & aitor
  *
  */
 public class Peer {
@@ -11,16 +13,18 @@ public class Peer {
 	private int id;
 	private String ip;
 	private int port;
-	private int downloaded;
-	private int uploaded;
+	private HashMap<String, PeerTorrent> swarmList;
 	
-	public Peer(int id, String ip, int port, int downloaded, int uploaded) {
+	public Peer(int id, String ip, int port, HashMap<String, PeerTorrent> swarmlist) {
 		super();
 		this.id = id;
 		this.ip = ip;
 		this.port = port;
-		this.downloaded = downloaded;
-		this.uploaded = uploaded;
+		this.swarmList = swarmlist;
+	}
+	
+	public Peer(int id) {
+		this.id = id;
 	}
 
 	public int getId() {
@@ -47,23 +51,30 @@ public class Peer {
 		this.port = port;
 	}
 
-	public int getDownloaded() {
-		return downloaded;
+	/**
+	 * @return the swarmList
+	 */
+	public HashMap<String, PeerTorrent> getSwarmList() {
+		return swarmList;
 	}
 
-	public void setDownloaded(int downloaded) {
-		this.downloaded = downloaded;
-	}
-
-	public int getUploaded() {
-		return uploaded;
-	}
-
-	public void setUploaded(int uploaded) {
-		this.uploaded = uploaded;
+	/**
+	 * @param swarmList the swarmList to set
+	 */
+	public void setSwarmList(HashMap<String, PeerTorrent> swarmList) {
+		this.swarmList = swarmList;
 	}
 	
-	
+	/**
+	 * equals is overrided to ensure we are just comparing IDs.
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if (o != null && o instanceof Peer) {
+			return ((Peer) o).id == this.id;
+		}
+		return false;
+	}
 	
 	
 

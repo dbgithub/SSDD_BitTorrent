@@ -195,28 +195,28 @@ public class RepositorySyncListener implements MessageListener{
 		// -------------------------------------------
 		// The following will CHANGE IN THE FUTURE when facing the implementation of the peers:							
 		// First we check if the current swarm list contains the swarm related to this InfoHash (torrent):
-		Peer p = new Peer(peerID, peerIP, peerPort, 0, 0);
-		if (!dms.getSwarmList().containsKey(infoHash)) {
-			Swarm s = new Swarm(infoHash, "EXAMPLE_FILENAME", 200);
-			s.addPeerToList(peerID, p);
-			dms.notifySwarmChanged(s);
-		} else {
-			dms.getSwarmList().get(infoHash).addPeerToList(peerID, p);
-			dms.notifySwarmChanged(dms.getSwarmList().get(infoHash));
-		}
-		// Console outputs:
-		System.out.println("The properties of incoming Peer are:");
-		System.out.println("infoHash (Torrent): " + infoHash);
-		System.out.println("Peer ID: " + peerID);
-		System.out.println("Peer IP: " + peerIP);
-		System.out.println("Peer Port: " + peerPort);
-		
-		//Adding to database
-		database.insertTorrent(infoHash);
-		System.out.println(">>>>>>>>>>>>>>>>"+peerID);
-		database.insertPeer(peerID, peerIP, peerPort);
-		//How to UPDATE the bytes downloaded and left?
-		database.insertPeer_Torrent(peerID, infoHash, 0, 0, 0, 0);
+//		Peer p = new Peer(peerID, peerIP, peerPort, 0, 0);
+//		if (!dms.getSwarmList().containsKey(infoHash)) {
+//			Swarm s = new Swarm(infoHash, "EXAMPLE_FILENAME", 200);
+//			s.addPeerToList(peerID, p);
+//			dms.notifySwarmChanged(s);
+//		} else {
+//			dms.getSwarmList().get(infoHash).addPeerToList(peerID, p);
+//			dms.notifySwarmChanged(dms.getSwarmList().get(infoHash));
+//		}
+//		// Console outputs:
+//		System.out.println("The properties of incoming Peer are:");
+//		System.out.println("infoHash (Torrent): " + infoHash);
+//		System.out.println("Peer ID: " + peerID);
+//		System.out.println("Peer IP: " + peerIP);
+//		System.out.println("Peer Port: " + peerPort);
+//		
+//		//Adding to database
+//		database.insertTorrent(infoHash);
+//		System.out.println(">>>>>>>>>>>>>>>>"+peerID);
+//		database.insertPeer(peerID, peerIP, peerPort);
+//		//How to UPDATE the bytes downloaded and left?
+//		database.insertPeer_Torrent(peerID, infoHash, 0, 0, 0, 0);
 		
 	}
 	

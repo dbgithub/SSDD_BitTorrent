@@ -7,6 +7,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import es.deusto.ingenieria.ssdd.classes.Peer;
+import es.deusto.ingenieria.ssdd.classes.PeerTorrent;
 
 /**
  * DBManager will handle and manage the operations done against the database for every tracker.
@@ -20,6 +25,8 @@ public class DBManager {
 	/**
 	 * Initializes a SQLite database with the name given by the parameter. The connection is established.
 	 * If the database did not exist, then, it is created. If it did exist previously, then, the connection is established.
+	 * (*Note for developers: The main difference between executeUpdate and executeQuery is that the former one return an int
+	 *  whereas the latter one returns a ResultSet to iterate though it.)
 	 * @param DBname
 	 */
 	public DBManager(String DBname) {
@@ -86,7 +93,6 @@ public class DBManager {
 						"'Uploaded' INTEGER(8),"+
 						"'Downloaded' INTEGER(8),"+
 						"'Left' INTEGER(8),"+
-						"'Key' INTEGER(4),"+
 						"PRIMARY KEY (FK_IDpeer, FK_InfoHash)," +
 						"FOREIGN KEY (FK_IDpeer) REFERENCES peer(IDpeer),"+
 						"FOREIGN KEY (FK_InfoHash) REFERENCES torrent(InfoHash))");
@@ -187,10 +193,10 @@ public class DBManager {
 		}
 	}
 	
-	public void insertPeer_Torrent(Integer IDpeer, String InfoHash, Integer uploaded, Integer downloaded, Integer left, Integer key) {
+	public void insertPeer_Torrent(Integer IDpeer, String InfoHash, Integer uploaded, Integer downloaded, Integer left) {
 		// TODO: validate parameteres
 
-		String sqlString = "INSERT INTO peer_torrent ('FK_IDpeer', 'FK_InfoHash', 'Uploaded', 'Downloaded', 'Left', 'Key') VALUES (?,?,?,?,?,?)";
+		String sqlString = "INSERT INTO peer_torrent ('FK_IDpeer', 'FK_InfoHash', 'Uploaded', 'Downloaded', 'Left') VALUES (?,?,?,?,?)";
 
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
 			stmt.setInt(1, IDpeer);
@@ -198,7 +204,6 @@ public class DBManager {
 			stmt.setInt(3, uploaded);
 			stmt.setInt(4, downloaded);
 			stmt.setInt(5, left);
-			stmt.setInt(6, key);
 
 			if (stmt.executeUpdate() >= 0) {
 				con.commit();
@@ -212,81 +217,295 @@ public class DBManager {
 		}
 	}
 	
-	public int retrievePeers() {
-		// TODO: return a real and meaningful value
-		
-		String sqlString = "SELECT * FROM peer";
-		
+	/**
+	 * Retrieves a list of peers with their corresponding peer-torrent information.
+	 * Apart from retrieving the attributes of a peer, the result also contains the attributes related to the
+	 * torrent files the peer is linked to.
+	 * @return a list of peers with attributes concerning the peer plus information regarding peer-torrent attributes.
+	 */
+	public ArrayList<Peer> retrievePeers() {
+		ArrayList<Peer> list = new ArrayList<Peer>();
+		String sqlString = "SELECT * FROM peer INNER JOIN peer_torrent ON peer.IDpeer = peer_torrent.FK_IDpeer";
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {			
 			ResultSet rs = stmt.executeQuery();
-			
-			if (rs != null) {
-				con.commit();
-				System.out.println("[DBManager] all peers within 'peer':");
-				while(rs.next()) {
-					System.out.println(rs.getInt("IDpeer") +" | "+  rs.getString("IP") + " | " + rs.getInt("Port"));
-				}		
-			} else {
-				con.rollback();
-				System.err.println("[DBManager] WARNING! A rollback was performed in retrievePeers method");
-			}
-			
-			return 0; // to delete in the future. We should return meaningful value.
+			con.commit();
+			System.out.println("[DBManager] all peers with their respective peer-torrent information:");
+			while(rs.next()) {
+				int peerindex = list.indexOf(new Peer(rs.getInt("IDpeer")));
+				if (peerindex != -1) {// This statement will occur when the peer was already in the result list.
+					Peer updatedPeer = list.get(peerindex); // This is the peer to whom its information will be updated.
+					updatedPeer.getSwarmList().put(rs.getString("FK_InfoHash"), new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
+					list.set(peerindex, updatedPeer);
+					System.out.println("[Retrieving peers...] Peer updated -> "+rs.getInt("IDpeer") +" | "+  rs.getString("IP") + " | " + rs.getInt("Port"));
+				} else {// This statement will occur when there is no such peer in the result list. Thus, we instantiate a new one.
+					HashMap<String, PeerTorrent> temp = new HashMap<String, PeerTorrent>();
+					temp.put(rs.getString("FK_InfoHash"), new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
+					list.add(new Peer(rs.getInt("IDpeer"),rs.getString("IP"),rs.getInt("Port"),temp));
+					System.out.println("[Retrieving peers...] New peer inserted -> "+rs.getInt("IDpeer") +" | "+  rs.getString("IP") + " | " + rs.getInt("Port"));
+				}
+			}		
+			return list;
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error retrieving tuples in 'peer': " + e.getMessage());
-			return -1; // to delete in the future. We should return meaningful value.
+			try {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in retrievePeers method");
+			} catch (SQLException e1) {
+				System.err.println("[DBManager] Error performing the rollback in retrievePeers method");
+				e1.printStackTrace();
+			}
 		}
+		return null;
 	}
 	
-	public int retrieveTorrents() {
-		// TODO: return a real and meaningful value
-		
+	/**
+	 * Retrieves all torrents saved in the database. 
+	 * @return a list of infoHashes (strings)
+	 */
+	public ArrayList<String> retrieveTorrents() {
+		ArrayList<String> list = new ArrayList<String>();
 		String sqlString = "SELECT * FROM torrent";
-		
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {			
 			ResultSet rs = stmt.executeQuery();
-			
-			if (rs != null) {
-				con.commit();
-				System.out.println("[DBManager] all peers within 'torrent':");
-				while(rs.next()) {
-					System.out.println(rs.getString("InfoHash"));
-				}			
-			} else {
-				con.rollback();
-				System.err.println("[DBManager] WARNING! A rollback was performed in retrieveTorrents method");
-			}
-			
-			return 0; // to delete in the future. We should return meaningful value.
+			con.commit();
+			System.out.println("[DBManager] all peers within 'torrent':");		
+			while (rs.next()) {
+				list.add(rs.getString("Infohash"));
+				System.out.println("[Retrieving torrents...] torrent -> " + rs.getString("InfoHash"));
+			} 
+			return list;
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error retrieving tuples in 'torrent': " + e.getMessage());
-			return -1; // to delete in the future. We should return meaningful value.
+			try {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in retrieveTorrents method");
+			} catch (SQLException e1) {
+				System.err.println("[DBManager] Error performing the rollback in retrieveTorrents method");
+				e1.printStackTrace();
+			}
+
 		}
+		return null;
 	}
 	
-	public int retrievePeerTorrent() {
-		// TODO: return a real and meaningful value
-		
+	/**
+	 * Retrieves a map of peer-torrent with key equals to the peer's ID and value equals to a list of (collection)
+	 * peer-torrent objects.
+	 * @return a map of peer-torrents information.
+	 */
+	public HashMap<Integer, ArrayList<PeerTorrent>> retrievePeerTorrent() {
+		HashMap<Integer, ArrayList<PeerTorrent>> map = new HashMap<Integer, ArrayList<PeerTorrent>>();
 		String sqlString = "SELECT * FROM peer_torrent";
-		
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {			
 			ResultSet rs = stmt.executeQuery();
-			
-			if (rs != null) {
-				con.commit();
-				System.out.println("[DBManager] all peers within 'peer_torrent':");
-				while(rs.next()) {
-					System.out.println(rs.getInt("downloaded") +" | "+  rs.getInt("uploaded") + " | " + rs.getInt("left") + " | " + rs.getInt("key"));
-				}	
-			} else {
-				con.rollback();
-				System.err.println("[DBManager] WARNING! A rollback was performed in retrievePeer_torrents method");
-			}
-			
-			return 0; // to delete in the future. We should return meaningful value.
+			con.commit();
+			System.out.println("[DBManager] all peeer-torrents within 'peer_torrent':");
+			while(rs.next()) {
+				int peerkey = rs.getInt("FK_IDpeer");
+				ArrayList<PeerTorrent> temp;
+				if (map.containsKey(peerkey)) {
+					if (map.get(peerkey) != null || map.get(peerkey).size() != 0) {
+						temp = map.get(peerkey);
+						temp.add(new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
+						System.out.println("[Retrieving peer-torrents...] Peer-torrent updated with a new insert -> "+rs.getString("FK_InfoHash") +" | "+ rs.getInt("Uploaded") +" | "+ rs.getInt("Downloaded") +" | "+ rs.getInt("Left"));
+						map.put(peerkey, temp);
+					} 
+				} else {
+					temp = new ArrayList<PeerTorrent>();
+					temp.add(new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
+					System.out.println("[Retrieving peer-torrents...] New Peer-torrent inserted -> "+rs.getString("FK_InfoHash") +" | "+ rs.getInt("Uploaded") +" | "+ rs.getInt("Downloaded") +" | "+ rs.getInt("Left"));
+					map.put(peerkey, temp);
+				}
+			}	
+			return map;
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error retrieving tuples in 'peer_torrent': " + e.getMessage());
-			return -1; // to delete in the future. We should return meaningful value.
+			try {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in retrievePeer_torrents method");
+			} catch (SQLException e1) {
+				System.err.println("[DBManager] Error performing the rollback in retrievePeer_torrents method");
+				e1.printStackTrace();
+			}
 		}
+		return null;
+	}
+	
+	/**
+	 * Updates an already existent peer with the values given by parameters
+	 * @param IDpeer
+	 * @param IP
+	 * @param Port
+	 * @return 1 if the operation was successful, if not, it returns -1
+	 */
+	public int updatePeer(Integer IDpeer, String IP, Integer Port) {
+		// TODO: Validate input parameters, check for NULL values
+		String sqlString = "UPDATE peer SET IP=?, Port=? WHERE IDpeer ="+IDpeer;
+		
+		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
+			stmt.setString(1, IP);
+			stmt.setInt(2, Port);
+			
+			if (stmt.executeUpdate() >= 0) {
+				con.commit();
+				System.out.println("[DBManager] peer with ID = "+IDpeer+" was updated in the database ('Peer')");
+				return 1;
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in updatePeer method");
+				return -1;
+			}
+		} catch (SQLException e) {
+			System.err.println("ERROR/EXCEPTION. Error updating a 'Peer' (ID="+IDpeer+")!" + e.getMessage());
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	
+	/**
+	 * Updates an already existent torrent with the values given by parameters
+	 * @param InfoHash
+	 * @return 1 if the operation was successful, if not, it returns -1
+	 */
+	public int updateTorrent(String primarykey, String InfoHash) {
+		// TODO: Validate input parameters, check for NULL values
+		String sqlString = "UPDATE torrent SET InfoHash=? WHERE InfoHash ='"+primarykey+"'";
+
+		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
+			stmt.setString(1, InfoHash);
+
+			if (stmt.executeUpdate() >= 0) {
+				con.commit();
+				System.out.println("[DBManager] torrent with InfoHash = "+primarykey+" was updated to '"+InfoHash+"' in the database ('Torrent')");
+				return 1;
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in updateTorrent method");
+				return -1;
+			}
+		} catch (SQLException e) {
+			System.err.println("ERROR/EXCEPTION. Error updating a 'Torrent' (InfoHash="+primarykey+")!" + e.getMessage());
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	
+	/**
+	 * Updates an already existent peer-torrent with the values given by parameters
+	 * @param IDpeer
+	 * @param InfoHash
+	 * @param uploaded
+	 * @param downloaded
+	 * @param left
+	 * @return 1 if the operation was successful, if not, it returns -1
+	 */
+	public int updatePeerTorrent(Integer IDpeer, String InfoHash, Integer uploaded, Integer downloaded, Integer left){
+		// TODO: Validate input parameters, check for NULL values
+		String sqlString = "UPDATE peer_torrent SET Uploaded=?, Downloaded=?, Left=? WHERE FK_IDpeer ="+IDpeer + " AND FK_InfoHash='"+InfoHash+"'";
+
+		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
+			stmt.setInt(1, uploaded);
+			stmt.setInt(2, downloaded);
+			stmt.setInt(3, left);
+
+			if (stmt.executeUpdate() >= 0) {
+				con.commit();
+				System.out.println("[DBManager] peer-torrent with ID = "+IDpeer+" and InfoHash = "+InfoHash+" was updated in the database ('Peer_Torrent')");
+				return 1;
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in updatePeerTorrent method");
+				return -1;
+			}
+		} catch (SQLException e) {
+			System.err.println("ERROR/EXCEPTION. Error updating a 'PeerTorrent' (ID="+IDpeer+", InfoHash="+InfoHash+")!" + e.getMessage());
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	
+	/**
+	 * Deletes a peer specified by a given parameter
+	 * @param idpeer
+	 * @return 1 if the operation was successful, if not, it returns -1
+	 */
+	public int deletePeer(Integer idpeer) {
+		String sqlString = "DELETE FROM peer WHERE IDpeer = "+idpeer;
+		
+		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
+			if (!stmt.execute()) {
+				con.commit();
+				if (stmt.getUpdateCount() == 1) {
+					System.out.println("Peer with ID = "+idpeer+" deleted successfully!");
+					return 1;
+					}
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in deletePeer method");
+				return -1;
+			}
+			return -1;
+		} catch (SQLException e) {
+			System.err.println("ERROR/EXCEPTION. Error deleting a 'Peer' (ID="+idpeer+")!" + e.getMessage());
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	
+	/**
+	 * Deletes a torrent specified by a given parameter
+	 * @param infohash
+	 * @return 1 if the operation was successful, if not, it returns -1
+	 */
+	public int deleteTorrent(String infohash) {
+		String sqlString = "DELETE FROM torrent WHERE InfoHash = '"+infohash+"'";
+		
+		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
+			if (!stmt.execute()) {
+				con.commit();
+				if (stmt.getUpdateCount() == 1) {
+					System.out.println("Torrent with InfoHash = "+infohash+" deleted successfully!");
+					return 1;
+					}
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in deleteTorrent method");
+				return -1;
+			}
+			return -1;
+		} catch (SQLException e) {
+			System.err.println("ERROR/EXCEPTION. Error deleting a 'Torrent' (InfoHash="+infohash+")!" + e.getMessage());
+			e.printStackTrace();
+		}
+		return -1;
+	}
+	
+	/**
+	 * Deletes a peer-torrent specified by a given parameter
+	 * @param idpeer
+	 * @param infohash
+	 * @return 1 if the operation was successful, if not, it returns -1
+	 */
+	public int deletePeerTorrent(Integer idpeer, String infohash) {
+		String sqlString = "DELETE FROM peer_torrent WHERE FK_IDpeer = "+idpeer+" AND FK_InfoHash = '" + infohash+"'";
+		
+		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
+			if (!stmt.execute()) {
+				con.commit();
+				if (stmt.getUpdateCount() == 1) {
+					System.out.println("PeerTorrent with ID = "+idpeer+" and InfoHash = "+infohash+" deleted successfully!");
+					return 1;
+					}
+			} else {
+				con.rollback();
+				System.err.println("[DBManager] WARNING! A rollback was performed in deletePeerTorrent method");
+				return -1;
+			}
+			return -1;
+		} catch (SQLException e) {
+			System.err.println("ERROR/EXCEPTION. Error deleting a 'PeerTorrent' (ID="+idpeer+", InfoHash="+infohash+")!" + e.getMessage());
+			e.printStackTrace();
+		}
+		return -1;
 	}
 }
