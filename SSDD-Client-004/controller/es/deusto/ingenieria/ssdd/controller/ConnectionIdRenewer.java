@@ -1,15 +1,8 @@
-package controller;
+package es.deusto.ingenieria.ssdd.controller;
 
 import java.net.DatagramSocket;
-
-import javax.jms.JMSException;
-import javax.jms.MessageProducer;
-import javax.jms.Session;
-import javax.jms.TextMessage;
-
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
-import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
-import es.deusto.ingenieria.ssdd.util.JMSXMLMessages;
+
 public class ConnectionIdRenewer implements Runnable{
 	
 	private DatagramSocket socketSend;

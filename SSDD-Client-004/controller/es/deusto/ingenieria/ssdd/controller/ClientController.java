@@ -1,4 +1,4 @@
-package controller;
+package es.deusto.ingenieria.ssdd.controller;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,9 +23,7 @@ import bitTorrent.tracker.protocol.udp.ConnectResponse;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest.Event;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
-import es.deusto.ingenieria.ssdd.tracker.MulticastSocketTracker;
 import bitTorrent.tracker.protocol.udp.PeerInfo;
-import main.TorrentInfoExtractor;
 
 public class ClientController {
 	

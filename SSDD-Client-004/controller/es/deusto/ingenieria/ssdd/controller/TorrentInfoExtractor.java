@@ -1,4 +1,4 @@
-package main;
+package es.deusto.ingenieria.ssdd.controller;
 
 import java.io.File;
 

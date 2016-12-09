@@ -1,19 +1,17 @@
-package main;
+package es.deusto.ingenieria.ssdd.view;
+
 
 import java.awt.FlowLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import es.deusto.ingenieria.ssdd.controller.ClientController;
 
-import controller.ClientController;
-import es.deusto.ingenieria.ssdd.controllers.DashboardController;
-import es.deusto.ingenieria.ssdd.view.MainFrame;
-
+@SuppressWarnings("serial")
 public class ClientFrame extends JFrame{
 	
 	  private JButton bChange ; // reference to the button object
@@ -70,7 +68,7 @@ public class ClientFrame extends JFrame{
 
 				public void run() {
 
-					ClientFrame cf = new ClientFrame(new ClientController());
+					new ClientFrame(new ClientController());
 
 				}
 

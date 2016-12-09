@@ -19,9 +19,9 @@ public class Peer {
 	private int id;
 	private String ip;
 	private int port;
-	private HashMap<String, PeerTrackerTemplate> swarmList;
+	private HashMap<String, PeerTorrent> swarmList;
 
-	public Peer(int id, String ip, int port, HashMap<String, PeerTrackerTemplate> swarmlist) {
+	public Peer(int id, String ip, int port, HashMap<String, PeerTorrent> swarmlist) {
 		super();
 		this.id = id;
 		this.ip = ip;
@@ -74,14 +74,14 @@ public class Peer {
 	/**
 	 * @return the swarmList
 	 */
-	public HashMap<String, PeerTrackerTemplate> getSwarmList() {
+	public HashMap<String, PeerTorrent> getSwarmList() {
 		return swarmList;
 	}
 
 	/**
 	 * @param swarmList the swarmList to set
 	 */
-	public void setSwarmList(HashMap<String, PeerTrackerTemplate> swarmList) {
+	public void setSwarmList(HashMap<String, PeerTorrent> swarmList) {
 		this.swarmList = swarmList;
 	}
 	

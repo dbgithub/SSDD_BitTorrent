@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import es.deusto.ingenieria.ssdd.classes.Peer;
-import es.deusto.ingenieria.ssdd.classes.PeerTrackerTemplate;
+import es.deusto.ingenieria.ssdd.classes.PeerTorrent;
 
 /**
  * DBManager will handle and manage the operations done against the database for every tracker.
@@ -234,12 +234,12 @@ public class DBManager {
 				int peerindex = list.indexOf(new Peer(rs.getInt("IDpeer")));
 				if (peerindex != -1) {// This statement will occur when the peer was already in the result list.
 					Peer updatedPeer = list.get(peerindex); // This is the peer to whom its information will be updated.
-					updatedPeer.getSwarmList().put(rs.getString("FK_InfoHash"), new PeerTrackerTemplate(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
+					updatedPeer.getSwarmList().put(rs.getString("FK_InfoHash"), new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
 					list.set(peerindex, updatedPeer);
 					System.out.println("[Retrieving peers...] Peer updated -> "+rs.getInt("IDpeer") +" | "+  rs.getString("IP") + " | " + rs.getInt("Port"));
 				} else {// This statement will occur when there is no such peer in the result list. Thus, we instantiate a new one.
-					HashMap<String, PeerTrackerTemplate> temp = new HashMap<String, PeerTrackerTemplate>();
-					temp.put(rs.getString("FK_InfoHash"), new PeerTrackerTemplate(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
+					HashMap<String, PeerTorrent> temp = new HashMap<String, PeerTorrent>();
+					temp.put(rs.getString("FK_InfoHash"), new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
 					list.add(new Peer(rs.getInt("IDpeer"),rs.getString("IP"),rs.getInt("Port"),temp));
 					System.out.println("[Retrieving peers...] New peer inserted -> "+rs.getInt("IDpeer") +" | "+  rs.getString("IP") + " | " + rs.getInt("Port"));
 				}
@@ -293,8 +293,8 @@ public class DBManager {
 	 * peer-torrent objects.
 	 * @return a map of peer-torrents information.
 	 */
-	public HashMap<Integer, ArrayList<PeerTrackerTemplate>> retrievePeerTorrent() {
-		HashMap<Integer, ArrayList<PeerTrackerTemplate>> map = new HashMap<Integer, ArrayList<PeerTrackerTemplate>>();
+	public HashMap<Integer, ArrayList<PeerTorrent>> retrievePeerTorrent() {
+		HashMap<Integer, ArrayList<PeerTorrent>> map = new HashMap<Integer, ArrayList<PeerTorrent>>();
 		String sqlString = "SELECT * FROM peer_torrent";
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {			
 			ResultSet rs = stmt.executeQuery();
@@ -302,17 +302,17 @@ public class DBManager {
 			System.out.println("[DBManager] all peeer-torrents within 'peer_torrent':");
 			while(rs.next()) {
 				int peerkey = rs.getInt("FK_IDpeer");
-				ArrayList<PeerTrackerTemplate> temp;
+				ArrayList<PeerTorrent> temp;
 				if (map.containsKey(peerkey)) {
 					if (map.get(peerkey) != null || map.get(peerkey).size() != 0) {
 						temp = map.get(peerkey);
-						temp.add(new PeerTrackerTemplate(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
+						temp.add(new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
 						System.out.println("[Retrieving peer-torrents...] Peer-torrent updated with a new insert -> "+rs.getString("FK_InfoHash") +" | "+ rs.getInt("Uploaded") +" | "+ rs.getInt("Downloaded") +" | "+ rs.getInt("Left"));
 						map.put(peerkey, temp);
 					} 
 				} else {
-					temp = new ArrayList<PeerTrackerTemplate>();
-					temp.add(new PeerTrackerTemplate(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
+					temp = new ArrayList<PeerTorrent>();
+					temp.add(new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
 					System.out.println("[Retrieving peer-torrents...] New Peer-torrent inserted -> "+rs.getString("FK_InfoHash") +" | "+ rs.getInt("Uploaded") +" | "+ rs.getInt("Downloaded") +" | "+ rs.getInt("Left"));
 					map.put(peerkey, temp);
 				}

@@ -12,7 +12,7 @@ import javax.jms.TextMessage;
 
 import org.w3c.dom.Document;
 
-import es.deusto.ingenieria.ssdd.classes.PeerTrackerTemplate;
+import es.deusto.ingenieria.ssdd.classes.PeerTorrent;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
@@ -34,7 +34,7 @@ public class RepositorySyncListener implements MessageListener{
 	private HashMap<Integer, HashMap<String, Boolean>> slaveResponseAvailabilityHashMap; // This HashMap stores True or False depending on the availability of the tracker slave for each and every peer request that is made.
 																						// The first Key represents the UpdateID of the peer (so as to identify who is (which peer) requesting anything).
 																						// The second Key represents a tracker.
-	private HashMap<Integer, PeerTrackerTemplate> updateInformationPeerList; // Information related to any incoming peer that NEEDS to be updated and transmitted to every tracker. 
+	private HashMap<Integer, PeerTorrent> updateInformationPeerList; // Information related to any incoming peer that NEEDS to be updated and transmitted to every tracker. 
 	private RepositorySyncTimeout repoSyncTimeout; // Runnable class that ensures that the communication between the master and slaves is not broken. After the timeout is fired, the same message is sent to the master!
 	private Thread timeout; // Tracker slave will launch this Thread to ensure that the communication between the master and slaves is not broken.
 	private DBManager database;
@@ -46,7 +46,7 @@ public class RepositorySyncListener implements MessageListener{
 		this.producer = p;
 		this.session = s;
 		this.slaveResponseAvailabilityHashMap = new HashMap<Integer, HashMap<String, Boolean>>();
-		this.updateInformationPeerList = new HashMap<Integer, PeerTrackerTemplate>();
+		this.updateInformationPeerList = new HashMap<Integer, PeerTorrent>();
 		this.database = db;
 	}
 	
@@ -102,7 +102,7 @@ public class RepositorySyncListener implements MessageListener{
 							if (amountPositiveAnswers >= admissionRate) {
 								System.out.println("The majority of the tracker slaves are ready to receive updates!");
 								// JMS message: Update UDPATE
-								PeerTrackerTemplate updateInformation = updateInformationPeerList.get(updateID);
+								PeerTorrent updateInformation = updateInformationPeerList.get(updateID);
 								updateMsg = new JMSXMLMessages().convertToStringUpdate("Update", updateInformation.getInfoHash(), updateInformation.getId(), updateInformation.getIp(), updateInformation.getPort());
 								// We make sure the master ALSO updates the information:
 								this.integrateNewPeer(updateInformation.getInfoHash(), updateInformation.getId(), updateInformation.getIp(), updateInformation.getPort());
@@ -165,7 +165,7 @@ public class RepositorySyncListener implements MessageListener{
 			do{
 				updateId = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
 			}while(slaveResponseAvailabilityHashMap.containsKey(updateId));
-			updateInformationPeerList.put(updateId, new PeerTrackerTemplate(peerID, IP, port, infohash)); // We save in memory the information to be updated
+			updateInformationPeerList.put(updateId, new PeerTorrent(peerID, IP, port, infohash)); // We save in memory the information to be updated
 			slaveResponseAvailabilityHashMap.put(updateId, new HashMap<String, Boolean>()); // We introduce the UpdateID of the peer in the hashmap that will be used later on.
 			String updateReq = new JMSXMLMessages().convertToStringUpdateRequest(updateId);
 			TextMessage txtmsg = session.createTextMessage();

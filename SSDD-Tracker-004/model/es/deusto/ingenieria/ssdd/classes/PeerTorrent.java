@@ -6,7 +6,7 @@ package es.deusto.ingenieria.ssdd.classes;
  * @author aitor & kevin
  *
  */
-public class PeerTrackerTemplate {
+public class PeerTorrent {
 	
 	private int id;
 	private String ip;
@@ -16,7 +16,7 @@ public class PeerTrackerTemplate {
 	private long uploaded;
 	private long left;
 	
-	public PeerTrackerTemplate(int id, String ip, int port, String infoHash) {
+	public PeerTorrent(int id, String ip, int port, String infoHash) {
 		super();
 		this.id = id;
 		this.ip = ip;
@@ -24,7 +24,7 @@ public class PeerTrackerTemplate {
 		this.infoHash = infoHash;
 	}
 	
-	public PeerTrackerTemplate(String infohash, long uploaded, long downloaded, long left) {
+	public PeerTorrent(String infohash, long uploaded, long downloaded, long left) {
 		this.infoHash = infohash;
 		this.downloaded = downloaded;
 		this.uploaded = uploaded;

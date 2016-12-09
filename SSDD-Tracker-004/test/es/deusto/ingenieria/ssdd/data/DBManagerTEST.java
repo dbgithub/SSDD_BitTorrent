@@ -14,7 +14,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import es.deusto.ingenieria.ssdd.classes.Peer;
-import es.deusto.ingenieria.ssdd.classes.PeerTrackerTemplate;
+import es.deusto.ingenieria.ssdd.classes.PeerTorrent;
 
 public class DBManagerTEST {
 
@@ -75,7 +75,7 @@ public class DBManagerTEST {
 	
 	//@Test
 	public void testretretrievePeerTorrent() {
-		HashMap<Integer, ArrayList<PeerTrackerTemplate>> map = dbm.retrievePeerTorrent();
+		HashMap<Integer, ArrayList<PeerTorrent>> map = dbm.retrievePeerTorrent();
 		assertNotNull(map);
 		assertTrue((map.keySet().size()!=0));
 	}

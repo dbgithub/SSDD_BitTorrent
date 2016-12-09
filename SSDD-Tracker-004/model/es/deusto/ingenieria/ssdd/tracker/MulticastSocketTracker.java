@@ -1,29 +1,22 @@
 package es.deusto.ingenieria.ssdd.tracker;
 
-import java.awt.List;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-
-import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
-import controller.ConnectionIdRenewer;
-import bitTorrent.tracker.protocol.udp.BitTorrentUDPRequestMessage;
 import bitTorrent.tracker.protocol.udp.ConnectRequest;
 import bitTorrent.tracker.protocol.udp.ConnectResponse;
 import bitTorrent.tracker.protocol.udp.Error;
 import bitTorrent.tracker.protocol.udp.PeerInfo;
-import bitTorrent.tracker.protocol.udp.AnnounceRequest.Event;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage;
 import es.deusto.ingenieria.ssdd.classes.Peer;
