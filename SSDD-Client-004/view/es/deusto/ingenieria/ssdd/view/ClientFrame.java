@@ -47,7 +47,7 @@ public class ClientFrame extends JFrame{
 	    add( bChange );                     // add the button to the JFrame
 	    setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 	    this.setSize( 150, 75 );
-	    this.setBounds(100, 100, 600, 480);
+	    this.setBounds(700, 100, 600, 480);
 	    this.setVisible( true );   
 	  }
 	  

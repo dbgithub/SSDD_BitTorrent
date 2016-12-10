@@ -30,6 +30,11 @@ public class Swarm {
 	
 	public Swarm(String infohash2) {
 		this.infoHash = infohash2;
+		this.swarmFile = "";
+		this.totalLeecher = 0;
+		this.totalSeeders = 0;
+		this.size = 0;
+		this.peerList = new HashMap<Integer, Peer>();
 	}
 
 	public String getInfoHash() {

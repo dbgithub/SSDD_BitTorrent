@@ -15,7 +15,7 @@ public class Peer {
 	private long connection_id;
 	private Date connection_id_lastupdate;
 	private Date announceRequest_lastupdate;
-	private long transaction_id;
+	private int transaction_id;
 	private int id;
 	private String ip;
 	private int port;
@@ -33,7 +33,7 @@ public class Peer {
 		this.id = id;
 	}
 
-	public Peer(long connection_id, long transaction_id, int id, String ip, int port) {
+	public Peer(long connection_id, int transaction_id, int id, String ip, int port) {
 		super();
 		this.connection_id = connection_id;
 		this.transaction_id = transaction_id;
@@ -104,11 +104,11 @@ public class Peer {
 		this.connection_id = connection_id;
 	}
 
-	public long getTransaction_id() {
+	public int getTransaction_id() {
 		return transaction_id;
 	}
 
-	public void setTransaction_id(long transaction_id) {
+	public void setTransaction_id(int transaction_id) {
 		this.transaction_id = transaction_id;
 	}
 

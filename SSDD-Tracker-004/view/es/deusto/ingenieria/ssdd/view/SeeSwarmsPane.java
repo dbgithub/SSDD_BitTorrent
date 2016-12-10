@@ -148,7 +148,7 @@ public class SeeSwarmsPane extends JPanel implements Observer{
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelSwarm){
 			//The update is related with the value that we are observing
-			if(arg == null)
+			if(arg != null)
 			{
 				//This is the Swarm object that provoked the notification
 				Swarm s = (Swarm)arg;

@@ -80,13 +80,16 @@ public class ClientController {
 			sendAndWaitUntilConnectResponseReceivedLoop(single, multicastsocketSend, socketReceive, true);
 
 			System.out.println("Connection id: "+ connectionId);
+			System.out.println("Transaction id: "+ connectResponse.getTransactionId());
 			
 			//Start a thread to renew connectionID after each minute of use
 			connectionIdRenewer(multicastsocketSend, socketReceive, single);
 			
 			//Send the first AnnounceRequest related with the torrent
+			System.out.println("PeerID: " +idPeer);
 			sendAndWaitUntilAnnounceResponseReceivedLoop(single, multicastsocketSend, socketReceive);
 			
+			System.out.println("AnnounceResponse: "+ announceResponse.getTransactionId());
 		}
 	}
 	

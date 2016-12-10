@@ -38,16 +38,16 @@ public class AnnounceResponse extends BitTorrentUDPMessage {
 		ByteBuffer buffer = ByteBuffer.allocate(20+6*peers.size());
 		buffer.order(ByteOrder.BIG_ENDIAN);
 		
-		buffer.putLong(0, super.getAction().value());
-		buffer.putLong(4, super.getTransactionId());
-		buffer.putLong(8, this.getInterval());
-		buffer.putLong(12, this.getLeechers());
-		buffer.putLong(16, this.getSeeders());
+		buffer.putInt(0, super.getAction().value());
+		buffer.putInt(4, super.getTransactionId());
+		buffer.putInt(8, this.getInterval());
+		buffer.putInt(12, this.getLeechers());
+		buffer.putInt(16, this.getSeeders());
 		
 		int index = 20;
 		for(PeerInfo t: peers){
-			buffer.putLong(index, t.getIpAddress());
-			buffer.putInt(index+4, t.getPort());
+			buffer.putInt(index, t.getIpAddress());
+			buffer.putShort(index+4, (short) t.getPort());
 			index = index + 6;
 		}
 		buffer.flip();
