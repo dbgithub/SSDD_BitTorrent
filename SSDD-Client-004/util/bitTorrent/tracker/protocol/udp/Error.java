@@ -24,7 +24,7 @@ public class Error extends BitTorrentUDPMessage {
 	
 	@Override
 	public byte[] getBytes() {
-		ByteBuffer buffer = ByteBuffer.allocate(98);
+		ByteBuffer buffer = ByteBuffer.allocate(4+message.getBytes().length);
 		buffer.order(ByteOrder.BIG_ENDIAN);
 		
 		buffer.putLong(0, super.getAction().value());

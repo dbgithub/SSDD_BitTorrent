@@ -61,7 +61,7 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		    
 		    int index = 16;
 		    
-		    while ((index + 20) < byteArray.length ) {
+		    while ((index + 20) <= byteArray.length ) {
 		    	byte[] msgB = new byte[20];
 			    buffer.get(msgB);
 			    msg.getInfoHashes().add(new String(msgB));

@@ -2,9 +2,9 @@ package es.deusto.ingenieria.ssdd.classes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import bitTorrent.tracker.protocol.udp.PeerInfo;
-import es.deusto.ingenieria.ssdd.tracker.MulticastSocketTracker;
 
 /**
  * Class that represents a Swarm of the network
@@ -18,7 +18,10 @@ public class Swarm {
 	private int size; // Size of the file
 	private int totalSeeders; // Peers who are uploading the file
 	private int totalLeecher; // Peers who are downloading the file
-	private HashMap<Integer, Peer> peerList; //Peer list
+	private List<PeerInfo> peerList; //Peer list
+	private long downloaded;
+	private long uploaded;
+	private long left;
 	
 	public Swarm(String infoHash, String file, int size) {
 		this.infoHash = infoHash;
@@ -26,7 +29,10 @@ public class Swarm {
 		this.size = size;
 		this.totalLeecher = 0;
 		this.totalSeeders = 0;
-		this.peerList = new HashMap<Integer, Peer>();
+		this.downloaded = 0;
+		this.uploaded = 0;
+		this.left = 0;
+		this.peerList = new ArrayList<>();
 	}
 	
 	public Swarm(String infohash2) {
@@ -35,7 +41,10 @@ public class Swarm {
 		this.totalLeecher = 0;
 		this.totalSeeders = 0;
 		this.size = 0;
-		this.peerList = new HashMap<Integer, Peer>();
+		this.downloaded = 0;
+		this.uploaded = 0;
+		this.left = 0;
+		this.peerList = new ArrayList<>();
 	}
 
 	public String getInfoHash() {
@@ -68,28 +77,40 @@ public class Swarm {
 	public void setTotalLeecher(int totalLeecher) {
 		this.totalLeecher = totalLeecher;
 	}
-	public HashMap<Integer, Peer> getPeerListHashMap() {
+
+	public List<PeerInfo> getPeerList() {
 		return peerList;
 	}
-	public void setPeerListHashMap(HashMap<Integer, Peer> peerList) {
+
+	public void setPeerList(List<PeerInfo> peerList) {
 		this.peerList = peerList;
 	}
-	public void addPeerToList(int PeerID, Peer p) {
-		this.peerList.put(PeerID, p);
+
+	public long getDownloaded() {
+		return downloaded;
 	}
-	public ArrayList<PeerInfo> getPeerInfoList() {
-		ArrayList<PeerInfo> resul = new ArrayList<PeerInfo>();
-		if (!peerList.isEmpty()) {
-			for (Peer p : peerList.values()) {
-				PeerInfo pf = new PeerInfo();
-				pf.setIpAddress(MulticastSocketTracker.convertIpAddressToInt(p.getIp()));
-				pf.setPort(p.getPort());
-				resul.add(pf);
-			}		
-			return resul;
-		}
-		return null;
+
+	public void setDownloaded(long downloaded) {
+		this.downloaded = downloaded;
 	}
+
+	public long getUploaded() {
+		return uploaded;
+	}
+
+	public void setUploaded(long uploaded) {
+		this.uploaded = uploaded;
+	}
+
+	public long getLeft() {
+		return left;
+	}
+
+	public void setLeft(long left) {
+		this.left = left;
+	}
+	
+	
 	
 
 }

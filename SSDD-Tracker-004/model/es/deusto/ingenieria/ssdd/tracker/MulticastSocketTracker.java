@@ -179,7 +179,7 @@ public class MulticastSocketTracker implements Runnable {
 										if (ismaster) {
 											//Once the message is created, we send it	
 											sendUDPMessage(ann_response, ip, destinationPort);
-											System.out.println("Sending AnnounceResponse UPD message back to the peer...");	
+											System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
 										}
 									}
 									else{
@@ -190,13 +190,13 @@ public class MulticastSocketTracker implements Runnable {
 									    if(secondsPassed >= 60){
 									    	// This means that one minute or more has elapsed 
 									    	// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
-									    	temp.setId(Integer.parseInt(announcerequest.getPeerId())); // first we assign the ID
+									    	temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
 											AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
 											
 											if (ismaster) {
 												//Once the message is created, we send it	
 												sendUDPMessage(ann_response, ip, destinationPort);
-												System.out.println("Sending AnnounceResponse UPD message back to the peer...");	
+												System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
 											}
 									    }
 									    else{
@@ -327,7 +327,7 @@ public class MulticastSocketTracker implements Runnable {
 		connectionCheckerThread.start();
 	}
 	
-	private int convertIpAddressToInt(String ip){
+	public static int convertIpAddressToInt(String ip){
 		
 		int result = 0;
 		InetAddress temp = null;

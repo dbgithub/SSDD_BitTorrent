@@ -71,7 +71,7 @@ public class AnnounceResponse extends BitTorrentUDPMessage {
 		    int index = 20;
 		    PeerInfo peerInfo = null;
 		    
-		    while ((index + 6) < byteArray.length ) {
+		    while ((index + 6) <= byteArray.length ) {
 		    	peerInfo = new PeerInfo();
 		    	peerInfo.setIpAddress(buffer.getInt(index));
 		    	peerInfo.setPort(buffer.getShort(index+4));		    	
@@ -117,5 +117,24 @@ public class AnnounceResponse extends BitTorrentUDPMessage {
 
 	public void setPeers(List<PeerInfo> peers) {
 		this.peers = peers;
+	}
+	
+	public static void main(String[]args){
+		AnnounceResponse temp = new AnnounceResponse();
+		temp.setAction(Action.ANNOUNCE);
+		temp.setInterval(60);
+		temp.setLeechers(80);
+		temp.setSeeders(90);
+		temp.setTransactionId(80808080);
+		List<PeerInfo> temporal = new ArrayList<>();
+		PeerInfo temp2 = new PeerInfo();
+		temp2.setIpAddress(102212112);
+		temp2.setPort(180);
+		temporal.add(temp2);
+		temp.setPeers(temporal);
+		byte[] array = temp.getBytes();
+		AnnounceResponse otro = AnnounceResponse.parse(array);
+		System.out.println(otro.getTransactionId() + " "+ otro.getPeers().get(0).getPort());
+		
 	}
 }

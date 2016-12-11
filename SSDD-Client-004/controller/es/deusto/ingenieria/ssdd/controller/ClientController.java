@@ -2,6 +2,7 @@ package es.deusto.ingenieria.ssdd.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -10,6 +11,9 @@ import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import bitTorrent.metainfo.InfoDictionary;
@@ -20,9 +24,11 @@ import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest;
 import bitTorrent.tracker.protocol.udp.ConnectRequest;
 import bitTorrent.tracker.protocol.udp.ConnectResponse;
+import bitTorrent.tracker.protocol.udp.Error;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest.Event;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
+import es.deusto.ingenieria.ssdd.classes.Swarm;
 import bitTorrent.tracker.protocol.udp.PeerInfo;
 
 public class ClientController {
@@ -41,9 +47,14 @@ public class ClientController {
 	private static final int DESTINATION_PORT = 9000;
 	private static int peerListenerPort;
 	
+	//Information about the swarms
+	public HashMap<String, Swarm> torrents = new HashMap<>();
+	
 	//THREADS
 	private ConnectionIdRenewer connectionRenewer;
 	private Thread connectionRenewerThread;
+	private DownloadStateNotifier downloadNotifier;
+	private Thread downloadNotifierThread;
 	
 	public void startConnection(File torrentFile){
 		//Create Object to extract the information related with the torrent file
@@ -63,18 +74,20 @@ public class ClientController {
 			// Start with the connection to the tracker
 			// First of all, send request to the multicast group. If the request doesn't have a response in 3 secs
 			// we will send the request again until we receive it.
-			try {
-				multicastsocketSend = new DatagramSocket();
-				socketReceive = multicastsocketSend;
-				peerListenerSocket = new ServerSocket();
-				peerListenerPort = peerListenerSocket.getLocalPort();
-			}catch (SocketException e) {
-				// TODO Auto-generated catch block
-				System.out.println("ERROR: Error opening UDP sender/listener Socket.");
-				e.printStackTrace();
-			} catch (IOException e) {
-				System.out.println("ERROR: Error opening TCP listener Socket.");
-				e.printStackTrace();
+			if(multicastsocketSend == null){
+				try {
+					multicastsocketSend = new DatagramSocket();
+					socketReceive = multicastsocketSend;
+					peerListenerSocket = new ServerSocket();
+					peerListenerPort = peerListenerSocket.getLocalPort();
+				}catch (SocketException e) {
+					// TODO Auto-generated catch block
+					System.out.println("ERROR: Error opening UDP sender/listener Socket.");
+					e.printStackTrace();
+				} catch (IOException e) {
+					System.out.println("ERROR: Error opening TCP listener Socket.");
+					e.printStackTrace();
+				}
 			}
 			//Let's send the ConnectionRequest and wait for the response (we try again if timeout reached)
 			sendAndWaitUntilConnectResponseReceivedLoop(single, multicastsocketSend, socketReceive, true);
@@ -83,16 +96,29 @@ public class ClientController {
 			System.out.println("Transaction id: "+ connectResponse.getTransactionId());
 			
 			//Start a thread to renew connectionID after each minute of use
-			connectionIdRenewer(multicastsocketSend, socketReceive, single);
+			createConnectionIdRenewer(multicastsocketSend, socketReceive, single);
 			
 			//Send the first AnnounceRequest related with the torrent
 			System.out.println("PeerID: " +idPeer);
-			sendAndWaitUntilAnnounceResponseReceivedLoop(single, multicastsocketSend, socketReceive);
+			sendAndWaitUntilAnnounceResponseReceivedLoop(single, multicastsocketSend, socketReceive, 0, 0, 0);
 			
 			System.out.println("AnnounceResponse: "+ announceResponse.getTransactionId());
+			
+			//Adding information about the swarm
+			String urlInfohash = single.getMetainfo().getInfo().getUrlInfoHash();
+			String file = single.getMetainfo().getInfo().getName();
+			int fileLength = single.getMetainfo().getInfo().getLength();
+			Swarm s = new Swarm(urlInfohash, file, fileLength);
+			s.setPeerList(announceResponse.getPeers());
+			s.setTotalLeecher(announceResponse.getLeechers());
+			s.setTotalSeeders(announceResponse.getSeeders());
+			torrents.put(single.getMetainfo().getInfo().getUrlInfoHash(), s);
+			
+			//Start a thread to notify the state of the download periodically
+			createDownloadStateNotifier(single, multicastsocketSend, socketReceive, announceResponse.getInterval());
 		}
 	}
-	
+
 	private void sendConnectRequest(MetainfoHandlerSingleFile single, DatagramSocket socket, boolean firstTime){
 		try{
 			InetAddress group = InetAddress.getByName(single.getMetainfo().getAnnounce());		
@@ -114,7 +140,7 @@ public class ClientController {
 		}
 	}
 	
-	private void sendAnnounceRequest(MetainfoHandlerSingleFile single, DatagramSocket socket){
+	private void sendAnnounceRequest(MetainfoHandlerSingleFile single, DatagramSocket socket, long downloaded, long left, long uploaded){
 		try{
 			InetAddress group = InetAddress.getByName(single.getMetainfo().getAnnounce());	
 			
@@ -166,8 +192,8 @@ public class ClientController {
 		}
 	}
 	
-	private void sendAndWaitUntilAnnounceResponseReceivedLoop(MetainfoHandlerSingleFile single,
-			DatagramSocket socketSend, DatagramSocket socketListen) {
+	public void sendAndWaitUntilAnnounceResponseReceivedLoop(MetainfoHandlerSingleFile single,
+			DatagramSocket socketSend, DatagramSocket socketListen, long downloaded, long left, long uploaded) {
 		try{
 			//Let's set a timeout if the tracker doesn't response
 			socketListen.setSoTimeout(3000);
@@ -175,13 +201,17 @@ public class ClientController {
 			boolean responseReceived = false;
 			while(!responseReceived){     // recieve data until timeout
 	            try {
-	            	sendAnnounceRequest(single, socketSend);
+	            	sendAnnounceRequest(single, socketSend, 0, 0, 0);
 	            	DatagramPacket response = new DatagramPacket(buffer, buffer.length);
 					//Stay blocked until the message is received or the timeout reached
 	            	socketListen.receive(response);
-	            	if(response.getLength() >= 98){
+	            	if(response.getLength() >= 16){
 	            		announceResponse = AnnounceResponse.parse(response.getData());
 		            	responseReceived = true;
+	            	}
+	            	else if(response.getLength() >= 4){
+	            		Error errorResponse = Error.parse(response.getData());
+	            		System.out.println("Error obtaining AnnounceResponse: "+errorResponse.getMessage());
 	            	}
 	            }
 	            catch (SocketTimeoutException e) {
@@ -231,12 +261,25 @@ public class ClientController {
 		
 	}
 	
-	private void connectionIdRenewer(DatagramSocket send, DatagramSocket receive, MetainfoHandlerSingleFile single) {
+	private void createConnectionIdRenewer(DatagramSocket send, DatagramSocket receive, MetainfoHandlerSingleFile single) {
 		ConnectionIdRenewer ms = new ConnectionIdRenewer(send, receive, single, this);
 		connectionRenewer = ms;
 		connectionRenewerThread = new Thread(ms); 
 		connectionRenewerThread.start();
 	}
 	
+	private void createDownloadStateNotifier(MetainfoHandlerSingleFile single, DatagramSocket send,
+			DatagramSocket receive, int interval) {
+		DownloadStateNotifier dsn = new DownloadStateNotifier(send, receive, single, interval, this);
+		downloadNotifier = dsn;
+		downloadNotifierThread = new Thread(dsn); 
+		downloadNotifierThread.start();
+	}
+	
+	private InetAddress convertIntToIP(int ip) throws UnknownHostException{
+		byte[] bytes = BigInteger.valueOf(ip).toByteArray();
+		InetAddress address = InetAddress.getByAddress(bytes);
+		return address;
+	}
 
 }
