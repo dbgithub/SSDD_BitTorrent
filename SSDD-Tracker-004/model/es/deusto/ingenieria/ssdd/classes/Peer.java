@@ -40,11 +40,13 @@ public class Peer {
 		this.id = id;
 		this.ip = ip;
 		this.port = port;
+		this.swarmList = new HashMap<>();
 		this.connection_id_lastupdate = new Date();
 	}
 
 	public Peer() {
-		
+		this.swarmList = new HashMap<>();
+		this.connection_id_lastupdate = new Date();
 	}
 
 	public int getId() {

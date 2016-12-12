@@ -21,6 +21,7 @@ import bitTorrent.tracker.protocol.udp.PeerInfo;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage;
 import es.deusto.ingenieria.ssdd.classes.Peer;
+import es.deusto.ingenieria.ssdd.classes.PeerTorrent;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
@@ -160,7 +161,7 @@ public class MulticastSocketTracker implements Runnable {
 							long downloaded = announcerequest.getDownloaded();
 							long uploaded = announcerequest.getUploaded();
 							long left = announcerequest.getLeft();
-							System.out.println(transacctionIdA+ " > "+ connectionIdA+ " > "+ downloaded + " > "+ uploaded + " > "+ left);
+							//System.out.println(transacctionIdA+ " > "+ connectionIdA+ " > "+ downloaded + " > "+ uploaded + " > "+ left);
 							Peer temp = peerList.get(transacctionIdA);
 							if(temp != null){
 								// This means that the communication is going on the right path.
@@ -278,7 +279,7 @@ public class MulticastSocketTracker implements Runnable {
 			Swarm temp = swarmsInfo.getSwarmList().get(stringinfohash);
 			response.setLeechers(temp.getTotalLeecher());
 			response.setSeeders(temp.getTotalSeeders());
-			response.setPeers(temp.getPeerInfoList());
+			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
 			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
 			temp.addPeerToList(peer.getId(), peer);
@@ -302,6 +303,7 @@ public class MulticastSocketTracker implements Runnable {
 			// The corresponding update to the database will occur later on.
 			HashMap<String, Swarm> temp_map= swarmsInfo.getSwarmList();
 			Swarm s = new Swarm(stringinfohash);
+			peer.getSwarmList().put(stringinfohash, new PeerTorrent(stringinfohash, uploaded, downloaded, left));
 			s.addPeerToList(peer.getId(), peer);
 			temp_map.put(stringinfohash, s);
 			swarmsInfo.setSwarmList(temp_map);

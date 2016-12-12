@@ -105,14 +105,14 @@ public class ClientController {
 			System.out.println("AnnounceResponse: "+ announceResponse.getTransactionId());
 			
 			//Adding information about the swarm
-			String urlInfohash = single.getMetainfo().getInfo().getUrlInfoHash();
+			String urlInfohash = single.getMetainfo().getInfo().getHexInfoHash();
 			String file = single.getMetainfo().getInfo().getName();
 			int fileLength = single.getMetainfo().getInfo().getLength();
 			Swarm s = new Swarm(urlInfohash, file, fileLength);
 			s.setPeerList(announceResponse.getPeers());
 			s.setTotalLeecher(announceResponse.getLeechers());
 			s.setTotalSeeders(announceResponse.getSeeders());
-			torrents.put(single.getMetainfo().getInfo().getUrlInfoHash(), s);
+			torrents.put(single.getMetainfo().getInfo().getHexInfoHash(), s);
 			
 			//Start a thread to notify the state of the download periodically
 			createDownloadStateNotifier(single, multicastsocketSend, socketReceive, announceResponse.getInterval());

@@ -1,7 +1,9 @@
 package es.deusto.ingenieria.ssdd.classes;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import bitTorrent.tracker.protocol.udp.PeerInfo;
 import es.deusto.ingenieria.ssdd.tracker.MulticastSocketTracker;
@@ -77,16 +79,32 @@ public class Swarm {
 	public void addPeerToList(int PeerID, Peer p) {
 		this.peerList.put(PeerID, p);
 	}
-	public ArrayList<PeerInfo> getPeerInfoList() {
-		ArrayList<PeerInfo> resul = new ArrayList<PeerInfo>();
+	public ArrayList<PeerInfo> getPeerInfoList(long left, String infohash, int numberOfPeers) {
+		//We order all the peers in a swarm taking into account the bytes of the file left
+		ArrayList<PeerInfo> result = new ArrayList<PeerInfo>();
 		if (!peerList.isEmpty()) {
-			for (Peer p : peerList.values()) {
+			List<PeerTorrent> peerTorrent = new ArrayList<PeerTorrent>();
+			for(Peer p : peerList.values()){
+				peerTorrent.add(p.getSwarmList().get(infohash));
+			}
+			if(left == 0){
+				//Then the peer is a complete seeder, don't need another seeders
+				Collections.sort(peerTorrent);
+			}
+			else{
+				Collections.sort(peerTorrent);
+				Collections.reverse(peerTorrent);
+			}
+			int index = 0;
+			while(index < numberOfPeers && index < peerTorrent.size())
+			{
 				PeerInfo pf = new PeerInfo();
-				pf.setIpAddress(MulticastSocketTracker.convertIpAddressToInt(p.getIp()));
-				pf.setPort(p.getPort());
-				resul.add(pf);
-			}		
-			return resul;
+				pf.setIpAddress(MulticastSocketTracker.convertIpAddressToInt(peerTorrent.get(index).getIp()));
+				pf.setPort(peerTorrent.get(index).getPort());
+				result.add(pf);
+				index++;
+			}	
+			return result;
 		}
 		return null;
 	}
