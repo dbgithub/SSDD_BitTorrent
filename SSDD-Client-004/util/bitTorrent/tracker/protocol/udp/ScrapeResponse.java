@@ -62,7 +62,7 @@ public class ScrapeResponse extends BitTorrentUDPMessage {
 		    int index = 8;
 		    ScrapeInfo scrapeInfo = null;
 		    
-		    while ((index + 12) < byteArray.length ) {
+		    while ((index + 12) <= byteArray.length ) {
 		    	scrapeInfo = new ScrapeInfo();
 		    	scrapeInfo.setSeeders(buffer.getInt(index));
 		    	scrapeInfo.setCompleted(buffer.getInt(index+4));
