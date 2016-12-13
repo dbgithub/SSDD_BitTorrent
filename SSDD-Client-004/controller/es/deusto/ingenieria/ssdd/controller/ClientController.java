@@ -182,10 +182,19 @@ public class ClientController {
 	            	DatagramPacket response = new DatagramPacket(buffer, buffer.length);
 					//Stay blocked until the message is received or the timeout reached
 	            	socketListen.receive(response);
+	            	//Size validation
 	            	if(response.getLength() >= 16){
 	            		connectResponse = ConnectResponse.parse(response.getData());
-		            	connectionId = connectResponse.getConnectionId();
-		            	responseReceived = true;
+	            		//Parse and Action Validation
+	            		if(connectResponse != null){
+	            			if(connectResponse.getAction().equals(Action.CONNECT)){
+	            				//TransactionId validation
+	            				if(connectResponse.getTransactionId() == transactionID){
+	            					connectionId = connectResponse.getConnectionId();
+					            	responseReceived = true;
+	            				}
+		            		}
+	            		}
 	            	}
 	            }
 	            catch (SocketTimeoutException e) {
@@ -213,13 +222,16 @@ public class ClientController {
 	            	DatagramPacket response = new DatagramPacket(buffer, buffer.length);
 					//Stay blocked until the message is received or the timeout reached
 	            	socketListen.receive(response);
+	            	//Size validation
 	            	if(response.getLength() >= 16){
 	            		announceResponse = AnnounceResponse.parse(response.getData());
-		            	responseReceived = true;
-	            	}
-	            	else if(response.getLength() >= 4){
-	            		Error errorResponse = Error.parse(response.getData());
-	            		System.out.println("Error obtaining AnnounceResponse: "+errorResponse.getMessage());
+	            		//Parse and Action Validation
+	            		if(announceResponse != null){
+	            			//TransactionId validation
+	            			if(announceResponse.getTransactionId() == transactionID){
+		            			responseReceived = true;
+		            		}
+	            		}
 	            	}
 	            }
 	            catch (SocketTimeoutException e) {
