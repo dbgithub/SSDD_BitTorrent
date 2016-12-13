@@ -12,13 +12,13 @@ import es.deusto.ingenieria.ssdd.classes.Peer;
  */
 public class DataModelPeer extends Observable {
 	
-	private HashMap<String, Peer> peerlist; // A list of key-value pairs containing all Peers
+	private HashMap<Integer, Peer> peerlist; // A list of key-value pairs containing all Peers
 	
-	public HashMap<String, Peer> getPeerlist() {
+	public HashMap<Integer, Peer> getPeerlist() {
 		return peerlist;
 	}
 
-	public void setPeerlist(HashMap<String, Peer> peerlist) {
+	public void setPeerlist(HashMap<Integer, Peer> peerlist) {
 		this.peerlist = peerlist;
 		setChanged();
 	    notifyObservers();

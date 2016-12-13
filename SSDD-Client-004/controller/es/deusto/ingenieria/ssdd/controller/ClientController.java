@@ -30,12 +30,15 @@ import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 import bitTorrent.tracker.protocol.udp.PeerInfo;
+import bitTorrent.tracker.protocol.udp.ScrapeRequest;
+import bitTorrent.tracker.protocol.udp.ScrapeResponse;
 
 public class ClientController {
 	
 	public static boolean ConnectResponseReceived = false;
 	private ConnectResponse connectResponse; //Response for the first ConnectRequest
 	private AnnounceResponse announceResponse; //Response for the first AnnounceResponse
+	private ScrapeResponse scrapeResponse; // Response of the Scrape request
 	
 	private DatagramSocket multicastsocketSend; //Represents the socket for sending messages
 	private DatagramSocket socketReceive; //Represents the socket for receiving messages
@@ -162,6 +165,10 @@ public class ClientController {
 		}
 	}
 	
+	private void sendScrapeRequest() {
+		
+	}
+	
 	public void sendAndWaitUntilConnectResponseReceivedLoop(MetainfoHandlerSingleFile single, DatagramSocket socketSend, DatagramSocket socketListen, boolean firstime){
 		try{
 			//Let's set a timeout if the tracker doesn't response
@@ -259,6 +266,12 @@ public class ClientController {
 		request.setTransactionId(transactionID);
 		return request;
 		
+	}
+	
+	private ScrapeRequest createScrapeRequest() {
+		ScrapeRequest scrape = new ScrapeRequest();
+		return null;
+//		scrape
 	}
 	
 	private void createConnectionIdRenewer(DatagramSocket send, DatagramSocket receive, MetainfoHandlerSingleFile single) {
