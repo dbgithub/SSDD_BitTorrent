@@ -274,15 +274,17 @@ public class MulticastSocketTracker implements Runnable {
 		// In other words, check if the swarm already exists or not.
 		if (swarmsInfo.getSwarmList().containsKey(stringinfohash)) {
 			// IF YES, then we already knew about that swarm.
-			// First, we send back the response to the peer and we will handle the update process (concerning all trackers) afterwards:
+			// First, we prepare the response to the peer and we will handle the update process (concerning all trackers) afterwards:
 			Swarm temp = swarmsInfo.getSwarmList().get(stringinfohash);
 			response.setLeechers(temp.getTotalLeecher());
 			response.setSeeders(temp.getTotalSeeders());
 			response.setPeers(temp.getPeerInfoList());
-			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory information regarding the SWARM.
+			// Now, no matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
-			temp.addPeerToList(peer.getId(), peer);
-			HashMap<String, Swarm> temp_map= swarmsInfo.getSwarmList();
+			HashMap<String, Swarm> temp_SwarmMap= swarmsInfo.getSwarmList();
+			HashMap<Integer, Peer> temp_PeerMap = temp.getPeerListHashMap();
+			temp_PeerMap.get()
+			temp.getPeerListHashMap().
 			temp_map.put(stringinfohash, temp);
 			swarmsInfo.setSwarmList(temp_map);
 			// So now, it is necessary to tell the rest of the trackers to update the information repository:
@@ -293,12 +295,11 @@ public class MulticastSocketTracker implements Runnable {
 			response.setSeeders(0);
 			ArrayList<PeerInfo> temp = new ArrayList<PeerInfo>();
 			PeerInfo pf = new PeerInfo();
-			
 			pf.setIpAddress(convertIpAddressToInt(peer.getIp()));
 			pf.setPort(peer.getPort());
 			temp.add(pf);
 			response.setPeers(temp);
-			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory information regarding the SWARM.
+			// Now, no matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
 			HashMap<String, Swarm> temp_map= swarmsInfo.getSwarmList();
 			Swarm s = new Swarm(stringinfohash);
