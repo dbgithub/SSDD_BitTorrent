@@ -20,7 +20,7 @@ public class DownloadStateNotifier implements Runnable{
 		this.send = send;
 		this.receive = receive;
 		this.single = single;
-		this.urlHash = single.getMetainfo().getInfo().getUrlInfoHash();
+		this.urlHash = single.getMetainfo().getInfo().getHexInfoHash();
 		this.interval = interval;
 		this.controller = controller;
 	}

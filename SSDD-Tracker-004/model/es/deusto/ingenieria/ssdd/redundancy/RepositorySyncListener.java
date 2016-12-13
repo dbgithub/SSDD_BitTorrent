@@ -156,7 +156,7 @@ public class RepositorySyncListener implements MessageListener{
 	/**
 	 * When a new Peer contacts the cluster of trackers (the master indeed), the master will have to send an UpdateRequest with
 	 * the information regarding the new peer.
-	 * This method will be called whenever the master (cluster of trackers) receives a new incoming peer.
+	 * This method will be called whenever the master (cluster of trackers) receives a new incoming peer or an AnnounceRequest.
 	 */
 	public void sendUpdateRequestMessage(String IP, int port, int peerID, String infohash) {
 		try {
@@ -165,7 +165,7 @@ public class RepositorySyncListener implements MessageListener{
 			do{
 				updateId = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
 			}while(slaveResponseAvailabilityHashMap.containsKey(updateId));
-			updateInformationPeerList.put(updateId, new PeerTorrent(peerID, IP, port, infohash)); // We save in memory the information to be updated
+			updateInformationPeerList.put(updateId, new PeerTorrent(peerID, IP, port, infohash)); // We save temporally the information to be spread over all trackers.
 			slaveResponseAvailabilityHashMap.put(updateId, new HashMap<String, Boolean>()); // We introduce the UpdateID of the peer in the hashmap that will be used later on.
 			String updateReq = new JMSXMLMessages().convertToStringUpdateRequest(updateId);
 			TextMessage txtmsg = session.createTextMessage();
@@ -187,26 +187,15 @@ public class RepositorySyncListener implements MessageListener{
 	 * @param peerPort
 	 */
 	private void integrateNewPeer(String infoHash, int peerID, String peerIP, int peerPort) {
-//		Peer p = new Peer(peerID, peerIP, peerPort, 0, 0);
-//		if (!dms.getSwarmList().containsKey(infoHash)) {
-//			Swarm s = new Swarm(infoHash, "EXAMPLE_FILENAME", 200);
-//			s.addPeerToList(peerID, p);
-//			dms.notifySwarmChanged(s);
-//		} else {
-//			dms.getSwarmList().get(infoHash).addPeerToList(peerID, p);
-//			dms.notifySwarmChanged(dms.getSwarmList().get(infoHash));
-//		}
-		System.out.println("Saving data in the database: PeerID-> "+peerID+" | Peer IP-> "+peerIP+" | Peer port-> "+peerPort+" | InfoHash-> "+infoHash);
-		// TODO: INSERT IF NOT EXISTS o UPDATE IF EXISTS ...
-//		if (update) {
-//			database.updatePeerTorrent(peerID, infoHash, uploaded, downloaded, left);
-//		} else {
-//			// Insert as new:
-//			database.insertTorrent(infoHash);
-//			database.insertPeer(peerID, peerIP, peerPort);
-//		database.insertPeer_Torrent(peerID, infoHash, uploaded, downloaded, left); // INT <--> LONG ¿cambiar?
-//		}
-		
+		PeerTorrent temp = dms.getSwarmList().get(infoHash).getPeerListHashMap().get(peerID).getSwarmList().get(infoHash);
+		System.out.println("Saving data in the database...: PeerID-> "+peerID+" | Peer IP-> "+peerIP+" | Peer port-> "+peerPort+" | InfoHash-> "+infoHash+" | Downloaded-> "+temp.getDownloaded()+" | Uploaded-> " + temp.getUploaded()+" | "+temp.getLeft());
+		int returnv = database.updatePeerTorrent(peerID, infoHash, temp.getUploaded(), temp.getDownloaded(), temp.getLeft());
+		if (returnv == -2) { // This means that no peer-torrent was found in the database with the specified infoHash. So, it's necessary to insert the peer, torrent and repeat the peer-torrent information.
+			System.out.println("No peer-torrent found. Inserting peer + torrent + peer-torrent...");
+			database.insertPeer(peerID, peerIP, peerPort);
+			database.insertTorrent(infoHash);
+			database.updatePeerTorrent(peerID, infoHash, temp.getUploaded(), temp.getDownloaded(), temp.getLeft());
+		}
 	}
 
 }

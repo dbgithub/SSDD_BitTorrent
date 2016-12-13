@@ -92,7 +92,7 @@ public class DBManagerTEST {
 	
 	//@Test
 	public void testupdatePeerTorrent() {
-		assertEquals(1, dbm.updatePeerTorrent(1234, "1571000710", 512, 1024, 6092));
+		assertEquals(1, dbm.updatePeerTorrent(1235, "1571000710", 512, 1024, 6092));
 	}
 	
 	//@Test

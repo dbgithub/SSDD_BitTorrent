@@ -6,7 +6,7 @@ package es.deusto.ingenieria.ssdd.classes;
  * @author aitor & kevin
  *
  */
-public class PeerTorrent {
+public class PeerTorrent implements Comparable<PeerTorrent>{
 	
 	private int id;
 	private String ip;
@@ -71,6 +71,13 @@ public class PeerTorrent {
 	}
 	public void setLeft(long left) {
 		this.left = left;
+	}
+
+	@Override
+	public int compareTo(PeerTorrent o) {
+		Long thisone = new Long(this.left);
+		Long theotherone = new Long(o.left);
+		return thisone.compareTo(theotherone);
 	}
 
 }

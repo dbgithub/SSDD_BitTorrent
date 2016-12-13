@@ -90,9 +90,9 @@ public class DBManager {
 				int resul3 = statement.executeUpdate("CREATE TABLE IF NOT EXISTS Peer_Torrent ("+
 						"'FK_IDpeer' INTEGER(20) NOT NULL,"+
 						"'FK_InfoHash' TEXT(20) NOT NULL,"+
-						"'Uploaded' INTEGER(8),"+
-						"'Downloaded' INTEGER(8),"+
-						"'Left' INTEGER(8),"+
+						"'Uploaded' LONG(8),"+
+						"'Downloaded' LONG(8),"+
+						"'Left' LONG(8),"+
 						"PRIMARY KEY (FK_IDpeer, FK_InfoHash)," +
 						"FOREIGN KEY (FK_IDpeer) REFERENCES peer(IDpeer),"+
 						"FOREIGN KEY (FK_InfoHash) REFERENCES torrent(InfoHash))");
@@ -153,19 +153,23 @@ public class DBManager {
 	public void insertPeer(Integer IDpeer, String IP, Integer Port) {
 		// TODO: validate parameters
 		
-		String sqlString = "INSERT INTO peer ('IDpeer', 'IP', 'Port') VALUES (?,?,?)";
+//		String sqlString = "INSERT INTO peer ('IDpeer', 'IP', 'Port') VALUES (?,?,?)";
+		String sqlString = "INSERT INTO peer ('IDpeer', 'IP', 'Port') SELECT ?,?,? WHERE NOT EXISTS "+
+							"(SELECT * FROM peer WHERE IDpeer = ?)";
 		
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
 			stmt.setInt(1, IDpeer);
 			stmt.setString(2, IP);
 			stmt.setInt(3, Port);
-			
-			if (stmt.executeUpdate() >=0) {
+			stmt.setInt(4, IDpeer);
+			int exists = stmt.executeUpdate(); // Check if the tuple exists or not. EXISTS = 0; NOT EXISTS = 1
+
+			if (exists > 0) {
 				con.commit();
 				System.out.println("[DBManager] a new record was saved into the database ('Peer')");
-			} else {
+			} else if (exists !=0){
 				con.rollback();
-				System.err.println("[DBManager] WARNING! A rollback was performed in insertPeer method");
+				System.err.println("[DBManager] WARNING! A rollback was performed in insertPeer method");				
 			}	
 		} catch (Exception e) {
 			System.err.println("ERROR/EXCEPTION. Error inserting data into 'Peer'!" + e.getStackTrace());
@@ -175,15 +179,19 @@ public class DBManager {
 	public void insertTorrent(String InfoHash){
 		// TODO: validate parameteres
 
-		String sqlString = "INSERT INTO torrent ('InfoHash') VALUES (?)";
+//		String sqlString = "INSERT INTO torrent ('InfoHash') VALUES (?)";
+		String sqlString = "INSERT INTO torrent ('InfoHash') SELECT ? WHERE NOT EXISTS "+
+							"(SELECT * FROM torrent WHERE InfoHash = ?)";
 
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
 			stmt.setString(1, InfoHash);
-
-			if (stmt.executeUpdate() >= 0) {
+			stmt.setString(2, InfoHash);
+			int exists = stmt.executeUpdate(); // Check if the tuple exists or not. EXISTS = 0; NOT EXISTS = 1
+			
+			if (exists > 0) {
 				con.commit();
 				System.out.println("[DBManager] a new record was saved into the database ('Torrent')");
-			} else {
+			} else if (exists != 0) {
 				con.rollback();
 				System.err.println("[DBManager] WARNING! A rollback was performed in insertTorrent method");
 			}	
@@ -401,21 +409,26 @@ public class DBManager {
 	 */
 	public int updatePeerTorrent(Integer IDpeer, String InfoHash, long uploaded, long downloaded, long left){
 		// TODO: Validate input parameters, check for NULL values
-		String sqlString = "UPDATE peer_torrent SET Uploaded=?, Downloaded=?, Left=? WHERE FK_IDpeer ="+IDpeer + " AND FK_InfoHash='"+InfoHash+"'";
+		String sqlString = "UPDATE peer_torrent SET Uploaded=?, Downloaded=?, Left=? " +
+							"WHERE EXISTS (SELECT * FROM peer_torrent WHERE FK_IDpeer ="+IDpeer + " AND FK_InfoHash='"+InfoHash+"') AND FK_IDpeer ="+IDpeer + " AND FK_InfoHash='"+InfoHash+"'";
 
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
 			stmt.setLong(1, uploaded);
 			stmt.setLong(2, downloaded);
 			stmt.setLong(3, left);
+			
+			int exists = stmt.executeUpdate(); // Check if the tuple exists or not. EXISTS = 0; NOT EXISTS = 1
 
-			if (stmt.executeUpdate() >= 0) {
+			if (exists > 0) {
 				con.commit();
 				System.out.println("[DBManager] peer-torrent with ID = "+IDpeer+" and InfoHash = "+InfoHash+" was updated in the database ('Peer_Torrent')");
 				return 1;
+			} else if (exists == 0) {
+				return -2; // If we return -2 means that no peer_torrent was found, so it is necessary to insert the peer and the torrent (in case they do not exist already)
 			} else {
 				con.rollback();
 				System.err.println("[DBManager] WARNING! A rollback was performed in updatePeerTorrent method");
-				return -1;
+				return -1;				
 			}
 		} catch (SQLException e) {
 			System.err.println("ERROR/EXCEPTION. Error updating a 'PeerTorrent' (ID="+IDpeer+", InfoHash="+InfoHash+")!" + e.getMessage());

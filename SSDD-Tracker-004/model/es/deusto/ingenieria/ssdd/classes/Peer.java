@@ -40,11 +40,13 @@ public class Peer {
 		this.id = id;
 		this.ip = ip;
 		this.port = port;
+		this.swarmList = new HashMap<>();
 		this.connection_id_lastupdate = new Date();
 	}
 
 	public Peer() {
-		
+		this.swarmList = new HashMap<>();
+		this.connection_id_lastupdate = new Date();
 	}
 
 	public int getId() {
@@ -71,23 +73,21 @@ public class Peer {
 		this.port = port;
 	}
 
-	/**
-	 * @return the swarmList
-	 */
 	public HashMap<String, PeerTorrent> getSwarmList() {
 		return swarmList;
 	}
 
-	/**
-	 * @param swarmList the swarmList to set
-	 */
 	public void setSwarmList(HashMap<String, PeerTorrent> swarmList) {
 		this.swarmList = swarmList;
 	}
 	
-	/**
-	 * equals is overrided to ensure we are just comparing IDs.
-	 */
+	public void updatePeerTorrentInfo(long downloaded, long uploaded, long left) {
+		swarmList.get(id).setDownloaded(downloaded);
+		swarmList.get(id).setUploaded(uploaded);
+		swarmList.get(id).setLeft(left);
+	}
+	
+
 	@Override
 	public boolean equals(Object o) {
 		if (o != null && o instanceof Peer) {

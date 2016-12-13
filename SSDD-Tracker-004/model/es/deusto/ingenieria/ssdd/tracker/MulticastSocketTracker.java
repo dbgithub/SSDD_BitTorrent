@@ -21,6 +21,7 @@ import bitTorrent.tracker.protocol.udp.PeerInfo;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage;
 import es.deusto.ingenieria.ssdd.classes.Peer;
+import es.deusto.ingenieria.ssdd.classes.PeerTorrent;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
@@ -46,8 +47,8 @@ public class MulticastSocketTracker implements Runnable {
 	volatile boolean cancel = false;
 	private boolean ismaster;
 	public HashMap<Integer, Peer> peerList = new HashMap<>(); //Saves the peers that 
-	private DataModelTracker trackersInfo;
-	private DataModelSwarm swarmsInfo;
+	private DataModelTracker dmt;
+	private DataModelSwarm dms;
 	private int interval = 60; // number of seconds to wait before receiving another AnnounceRequest from a peer.
 	
 	//THREAD
@@ -56,8 +57,8 @@ public class MulticastSocketTracker implements Runnable {
 	
 	
 	public MulticastSocketTracker(int port, String IP, boolean ismaster, DataModelTracker dmt, DataModelSwarm dms) {
-		this.trackersInfo = dmt;
-		this.swarmsInfo = dms;
+		this.dmt = dmt;
+		this.dms = dms;
 		try {
 			this.socketMulticast = new MulticastSocket(port);
 			this.group = InetAddress.getByName(IP);
@@ -102,7 +103,6 @@ public class MulticastSocketTracker implements Runnable {
 					// In this case, the incoming message comes from  an IP different from any tracker's IP, then, it is NOT a message from within the multicast group.
 					// Since we are interested in the incoming peers' IPs, we will save any interesting data:
 					
-					// TODO Enviar un mensaje JMS, UpdateRequest, a todos los SLAVES que estan escuchando para valorar si el master envia o no actualizacion de datos.
 					String ip = incomingMessage.getAddress().getHostAddress();
 					int originPort = incomingMessage.getPort();
 					int destinationPort = originPort;
@@ -160,7 +160,7 @@ public class MulticastSocketTracker implements Runnable {
 							long downloaded = announcerequest.getDownloaded();
 							long uploaded = announcerequest.getUploaded();
 							long left = announcerequest.getLeft();
-							System.out.println(transacctionIdA+ " > "+ connectionIdA+ " > "+ downloaded + " > "+ uploaded + " > "+ left);
+							//System.out.println(transacctionIdA+ " > "+ connectionIdA+ " > "+ downloaded + " > "+ uploaded + " > "+ left);
 							Peer temp = peerList.get(transacctionIdA);
 							if(temp != null){
 								// This means that the communication is going on the right path.
@@ -171,9 +171,9 @@ public class MulticastSocketTracker implements Runnable {
 									System.out.println("AnnounceRequest CORRECT");
 									if(temp.getAnnounceRequest_lastupdate() == null){
 										// This means that it is the first time in receiving an AnnounceRequest.
-										// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
 										temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
 										temp.setAnnounceRequest_lastupdate(new Date());
+										// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
 										AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
 
 										if (ismaster) {
@@ -189,8 +189,8 @@ public class MulticastSocketTracker implements Runnable {
 									    long secondsPassed = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
 									    if(secondsPassed >= 60){
 									    	// This means that one minute or more has elapsed 
-									    	// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
 									    	temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
+									    	// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
 											AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
 											
 											if (ismaster) {
@@ -272,23 +272,25 @@ public class MulticastSocketTracker implements Runnable {
 		
 		// Now, it is compulsory to check whether the peer we are communicating with has already been interested in the swarm.
 		// In other words, check if the swarm already exists or not.
-		if (swarmsInfo.getSwarmList().containsKey(stringinfohash)) {
+		if (dms.getSwarmList().containsKey(stringinfohash)) {
 			// IF YES, then we already knew about that swarm.
 			// First, we prepare the response to the peer and we will handle the update process (concerning all trackers) afterwards:
-			Swarm temp = swarmsInfo.getSwarmList().get(stringinfohash);
+			Swarm temp = dms.getSwarmList().get(stringinfohash);
 			response.setLeechers(temp.getTotalLeecher());
 			response.setSeeders(temp.getTotalSeeders());
-			response.setPeers(temp.getPeerInfoList());
-			// Now, no matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory information regarding the SWARM.
+			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
+			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
-			HashMap<String, Swarm> temp_SwarmMap= swarmsInfo.getSwarmList();
-			HashMap<Integer, Peer> temp_PeerMap = temp.getPeerListHashMap();
-			temp_PeerMap.get()
-			temp.getPeerListHashMap().
-			temp_map.put(stringinfohash, temp);
-			swarmsInfo.setSwarmList(temp_map);
-			// So now, it is necessary to tell the rest of the trackers to update the information repository:
-			trackersInfo.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);
+				// Now we extract/capture the peer from the memory and update is properties
+				HashMap<String, Swarm> temp_SwarmMap = dms.getSwarmList();
+				Peer temp_peer = temp.getPeerListHashMap().get(peer.getId());
+				temp_peer.updatePeerTorrentInfo(downloaded, uploaded, left);
+				// Now we put the peer back to its place in the memory:
+				temp.addPeerToList(temp_peer.getId(), temp_peer);
+				temp_SwarmMap.put(temp.getInfoHash(), temp);
+				dms.setSwarmList(temp_SwarmMap);
+			// So now, it is necessary to tell the rest of the trackers (IF WE ARE THE MASTER) to update the information repository:
+			if (ismaster) {dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);}
 		} else {
 			// IF NO, then we did NOT know about that swarm before.
 			response.setLeechers(0);
@@ -299,16 +301,17 @@ public class MulticastSocketTracker implements Runnable {
 			pf.setPort(peer.getPort());
 			temp.add(pf);
 			response.setPeers(temp);
-			// Now, no matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory information regarding the SWARM.
+			// Now, no matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
-			HashMap<String, Swarm> temp_map= swarmsInfo.getSwarmList();
+			HashMap<String, Swarm> temp_map= dms.getSwarmList();
 			Swarm s = new Swarm(stringinfohash);
+			peer.getSwarmList().put(stringinfohash, new PeerTorrent(stringinfohash, uploaded, downloaded, left));
 			s.addPeerToList(peer.getId(), peer);
 			temp_map.put(stringinfohash, s);
-			swarmsInfo.setSwarmList(temp_map);
+			dms.setSwarmList(temp_map);
 			// So, this means that it is the first time a peer requests the mentioned swarm.
 			// We need to include/save the new swarm and inform the rest of the trackers:
-			trackersInfo.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);
+			dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);
 		}
 		return response;
 	}
