@@ -17,7 +17,7 @@ public class Swarm {
 	
 	private String infoHash; // This is the identification of the torrent this swarms is sharing (downloading and/or uploading)
 	private String swarmFile; // The name of the file this swarm is sharing (downloading and/or uploading)
-	private int size; // Size of the file
+	private long size; // Size of the file
 	private int totalSeeders; // Peers who are uploading the file
 	private int totalLeecher; // Peers who are downloading the file
 	private HashMap<Integer, Peer> peerList; // This map contains a set of peer that are related somewhat to this swarm
@@ -52,10 +52,10 @@ public class Swarm {
 	public void setSwarmFile(String swarmFile) {
 		this.swarmFile = swarmFile;
 	}
-	public int getSize() {
+	public long getSize() {
 		return size;
 	}
-	public void setSize(int size) {
+	public void setSize(long size) {
 		this.size = size;
 	}
 	public int getTotalSeeders() {
@@ -107,6 +107,12 @@ public class Swarm {
 			return result;
 		}
 		return null;
+	}
+
+	public int getAppropiateInterval() {
+		int numberOfPeers = peerList.size();
+		
+		return 0;
 	}
 	
 

@@ -208,6 +208,9 @@ public class MulticastSocketTracker implements Runnable {
 								}
 							}
 							break;
+						default:
+							
+							break;
 					}
 				}
 			} catch (IOException e) {
@@ -276,19 +279,49 @@ public class MulticastSocketTracker implements Runnable {
 			// IF YES, then we already knew about that swarm.
 			// First, we prepare the response to the peer and we will handle the update process (concerning all trackers) afterwards:
 			Swarm temp = dms.getSwarmList().get(stringinfohash);
+			
+			//Set new value of peers/seeders
 			response.setLeechers(temp.getTotalLeecher());
 			response.setSeeders(temp.getTotalSeeders());
 			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
+			//We don't know nothing about the swarm, so we establish a default interval
+			response.setInterval(interval);
 			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
-				// Now we extract/capture the peer from the memory and update is properties
-				HashMap<String, Swarm> temp_SwarmMap = dms.getSwarmList();
-				Peer temp_peer = temp.getPeerListHashMap().get(peer.getId());
-				temp_peer.updatePeerTorrentInfo(downloaded, uploaded, left);
-				// Now we put the peer back to its place in the memory:
-				temp.addPeerToList(temp_peer.getId(), temp_peer);
-				temp_SwarmMap.put(temp.getInfoHash(), temp);
-				dms.setSwarmList(temp_SwarmMap);
+			// Now we extract/capture the peer from the memory and update is properties
+			
+			//Check if the peer exists in the swarm
+			HashMap<String, Swarm> temp_SwarmMap = dms.getSwarmList();
+			Peer tempPeer = null;
+			if(temp.getPeerListHashMap().containsKey(peer.getId())){
+				//The peer is already in the peer, just is necessary to update it
+				tempPeer = temp.getPeerListHashMap().get(peer.getId());
+			}
+			else{
+				//The peer isn't at the swarm
+				tempPeer = peerList.get(peer.getId());
+				tempPeer.updatePeerTorrentInfo(downloaded, uploaded, left);
+				if(left > 0){
+					//leecher
+					temp.setTotalLeecher(temp.getTotalSeeders()+1);
+				}
+				if(downloaded > 0){
+					//seeder
+					temp.setTotalSeeders(temp.getTotalLeecher()+1);
+				}
+			}
+			
+			tempPeer.updatePeerTorrentInfo(downloaded, uploaded, left);
+			// Now we put the peer back to its place in the memory:
+			temp.addPeerToList(tempPeer.getId(), tempPeer);
+			temp_SwarmMap.put(temp.getInfoHash(), temp);
+			dms.setSwarmList(temp_SwarmMap);
+			Peer temp_peer = temp.getPeerListHashMap().get(peer.getId());
+			temp_peer.updatePeerTorrentInfo(downloaded, uploaded, left);
+			// Now we put the peer back to its place in the memory:
+			temp.addPeerToList(temp_peer.getId(), temp_peer);
+			temp_SwarmMap.put(temp.getInfoHash(), temp);
+			dms.setSwarmList(temp_SwarmMap);
 			// So now, it is necessary to tell the rest of the trackers (IF WE ARE THE MASTER) to update the information repository:
 			if (ismaster) {dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);}
 		} else {
@@ -305,6 +338,18 @@ public class MulticastSocketTracker implements Runnable {
 			// The corresponding update to the database will occur later on.
 			HashMap<String, Swarm> temp_map= dms.getSwarmList();
 			Swarm s = new Swarm(stringinfohash);
+			if(left > 0){
+				//leecher
+				s.setTotalLeecher(1);
+			}
+			if(downloaded > 0){
+				//seeder
+				s.setTotalSeeders(1);
+			}
+			s.setSize(downloaded + left);
+			//We determinate an interval
+			int period = s.getAppropiateInterval();
+			response.setInterval(period);
 			peer.getSwarmList().put(stringinfohash, new PeerTorrent(stringinfohash, uploaded, downloaded, left));
 			s.addPeerToList(peer.getId(), peer);
 			temp_map.put(stringinfohash, s);
