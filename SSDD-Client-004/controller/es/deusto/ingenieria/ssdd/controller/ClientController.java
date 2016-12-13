@@ -13,6 +13,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -270,8 +271,18 @@ public class ClientController {
 	
 	private ScrapeRequest createScrapeRequest() {
 		ScrapeRequest scrape = new ScrapeRequest();
-		return null;
-//		scrape
+		scrape.setConnectionId(connectionId);
+		scrape.setTransactionId(transactionID);
+		int j = 0;
+		for (String s : this.torrents.keySet()) {
+			if (j <= 74) {
+				scrape.addInfoHash(s);
+				j++;				
+			} else {
+				break; // We cannot request information about more than 74 swarms, that's the limit! :)
+			}
+		}
+		return scrape;
 	}
 	
 	private void createConnectionIdRenewer(DatagramSocket send, DatagramSocket receive, MetainfoHandlerSingleFile single) {
