@@ -18,6 +18,7 @@ import bitTorrent.tracker.protocol.udp.ConnectRequest;
 import bitTorrent.tracker.protocol.udp.ConnectResponse;
 import bitTorrent.tracker.protocol.udp.Error;
 import bitTorrent.tracker.protocol.udp.PeerInfo;
+import bitTorrent.tracker.protocol.udp.ScrapeResponse;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage;
 import es.deusto.ingenieria.ssdd.classes.Peer;
@@ -163,9 +164,8 @@ public class MulticastSocketTracker implements Runnable {
 							long downloaded = announcerequest.getDownloaded();
 							long uploaded = announcerequest.getUploaded();
 							long left = announcerequest.getLeft();
-							//System.out.println(transacctionIdA+ " > "+ connectionIdA+ " > "+ downloaded + " > "+ uploaded + " > "+ left);
+							System.out.println(transacctionIdA+ " > "+ connectionIdA+ " > "+ downloaded + " > "+ uploaded + " > "+ left);
 							Peer temp = dmp.peerlist.get(transacctionIdA);
-							System.out.println("PEER ID!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + Integer.parseInt(announcerequest.getPeerId().trim()));
 							if(temp != null){
 								// This means that the communication is going on the right path.
 								// The tracker knew about the transaction ID, so we continue with the process.
@@ -372,6 +372,10 @@ public class MulticastSocketTracker implements Runnable {
 			if (ismaster) {dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);}
 		}
 		return response;
+	}
+	
+	public ScrapeResponse prepareScrapeResponse() {
+		
 	}
 	
 	public Error prepareError(String errormessage, int transactionId){

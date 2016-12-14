@@ -3,21 +3,17 @@ package es.deusto.ingenieria.ssdd.controller;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.BindException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
-import bitTorrent.metainfo.InfoDictionary;
 import bitTorrent.metainfo.InfoDictionarySingleFile;
 import bitTorrent.metainfo.handler.MetainfoHandler;
 import bitTorrent.metainfo.handler.MetainfoHandlerMultipleFile;
@@ -25,12 +21,12 @@ import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest;
 import bitTorrent.tracker.protocol.udp.ConnectRequest;
 import bitTorrent.tracker.protocol.udp.ConnectResponse;
-import bitTorrent.tracker.protocol.udp.Error;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest.Event;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 import bitTorrent.tracker.protocol.udp.PeerInfo;
+import bitTorrent.tracker.protocol.udp.ScrapeInfo;
 import bitTorrent.tracker.protocol.udp.ScrapeRequest;
 import bitTorrent.tracker.protocol.udp.ScrapeResponse;
 
@@ -46,13 +42,16 @@ public class ClientController {
 	private ServerSocket peerListenerSocket; //Socket for listening other peer connections
 	
 	private int idPeer = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+	private InetAddress multicastIP;
 	private static long connectionId = 41727101980L;
 	private static int transactionID;
 	private static final int DESTINATION_PORT = 9000;
 	private static int peerListenerPort;
 	
-	//Information about the swarms
+	// List of swarms
 	public HashMap<String, Swarm> torrents = new HashMap<>();
+	// Information about each and every swarm (leechers, seeders and completed), ScrapeInfos:
+	public ArrayList<ScrapeInfo> listScrapeInfo = new ArrayList<ScrapeInfo>();
 	
 	//THREADS
 	private ConnectionIdRenewer connectionRenewer;
@@ -125,13 +124,13 @@ public class ClientController {
 
 	private void sendConnectRequest(MetainfoHandlerSingleFile single, DatagramSocket socket, boolean firstTime){
 		try{
-			InetAddress group = InetAddress.getByName(single.getMetainfo().getAnnounce());		
-			
+			multicastIP = InetAddress.getByName(single.getMetainfo().getAnnounce());
+						
 			//Create Message
 			ConnectRequest request = createConnectRequest(firstTime);
 			
 			byte[] requestBytes = request.getBytes();	
-			DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length, group, DESTINATION_PORT);
+			DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length, multicastIP, DESTINATION_PORT);
 			socket.send(messageOut);
 			
 			System.out.println(" - Sent a message to '" + messageOut.getAddress().getHostAddress() + ":" + messageOut.getPort() + 
@@ -146,14 +145,12 @@ public class ClientController {
 	
 	private void sendAnnounceRequest(MetainfoHandlerSingleFile single, DatagramSocket socket, long downloaded, long left, long uploaded){
 		try{
-			InetAddress group = InetAddress.getByName(single.getMetainfo().getAnnounce());	
-			
 			InfoDictionarySingleFile info = single.getMetainfo().getInfo();
 			System.out.println("InfoHash: "+ info.getHexInfoHash());
 			AnnounceRequest request = createAnnounceRequest(info.getInfoHash(), 0, info.getLength(), 0, Event.NONE, 0, peerListenerPort);
 			
 			byte[] requestBytes = request.getBytes();	
-			DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length, group, DESTINATION_PORT);
+			DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length, multicastIP, DESTINATION_PORT);
 			socket.send(messageOut);
 			
 			System.out.println(" - Sent a message to '" + messageOut.getAddress().getHostAddress() + ":" + messageOut.getPort() + 
@@ -166,8 +163,18 @@ public class ClientController {
 		}
 	}
 	
-	private void sendScrapeRequest() {
-		
+	private void sendScrapeRequest(DatagramSocket socketSend) {
+		ScrapeRequest request = createScrapeRequest();
+		byte[] requestBytes = request.getBytes();
+		DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length,multicastIP, DESTINATION_PORT);
+		System.out.println(" - UDP ScrapeRequest message sent to the multicast group. From " + messageOut.getAddress().getHostAddress() +":"+
+							messageOut.getPort() + " to " + multicastIP.getHostAddress()+":"+DESTINATION_PORT +" (Bytes="+messageOut.getLength());
+		try {
+			socketSend.send(messageOut);
+		} catch (IOException e) {
+			System.err.println("# Socket Error ('sendScrapeRequest'): " + e.getMessage());
+			e.printStackTrace();
+		}
 	}
 	
 	public void sendAndWaitUntilConnectResponseReceivedLoop(MetainfoHandlerSingleFile single, DatagramSocket socketSend, DatagramSocket socketListen, boolean firstime){
@@ -246,6 +253,39 @@ public class ClientController {
 		}
 	}
 	
+	public void sendAndWaitUntilScrapeResponseReceivedLoop() {
+		try {
+			socketReceive.setSoTimeout(3000); //Let's set a timeout if the tracker doesn't response
+			byte[] buffer = new byte[1024];
+			boolean responseReceived = false;
+			while(!responseReceived) {
+				sendScrapeRequest(multicastsocketSend);
+				DatagramPacket response = new DatagramPacket(buffer, buffer.length);
+				try {
+					socketReceive.receive(response); // We wait until a response is received
+					if (response.getLength() >= 48) { 
+						scrapeResponse = ScrapeResponse.parse(response.getData());
+						if (scrapeResponse != null) {
+							if (scrapeResponse.getAction().equals(Action.SCRAPE)) {
+								if (scrapeResponse.getTransactionId() == transactionID) {
+									responseReceived = true;
+									listScrapeInfo = (ArrayList<ScrapeInfo>) scrapeResponse.getScrapeInfos();
+									System.out.println("ScrapeResponse received! The list of ScrapeInfo has been saved in memory!");
+								}
+							}
+						}
+					}
+				} catch (IOException e) {
+					System.out.println("ERROR occurred receiving from the listening socket in 'ScrapeResponseReceivedLoop'");
+					e.printStackTrace();
+				} 
+			}
+		} catch (SocketException e1) {
+			System.out.println("ERROR: Timeout exception in 'ScrapeResponseReceivedLoop'");
+			e1.printStackTrace();
+		}
+	}
+	
 	private AnnounceRequest createAnnounceRequest(byte[]infoHash, long downloaded, long left, int uploaded, Event event, int ipaddress, int port){
 		AnnounceRequest temp = new AnnounceRequest();
 		temp.setConnectionId(connectionId);
@@ -285,9 +325,10 @@ public class ClientController {
 		ScrapeRequest scrape = new ScrapeRequest();
 		scrape.setConnectionId(connectionId);
 		scrape.setTransactionId(transactionID);
+		scrape.setAction(Action.SCRAPE);
 		int j = 0;
 		for (String s : this.torrents.keySet()) {
-			if (j <= 74) {
+			if (j < 74) {
 				scrape.addInfoHash(s);
 				j++;				
 			} else {

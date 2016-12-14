@@ -15,6 +15,7 @@ import es.deusto.ingenieria.ssdd.controller.ClientController;
 public class ClientFrame extends JFrame{
 	
 	  private JButton bChange ; // reference to the button object
+	  private JButton bSendScrape; // the goal of this button's functionality is to ask for information regarding the swarms you "own"
 	  private ClientController controller;
 	  
 	  // constructor for ButtonFrame
@@ -45,11 +46,21 @@ public class ClientFrame extends JFrame{
 			}
 		});
 	    add( bChange );                     // add the button to the JFrame
+	    
+	    bSendScrape = new JButton("Send Scrape request");
+	    bSendScrape.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				controller.sendAndWaitUntilScrapeResponseReceivedLoop();
+			}
+		});
+	    add( bSendScrape );
 	    setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
 	    this.setSize( 150, 75 );
 	    this.setBounds(700, 100, 600, 480);
 	    this.setVisible( true );   
 	  }
+	  
 	  
 	  public static void main(String[]args){
 			try {
