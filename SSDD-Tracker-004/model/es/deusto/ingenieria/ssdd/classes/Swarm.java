@@ -109,9 +109,42 @@ public class Swarm {
 		return null;
 	}
 
-	public int getAppropiateInterval() {
-		int numberOfPeers = peerList.size();
-		
+	public int getAppropiateInterval(HashMap<String, Swarm> hashMap) {
+		//we will determine the interval considering the number of peers / seeders
+		//we first normalize data taking into account max/min
+		long maxSize = Long.MIN_VALUE;
+		long minSize = Long.MAX_VALUE;
+		int maxLeechers = Integer.MIN_VALUE;
+		int minLeechers = Integer.MAX_VALUE;
+		int maxSeeders = Integer.MIN_VALUE;
+		int minSeeders = Integer.MAX_VALUE;
+		if(hashMap.size() > 1){
+			for(Swarm temp : hashMap.values()){
+				if(temp.getTotalLeecher() > maxLeechers){
+					maxLeechers = temp.getTotalLeecher();
+				}
+				if(temp.getTotalLeecher() < minLeechers){
+					minLeechers = temp.getTotalLeecher();
+				}
+				if(temp.getTotalSeeders() > maxSeeders){
+					maxSeeders = temp.getTotalSeeders();
+				}
+				if(temp.getTotalSeeders() < minSeeders){
+					minSeeders = temp.getTotalSeeders();
+				}
+				if(temp.getTotalLeecher() > maxLeechers){
+					maxLeechers = temp.getTotalLeecher();
+				}
+				if(temp.getTotalLeecher() < minLeechers){
+					minLeechers = temp.getTotalLeecher();
+				}
+			}
+		}
+		else{
+			//This means that this swarm is the only one
+			//Just check the file 
+			
+		}
 		return 0;
 	}
 	
