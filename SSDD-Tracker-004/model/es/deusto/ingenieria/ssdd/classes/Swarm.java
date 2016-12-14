@@ -132,20 +132,31 @@ public class Swarm {
 				if(temp.getTotalSeeders() < minSeeders){
 					minSeeders = temp.getTotalSeeders();
 				}
-				if(temp.getTotalLeecher() > maxLeechers){
-					maxLeechers = temp.getTotalLeecher();
+				if(temp.getSize() > maxSize){
+					maxSize = temp.getSize();
 				}
-				if(temp.getTotalLeecher() < minLeechers){
-					minLeechers = temp.getTotalLeecher();
+				if(temp.getSize() < minSize){
+					minSize = temp.getSize();
 				}
 			}
+			//normalized values
+			double thisSize = this.size - minSize / (maxSize - minSize);
+			double thisLeechers = this.totalLeecher - minLeechers /(maxLeechers - minLeechers);
+			double thisSeeders = this.totalSeeders - minSeeders /(maxSeeders - minSeeders);
+			//If the file is big and the number of leechers high, we get a relative low interval
+			return (int) Math.round(70 - thisSize * 30 - thisLeechers * 30 + 60 * thisSeeders);
 		}
 		else{
 			//This means that this swarm is the only one
-			//Just check the file 
-			
+			//Just check number of peers (seeders/leechers)
+			double seederLeechersRatio = totalSeeders/totalLeecher;
+			if(seederLeechersRatio >= 1){
+				return (int) Math.round(60 + 60 * seederLeechersRatio);
+			}
+			else{
+				return (int) Math.round(60 * seederLeechersRatio);
+			}
 		}
-		return 0;
 	}
 	
 
