@@ -112,98 +112,115 @@ public class MulticastSocketTracker implements Runnable {
 							//If length is 16 bytes, then it's a ConnectRequest
 							System.out.println("The UDP message received was a ConnectionRequest!");
 							ConnectRequest request = ConnectRequest.parse(incomingMessage.getData());
-							long connectionId = request.getConnectionId();
-							int transacctionId = request.getTransactionId();
-							Action action = request.getAction();
-							if(action.compareTo(Action.CONNECT) == 0 && connectionId == 41727101980L){
-								//Then, this means the first connection between the peer and the tracker
-								//So, we have to add the peer to a list and response back to the peer if we are the master
-								//First, create a peer
-								Peer p = new Peer();
-								p.setIp(ip);
-								p.setAnnounceRequest_lastupdate(null);
-								p.setPort(destinationPort);
-								p.setTransaction_id(transacctionId);
-								p.setConnection_id_lastupdate(new Date());
-								dmp.peerlist.put(p.getTransaction_id(), p);
-								System.out.println("The transaction_id of the peer is: "+ p.getTransaction_id());
-								// If the current tracker is the master. Then, it has to response to the peer with a connection_id
-								if(ismaster){
-									//Create Response
-									ConnectResponse response = prepareConnectResponse(transacctionId);
-									p.setConnection_id(response.getConnectionId());
-									System.out.println("Asigned ConnectionID "+ p.getConnection_id() + " to this peer.");
-									
-									//Once the message is created, we send it	
-									sendUDPMessage(response, ip, destinationPort);
-									System.out.println("Sending ConnectResponse UPD message back to the peer...");
-								}	
+							if(request != null){
+								long connectionId = request.getConnectionId();
+								int transacctionId = request.getTransactionId();
+								Action action = request.getAction();
+								
+								if(connectionId == 41727101980L){
+									if(action.compareTo(Action.CONNECT) == 0){
+										//Then, this means the first connection between the peer and the tracker
+										//So, we have to add the peer to a list and response back to the peer if we are the master
+										//First, create a peer
+										if(!(dmp.peerlist.containsKey(transacctionId))){
+											Peer p = new Peer();
+											p.setIp(ip);
+											p.setAnnounceRequest_lastupdate(null);
+											p.setPort(destinationPort);
+											p.setTransaction_id(transacctionId);
+											p.setConnection_id_lastupdate(new Date());
+											dmp.peerlist.put(p.getTransaction_id(), p);
+											System.out.println("The transaction_id of the peer is: "+ p.getTransaction_id());
+											// If the current tracker is the master. Then, it has to response to the peer with a connection_id
+											if(ismaster){
+												//Create Response
+												ConnectResponse response = prepareConnectResponse(transacctionId);
+												p.setConnection_id(response.getConnectionId());
+												System.out.println("Asigned ConnectionID "+ p.getConnection_id() + " to this peer.");
+												
+												//Once the message is created, we send it	
+												sendUDPMessage(response, ip, destinationPort);
+												System.out.println("Sending ConnectResponse UPD message back to the peer...");
+											}	
+										}
+										else{
+											if (ismaster) {
+												//Then is trying to renew its connectionId
+												Peer selected = dmp.peerlist.get(transacctionId);
+												//We have to response to the peer with a new connection_id
+												ConnectResponse response = prepareConnectResponse(transacctionId);
+												selected.setConnection_id(response.getConnectionId());
+												selected.setConnection_id_lastupdate(new Date());
+												//Once is created the message, we send it	
+												sendUDPMessage(response, ip, destinationPort);	
+											}
+										}
+									}
+									else{
+										if(ismaster){
+											// Send error regarding action incorrect: connect
+											Error error = prepareError("[ActionIncorrectError]: Action incorrect, should be ANNOUNCE.", transacctionId);
+											sendUDPMessage(error, ip, destinationPort);
+										}
+									}
+								}
+								else{
+									if (ismaster) {
+										//Send error regarding connection ID incorrect
+										Error error = prepareError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match with the default onr or the one stored at the tracker.", transacctionId);
+										sendUDPMessage(error, ip, destinationPort);													
+									}
+								}
 							}
 							else{
 								if (ismaster) {
-									//Then is trying to renew its connectionId
-									Peer selected = dmp.peerlist.get(transacctionId);
-									//We have to response to the peer with a new connection_id
-									ConnectResponse response = prepareConnectResponse(transacctionId);
-									selected.setConnection_id(response.getConnectionId());
-									selected.setConnection_id_lastupdate(new Date());
-									//Once is created the message, we send it	
-									sendUDPMessage(response, ip, destinationPort);	
+									//Send error regarding transactionId incorrect
+									int defaultTransactionId = 0;
+									Error error = prepareError("[ParsingError]: Error parsing the ConnectRequest message. Try to send it again.", defaultTransactionId);
+									sendUDPMessage(error, ip, destinationPort);	
 								}
 							}
 							break;
 						case 98:
 							//If length is 98 bytes, then it's an AnnounceRequest
 							AnnounceRequest announcerequest = AnnounceRequest.parse(incomingMessage.getData());
-							System.out.println("The UDP message received was a AnnounceRequests!");
-							System.out.println("	InfoHash: "+announcerequest.getHexInfoHash());
-							String infoHash = announcerequest.getHexInfoHash();
-							int transacctionIdA = announcerequest.getTransactionId();
-							long connectionIdA = announcerequest.getConnectionId();
-							long downloaded = announcerequest.getDownloaded();
-							long uploaded = announcerequest.getUploaded();
-							long left = announcerequest.getLeft();
-							//System.out.println(transacctionIdA+ " > "+ connectionIdA+ " > "+ downloaded + " > "+ uploaded + " > "+ left);
-							Peer temp = dmp.peerlist.get(transacctionIdA);
-							System.out.println("PEER ID!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + Integer.parseInt(announcerequest.getPeerId().trim()));
-							if(temp != null){
-								// This means that the communication is going on the right path.
-								// The tracker knew about the transaction ID, so we continue with the process.
-								// Check if the information is coherent:
-								System.out.println("Action: "+ announcerequest.getAction());
-								boolean connectionIDcorrect = true; // by default is true
-								if (ismaster) {
-									if (temp.getConnection_id() != connectionIdA) {
-										connectionIDcorrect = false;									
-									}
-								}
-								if (!connectionIDcorrect) {
-									// Send error regarding connection ID
-								} else {
-									System.out.println("ConnectionID CORRECT");
-									if(announcerequest.getAction().compareTo(Action.ANNOUNCE) == 0){
-										System.out.println("AnnounceRequest CORRECT");
-										if(temp.getAnnounceRequest_lastupdate() == null){
-											// This means that it is the first time in receiving an AnnounceRequest.
-											temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
-											temp.setAnnounceRequest_lastupdate(new Date());
-											// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
-											AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
-											
-											if (ismaster) {
-												//Once the message is created, we send it	
-												sendUDPMessage(ann_response, ip, destinationPort);
-												System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
-											}
+							if(announcerequest != null){
+								System.out.println("The UDP message received was a AnnounceRequests!");
+								System.out.println("	InfoHash: "+announcerequest.getHexInfoHash());
+								String infoHash = announcerequest.getHexInfoHash();
+								int transacctionIdA = announcerequest.getTransactionId();
+								long connectionIdA = announcerequest.getConnectionId();
+								long downloaded = announcerequest.getDownloaded();
+								long uploaded = announcerequest.getUploaded();
+								long left = announcerequest.getLeft();
+								Peer temp = dmp.peerlist.get(transacctionIdA);
+								System.out.println("Received PEER ID: " + Integer.parseInt(announcerequest.getPeerId().trim()));
+								if(temp != null){
+									// This means that the communication is going on the right path.
+									// The tracker knew about the transaction ID, so we continue with the process.
+									// Check if the information is coherent:
+									System.out.println("Action: "+ announcerequest.getAction());
+									boolean connectionIDcorrect = true; // by default is true
+									if (ismaster) {
+										if (temp.getConnection_id() != connectionIdA) {
+											connectionIDcorrect = false;									
 										}
-										else{
-											//Check if the required amount of time has elapsed so as to accept or not the message from the peer:
-											Date last = temp.getAnnounceRequest_lastupdate();
-											long diffInMillies = new Date().getTime() - last.getTime();
-											long secondsPassed = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
-											if(secondsPassed >= 60){
-												// This means that one minute or more has elapsed 
+									}
+									if (!connectionIDcorrect) {
+										if (ismaster) {
+											// Send error regarding connection ID incorrect
+											Error error = prepareError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match with the one stored at the tracker.", transacctionIdA);
+											sendUDPMessage(error, ip, destinationPort);													
+										}
+										
+									} else {
+										System.out.println("ConnectionID CORRECT");
+										if(announcerequest.getAction().compareTo(Action.ANNOUNCE) == 0){
+											System.out.println("AnnounceRequest CORRECT");
+											if(temp.getAnnounceRequest_lastupdate() == null){
+												// This means that it is the first time in receiving an AnnounceRequest.
 												temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
+												temp.setAnnounceRequest_lastupdate(new Date());
 												// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
 												AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
 												
@@ -214,22 +231,65 @@ public class MulticastSocketTracker implements Runnable {
 												}
 											}
 											else{
-												// Less than one minute has elapsed. Such a short time to receive another request from the peer so soon. Send error!
-												if (ismaster) {
-													Error error = prepareError("Error: need to wait the time specified", transacctionIdA);
-													sendUDPMessage(error, ip, destinationPort);													
+												//Check if the required amount of time has elapsed so as to accept or not the message from the peer:
+												Date last = temp.getAnnounceRequest_lastupdate();
+												long diffInMillies = new Date().getTime() - last.getTime();
+												long secondsPassed = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
+												if(secondsPassed >= 60){
+													// This means that one minute or more has elapsed 
+													temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
+													// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
+													AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
+													
+													if (ismaster) {
+														//Once the message is created, we send it	
+														sendUDPMessage(ann_response, ip, destinationPort);
+														System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
+													}
 												}
-												
+												else{
+													// Less than one minute has elapsed. Such a short time to receive another request from the peer so soon. Send error!
+													if (ismaster) {
+														//Send error regarding request to early
+														Error error = prepareError("[IntervalIncorrectError]: AnnounceRequest too early.", transacctionIdA);
+														sendUDPMessage(error, ip, destinationPort);													
+													}
+													
+												}
 											}
-										}
-									} else {
-										// Send error regarding announce
-									}		
+										} else {
+											if(ismaster){
+												// Send error regarding action incorrect: announce
+												Error error = prepareError("[ActionIncorrectError]: Action incorrect, should be ANNOUNCE.", transacctionIdA);
+												sendUDPMessage(error, ip, destinationPort);
+											}
+										}		
+									}
+								}
+								else{
+									if(ismaster){
+										//Send error regarding transactionId incorrect
+										Error error = prepareError("[TransactionIdIncorrectError]: Incorrect transactionID. No registered with ConnectRequest before.", transacctionIdA);
+										sendUDPMessage(error, ip, destinationPort);	
+									}
+								}
+							}
+							else{
+								if (ismaster) {
+									//Send error regarding transactionId incorrect
+									int defaultTransactionId = 0;
+									Error error = prepareError("[ParsingError]: Error parsing AnnounceRequest message. Try to send it again.", defaultTransactionId);
+									sendUDPMessage(error, ip, destinationPort);	
 								}
 							}
 							break;
 						default:
-							
+							if (ismaster) {
+								//Send error regarding size of message incorrect
+								int defaultTransactionId = 0;
+								Error error = prepareError("[SizeIncorrectError]: Size incorrect, not matching with any of the messages.", defaultTransactionId);
+								sendUDPMessage(error, ip, destinationPort);													
+							}
 							break;
 					}
 				}
@@ -306,7 +366,7 @@ public class MulticastSocketTracker implements Runnable {
 			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
 			//We don't know nothing about the swarm, so we establish a default interval
 			//We determinate an interval
-			int period = temp.getAppropiateInterval();
+			int period = temp.getAppropiateInterval(dms.getSwarmList());
 			response.setInterval(period);
 			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
@@ -396,7 +456,6 @@ public class MulticastSocketTracker implements Runnable {
 		try {
 			temp = InetAddress.getByName(ip);
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		if(temp != null){
