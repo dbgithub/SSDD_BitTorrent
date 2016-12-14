@@ -96,7 +96,7 @@ public class DashboardController {
 			dmc.setId(id);
 			dmc.setIp(ip);
 			dmc.setPort(Integer.parseInt(port));
-			dmt.startEntranceStep(dmc, dms);
+			dmt.startEntranceStep(dmc, dms, dmp);
 		} else {
 			System.out.println("Stoping entrance-and-keepalive process...");
 			dmt.stopEntranceStep();

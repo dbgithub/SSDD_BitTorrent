@@ -48,8 +48,8 @@ public class DataModelTracker extends Observable{
 		notifyObservers(t);
 	}
 
-	public void startEntranceStep(DataModelConfiguration dmc, DataModelSwarm dms) {
-		EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, this, dms);
+	public void startEntranceStep(DataModelConfiguration dmc, DataModelSwarm dms, DataModelPeer dmp) {
+		EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, this, dms, dmp);
 		threadKeepaliveListener = new Thread(keepalive);
 		threadKeepaliveListener.start();	
 	}

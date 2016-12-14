@@ -23,6 +23,7 @@ import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage;
 import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.classes.PeerTorrent;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
+import es.deusto.ingenieria.ssdd.data.DataModelPeer;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
@@ -46,7 +47,7 @@ public class MulticastSocketTracker implements Runnable {
 	private DatagramPacket incomingMessage;
 	volatile boolean cancel = false;
 	private boolean ismaster;
-	public HashMap<Integer, Peer> peerList = new HashMap<>(); //Saves the peers that 
+	private DataModelPeer dmp;
 	private DataModelTracker dmt;
 	private DataModelSwarm dms;
 	private int interval = 60; // number of seconds to wait before receiving another AnnounceRequest from a peer.
@@ -56,9 +57,10 @@ public class MulticastSocketTracker implements Runnable {
 	private Thread connectionCheckerThread;
 	
 	
-	public MulticastSocketTracker(int port, String IP, boolean ismaster, DataModelTracker dmt, DataModelSwarm dms) {
+	public MulticastSocketTracker(int port, String IP, boolean ismaster, DataModelTracker dmt, DataModelSwarm dms, DataModelPeer dmp) {
 		this.dmt = dmt;
 		this.dms = dms;
+		this.dmp = dmp;
 		try {
 			this.socketMulticast = new MulticastSocket(port);
 			this.group = InetAddress.getByName(IP);
@@ -93,23 +95,22 @@ public class MulticastSocketTracker implements Runnable {
 			try {
 				this.socketMulticast.receive(incomingMessage);
 				System.out.println("UDP message arrived at Multicast group! :)");
-				System.out.println("Sender's IP: " + incomingMessage.getAddress().getHostAddress()); // This might be either an IP from the multicast group or peer's IP.
-				System.out.println("Sender's Port: " + incomingMessage.getPort()); // This might be either an port from the multicast group or peer's port.
-				System.out.println("Sender's message length: " + incomingMessage.getLength());
+				System.out.println("	Sender's IP: " + incomingMessage.getAddress().getHostAddress()); // This might be either an IP from the multicast group or peer's IP.
+				System.out.println("	Sender's Port: " + incomingMessage.getPort()); // This might be either an port from the multicast group or peer's port.
+				System.out.println("	Sender's message length: " + incomingMessage.getLength());
 				//System.out.println("Sender's data: " + new String(incomingMessage.getData()));
 				
 				
 				if (!incomingMessage.getAddress().equals(group)) {
-					// In this case, the incoming message comes from  an IP different from any tracker's IP, then, it is NOT a message from within the multicast group.
-					// Since we are interested in the incoming peers' IPs, we will save any interesting data:
-					
+					// In this case, the incoming message comes from an IP different from any tracker's IP, then, it is NOT a message from within the multicast group.
+					// Since we are interested in the incoming peers' IPs, we will save any interesting data:		
 					String ip = incomingMessage.getAddress().getHostAddress();
 					int originPort = incomingMessage.getPort();
 					int destinationPort = originPort;
 					switch(incomingMessage.getLength()){
 						case 16:
 							//If length is 16 bytes, then it's a ConnectRequest
-							System.out.println("The UDP message received was a ConnectionRequest");
+							System.out.println("The UDP message received was a ConnectionRequest!");
 							ConnectRequest request = ConnectRequest.parse(incomingMessage.getData());
 							long connectionId = request.getConnectionId();
 							int transacctionId = request.getTransactionId();
@@ -124,7 +125,7 @@ public class MulticastSocketTracker implements Runnable {
 								p.setPort(destinationPort);
 								p.setTransaction_id(transacctionId);
 								p.setConnection_id_lastupdate(new Date());
-								peerList.put(p.getTransaction_id(), p);
+								dmp.peerlist.put(p.getTransaction_id(), p);
 								System.out.println("The transaction_id of the peer is: "+ p.getTransaction_id());
 								// If the current tracker is the master. Then, it has to response to the peer with a connection_id
 								if(ismaster){
@@ -139,21 +140,23 @@ public class MulticastSocketTracker implements Runnable {
 								}	
 							}
 							else{
-								//Then is trying to renew its connectionId
-								Peer selected = peerList.get(transacctionId);
-								//We have to response to the peer with a new connection_id
-								ConnectResponse response = prepareConnectResponse(transacctionId);
-								selected.setConnection_id(response.getConnectionId());
-								selected.setConnection_id_lastupdate(new Date());
-								
-								//Once is created the message, we send it	
-								sendUDPMessage(response, ip, destinationPort);
+								if (ismaster) {
+									//Then is trying to renew its connectionId
+									Peer selected = dmp.peerlist.get(transacctionId);
+									//We have to response to the peer with a new connection_id
+									ConnectResponse response = prepareConnectResponse(transacctionId);
+									selected.setConnection_id(response.getConnectionId());
+									selected.setConnection_id_lastupdate(new Date());
+									//Once is created the message, we send it	
+									sendUDPMessage(response, ip, destinationPort);	
+								}
 							}
 							break;
 						case 98:
 							//If length is 98 bytes, then it's an AnnounceRequest
 							AnnounceRequest announcerequest = AnnounceRequest.parse(incomingMessage.getData());
-							System.out.println("The UDP message received was a AnnounceRequests (InfoHash: "+announcerequest.getHexInfoHash()+")");
+							System.out.println("The UDP message received was a AnnounceRequests!");
+							System.out.println("	InfoHash: "+announcerequest.getHexInfoHash());
 							String infoHash = announcerequest.getHexInfoHash();
 							int transacctionIdA = announcerequest.getTransactionId();
 							long connectionIdA = announcerequest.getConnectionId();
@@ -161,36 +164,30 @@ public class MulticastSocketTracker implements Runnable {
 							long uploaded = announcerequest.getUploaded();
 							long left = announcerequest.getLeft();
 							//System.out.println(transacctionIdA+ " > "+ connectionIdA+ " > "+ downloaded + " > "+ uploaded + " > "+ left);
-							Peer temp = peerList.get(transacctionIdA);
+							Peer temp = dmp.peerlist.get(transacctionIdA);
+							System.out.println("PEER ID!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! " + Integer.parseInt(announcerequest.getPeerId().trim()));
 							if(temp != null){
 								// This means that the communication is going on the right path.
 								// The tracker knew about the transaction ID, so we continue with the process.
 								// Check if the information is coherent:
-								System.out.println("ConnectionId: "+ temp.getConnection_id()+ " / Action: "+ announcerequest.getAction());
-								if(temp.getConnection_id() == connectionIdA && announcerequest.getAction().compareTo(Action.ANNOUNCE) == 0){
-									System.out.println("AnnounceRequest CORRECT");
-									if(temp.getAnnounceRequest_lastupdate() == null){
-										// This means that it is the first time in receiving an AnnounceRequest.
-										temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
-										temp.setAnnounceRequest_lastupdate(new Date());
-										// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
-										AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
-
-										if (ismaster) {
-											//Once the message is created, we send it	
-											sendUDPMessage(ann_response, ip, destinationPort);
-											System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
-										}
+								System.out.println("Action: "+ announcerequest.getAction());
+								boolean connectionIDcorrect = true; // by default is true
+								if (ismaster) {
+									if (temp.getConnection_id() != connectionIdA) {
+										connectionIDcorrect = false;									
 									}
-									else{
-										//Check if the required amount of time has elapsed so as to accept or not the message from the peer:
-									    Date last = temp.getAnnounceRequest_lastupdate();
-										long diffInMillies = new Date().getTime() - last.getTime();
-									    long secondsPassed = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
-									    if(secondsPassed >= 60){
-									    	// This means that one minute or more has elapsed 
-									    	temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
-									    	// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
+								}
+								if (!connectionIDcorrect) {
+									// Send error regarding connection ID
+								} else {
+									System.out.println("ConnectionID CORRECT");
+									if(announcerequest.getAction().compareTo(Action.ANNOUNCE) == 0){
+										System.out.println("AnnounceRequest CORRECT");
+										if(temp.getAnnounceRequest_lastupdate() == null){
+											// This means that it is the first time in receiving an AnnounceRequest.
+											temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
+											temp.setAnnounceRequest_lastupdate(new Date());
+											// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
 											AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
 											
 											if (ismaster) {
@@ -198,13 +195,36 @@ public class MulticastSocketTracker implements Runnable {
 												sendUDPMessage(ann_response, ip, destinationPort);
 												System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
 											}
-									    }
-									    else{
-									    	// Less than one minute has elapsed. Such a short time to receive another request from the peer so soon. Send error!
-									    	Error error = prepareError("Error: need to wait the time specified", transacctionIdA);
-									    	sendUDPMessage(error, ip, destinationPort);
-									    }
-									}
+										}
+										else{
+											//Check if the required amount of time has elapsed so as to accept or not the message from the peer:
+											Date last = temp.getAnnounceRequest_lastupdate();
+											long diffInMillies = new Date().getTime() - last.getTime();
+											long secondsPassed = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
+											if(secondsPassed >= 60){
+												// This means that one minute or more has elapsed 
+												temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
+												// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
+												AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
+												
+												if (ismaster) {
+													//Once the message is created, we send it	
+													sendUDPMessage(ann_response, ip, destinationPort);
+													System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
+												}
+											}
+											else{
+												// Less than one minute has elapsed. Such a short time to receive another request from the peer so soon. Send error!
+												if (ismaster) {
+													Error error = prepareError("Error: need to wait the time specified", transacctionIdA);
+													sendUDPMessage(error, ip, destinationPort);													
+												}
+												
+											}
+										}
+									} else {
+										// Send error regarding announce
+									}		
 								}
 							}
 							break;
@@ -262,8 +282,8 @@ public class MulticastSocketTracker implements Runnable {
 	public ConnectResponse prepareConnectResponse(int transactionId){
 		ConnectResponse response = new ConnectResponse();
 		response.setAction(Action.CONNECT);
-		response.setTransactionId(transactionId);
-		response.setConnectionId(ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE));
+		response.setTransactionId(transactionId); // Transaction ID!
+		response.setConnectionId(ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE)); // Connection ID!
 		return response;
 	}
 	
@@ -285,7 +305,9 @@ public class MulticastSocketTracker implements Runnable {
 			response.setSeeders(temp.getTotalSeeders());
 			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
 			//We don't know nothing about the swarm, so we establish a default interval
-			response.setInterval(interval);
+			//We determinate an interval
+			int period = temp.getAppropiateInterval();
+			response.setInterval(period);
 			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
 			// Now we extract/capture the peer from the memory and update is properties
@@ -299,8 +321,7 @@ public class MulticastSocketTracker implements Runnable {
 			}
 			else{
 				//The peer isn't at the swarm
-				tempPeer = peerList.get(peer.getId());
-				tempPeer.updatePeerTorrentInfo(downloaded, uploaded, left);
+				tempPeer = dmp.peerlist.get(peer.getId());
 				if(left > 0){
 					//leecher
 					temp.setTotalLeecher(temp.getTotalSeeders()+1);
@@ -311,15 +332,9 @@ public class MulticastSocketTracker implements Runnable {
 				}
 			}
 			
-			tempPeer.updatePeerTorrentInfo(downloaded, uploaded, left);
+			tempPeer.updatePeerTorrentInfo(stringinfohash, downloaded, uploaded, left);
 			// Now we put the peer back to its place in the memory:
 			temp.addPeerToList(tempPeer.getId(), tempPeer);
-			temp_SwarmMap.put(temp.getInfoHash(), temp);
-			dms.setSwarmList(temp_SwarmMap);
-			Peer temp_peer = temp.getPeerListHashMap().get(peer.getId());
-			temp_peer.updatePeerTorrentInfo(downloaded, uploaded, left);
-			// Now we put the peer back to its place in the memory:
-			temp.addPeerToList(temp_peer.getId(), temp_peer);
 			temp_SwarmMap.put(temp.getInfoHash(), temp);
 			dms.setSwarmList(temp_SwarmMap);
 			// So now, it is necessary to tell the rest of the trackers (IF WE ARE THE MASTER) to update the information repository:
@@ -334,9 +349,10 @@ public class MulticastSocketTracker implements Runnable {
 			pf.setPort(peer.getPort());
 			temp.add(pf);
 			response.setPeers(temp);
+			response.setInterval(interval);
 			// Now, no matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
-			HashMap<String, Swarm> temp_map= dms.getSwarmList();
+			HashMap<String, Swarm> temp_SwarmMap= dms.getSwarmList();
 			Swarm s = new Swarm(stringinfohash);
 			if(left > 0){
 				//leecher
@@ -347,16 +363,13 @@ public class MulticastSocketTracker implements Runnable {
 				s.setTotalSeeders(1);
 			}
 			s.setSize(downloaded + left);
-			//We determinate an interval
-			int period = s.getAppropiateInterval();
-			response.setInterval(period);
 			peer.getSwarmList().put(stringinfohash, new PeerTorrent(stringinfohash, uploaded, downloaded, left));
 			s.addPeerToList(peer.getId(), peer);
-			temp_map.put(stringinfohash, s);
-			dms.setSwarmList(temp_map);
+			temp_SwarmMap.put(stringinfohash, s);
+			dms.setSwarmList(temp_SwarmMap);
 			// So, this means that it is the first time a peer requests the mentioned swarm.
 			// We need to include/save the new swarm and inform the rest of the trackers:
-			dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);
+			if (ismaster) {dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);}
 		}
 		return response;
 	}
@@ -370,7 +383,7 @@ public class MulticastSocketTracker implements Runnable {
 	}
 	
 	private void startConnectionIdChecker() {
-		ConnectionIdChecker checker = new ConnectionIdChecker(this);
+		ConnectionIdChecker checker = new ConnectionIdChecker(this, dmp);
 		connectionChecker = checker;
 		connectionCheckerThread = new Thread(checker); 
 		connectionCheckerThread.start();
@@ -395,5 +408,4 @@ public class MulticastSocketTracker implements Runnable {
 		return result;
 		
 	}
-
 }

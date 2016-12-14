@@ -15,6 +15,7 @@ import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
+import es.deusto.ingenieria.ssdd.data.DataModelPeer;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 import es.deusto.ingenieria.ssdd.redundancy.RepositorySyncListener;
@@ -23,10 +24,12 @@ import es.deusto.ingenieria.ssdd.util.JMSXMLMessages;
 public class ConnectionIdChecker implements Runnable{
 	
 	private MulticastSocketTracker mst;
+	private DataModelPeer dmp;
 	volatile boolean cancel = false;
 	
-	public ConnectionIdChecker(MulticastSocketTracker mst) {
+	public ConnectionIdChecker(MulticastSocketTracker mst, DataModelPeer dmp) {
 		this.mst = mst;
+		this.dmp = dmp;
 	}
 
 	@Override
@@ -39,7 +42,7 @@ public class ConnectionIdChecker implements Runnable{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			for (Iterator<Peer> iterator = mst.peerList.values().iterator(); iterator.hasNext(); ) {
+			for (Iterator<Peer> iterator = dmp.peerlist.values().iterator(); iterator.hasNext(); ) {
 			    Peer t = iterator.next();
 			    Date last = t.getConnection_id_lastupdate();
 				long diffInMillies = new Date().getTime() - last.getTime();

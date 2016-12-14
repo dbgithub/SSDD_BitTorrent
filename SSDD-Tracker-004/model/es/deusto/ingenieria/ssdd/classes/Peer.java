@@ -40,12 +40,12 @@ public class Peer {
 		this.id = id;
 		this.ip = ip;
 		this.port = port;
-		this.swarmList = new HashMap<>();
+		this.swarmList = new HashMap<String, PeerTorrent>();
 		this.connection_id_lastupdate = new Date();
 	}
 
 	public Peer() {
-		this.swarmList = new HashMap<>();
+		this.swarmList = new HashMap<String, PeerTorrent>();
 		this.connection_id_lastupdate = new Date();
 	}
 
@@ -81,10 +81,10 @@ public class Peer {
 		this.swarmList = swarmList;
 	}
 	
-	public void updatePeerTorrentInfo(long downloaded, long uploaded, long left) {
-		swarmList.get(id).setDownloaded(downloaded);
-		swarmList.get(id).setUploaded(uploaded);
-		swarmList.get(id).setLeft(left);
+	public void updatePeerTorrentInfo(String infohash, long downloaded, long uploaded, long left) {
+		swarmList.get(infohash).setDownloaded(downloaded);
+		swarmList.get(infohash).setUploaded(uploaded);
+		swarmList.get(infohash).setLeft(left);
 	}
 	
 

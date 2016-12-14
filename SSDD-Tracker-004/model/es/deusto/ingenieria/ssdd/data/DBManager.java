@@ -201,7 +201,7 @@ public class DBManager {
 		}
 	}
 	
-	public void insertPeer_Torrent(Integer IDpeer, String InfoHash, Integer uploaded, Integer downloaded, Integer left) {
+	public void insertPeer_Torrent(Integer IDpeer, String InfoHash, long uploaded, long downloaded, long left) {
 		// TODO: validate parameteres
 
 		String sqlString = "INSERT INTO peer_torrent ('FK_IDpeer', 'FK_InfoHash', 'Uploaded', 'Downloaded', 'Left') VALUES (?,?,?,?,?)";
@@ -209,9 +209,9 @@ public class DBManager {
 		try (PreparedStatement stmt = con.prepareStatement(sqlString)) {
 			stmt.setInt(1, IDpeer);
 			stmt.setString(2, InfoHash);
-			stmt.setInt(3, uploaded);
-			stmt.setInt(4, downloaded);
-			stmt.setInt(5, left);
+			stmt.setLong(3, uploaded);
+			stmt.setLong(4, downloaded);
+			stmt.setLong(5, left);
 
 			if (stmt.executeUpdate() >= 0) {
 				con.commit();

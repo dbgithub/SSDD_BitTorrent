@@ -18,6 +18,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import es.deusto.ingenieria.ssdd.classes.Tracker;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelConfiguration;
+import es.deusto.ingenieria.ssdd.data.DataModelPeer;
 import es.deusto.ingenieria.ssdd.data.DataModelSwarm;
 import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 import es.deusto.ingenieria.ssdd.redundancy.RepositorySyncListener;
@@ -41,13 +42,15 @@ public class EntranceAndKeepAlive implements Runnable{
 	private DataModelConfiguration dmc;
 	private DataModelTracker dmt;
 	private DataModelSwarm dms;
+	private DataModelPeer dmp;
 	public static int trackerID; // The ID of the tracker, it is static to make it publicly available.
 	
 	@SuppressWarnings("static-access")
-	public EntranceAndKeepAlive(DataModelConfiguration dmc, DataModelTracker dmt, DataModelSwarm dms){
+	public EntranceAndKeepAlive(DataModelConfiguration dmc, DataModelTracker dmt, DataModelSwarm dms, DataModelPeer dmp){
 		this.dmc = dmc;
 		this.dmt = dmt;
 		this.dms = dms;
+		this.dmp = dmp;
 		this.trackerID = Integer.parseInt(dmc.getId());
 	}
 
@@ -203,7 +206,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	}
 
 	private void restartEntranceProcess(DataModelTracker dmt2, DataModelConfiguration dmc2, DataModelSwarm dms2) {
-		EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt, dms);
+		EntranceAndKeepAlive keepalive = new EntranceAndKeepAlive(dmc, dmt, dms, dmp);
 		dmt.threadKeepaliveListener = new Thread(keepalive);
 		dmt.threadKeepaliveListener.start();
 	}
@@ -232,7 +235,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	
 	// Starts a new thread to manage the joining process to a multicast group and it handles the messages. 
 	private void multicastSocketStart() {
-		MulticastSocketTracker ms = new MulticastSocketTracker(dmc.getPort(), dmc.getIp(), dmc.isMaster(), dmt, dms);
+		MulticastSocketTracker ms = new MulticastSocketTracker(dmc.getPort(), dmc.getIp(), dmc.isMaster(), dmt, dms, dmp);
 		dmt.multicastSocketTracker = ms;
 		dmt.threadMulticastSocketTracker = new Thread(ms); 
 		dmt.threadMulticastSocketTracker.start();
