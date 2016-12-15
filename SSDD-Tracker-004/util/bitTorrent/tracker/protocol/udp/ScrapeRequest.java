@@ -31,16 +31,19 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 	
 	@Override
 	public byte[] getBytes() {
-		ByteBuffer buffer = ByteBuffer.allocate(16+20*(infoHashes.size()));
+		ByteBuffer buffer = ByteBuffer.allocate(16+20*infoHashes.size());
 		buffer.order(ByteOrder.BIG_ENDIAN);
 		
 		buffer.putLong(0, super.getConnectionId());
 		buffer.putInt(8, super.getAction().value());
 		buffer.putInt(12, super.getTransactionId());
+		buffer.position(16);
 		int index = 16;
+		System.out.println(buffer.remaining());
 		for(String t: infoHashes){
+			System.out.println(t.getBytes().length);
 			buffer.put(t.getBytes(), index, 20);
-			index = index + 20;
+			index = index+20;
 		}
 		
 		buffer.flip();
@@ -83,5 +86,20 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		if (infoHash != null && !infoHash.trim().isEmpty() && !this.infoHashes.contains(infoHash)) {
 			this.infoHashes.add(infoHash);
 		}
+	}
+	
+	public static void main(String[]args){
+		ScrapeRequest temp = new ScrapeRequest();
+		temp.setAction(Action.ANNOUNCE);
+		temp.setConnectionId(0020011212);
+		temp.setTransactionId(999999999);
+		String infohash1 = "ABF02E0FSAF70SAAAQW1";
+		String infohash2 = "ABF02E0F6F6F01233232";
+		temp.infoHashes.add(infohash1);
+		temp.infoHashes.add(infohash2);
+		byte[] array = temp.getBytes();
+		ScrapeRequest otro = ScrapeRequest.parse(array);
+		System.out.println(otro.getTransactionId() + " "+ otro.getInfoHashes().get(1));
+		
 	}
 }
