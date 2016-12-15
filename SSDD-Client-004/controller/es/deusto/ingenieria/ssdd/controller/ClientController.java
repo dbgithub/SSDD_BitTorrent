@@ -167,8 +167,8 @@ public class ClientController {
 		ScrapeRequest request = createScrapeRequest();
 		byte[] requestBytes = request.getBytes();
 		DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length,multicastIP, DESTINATION_PORT);
-		System.out.println(" - UDP ScrapeRequest message sent to the multicast group. From " + messageOut.getAddress().getHostAddress() +":"+
-							messageOut.getPort() + " to " + multicastIP.getHostAddress()+":"+DESTINATION_PORT +" (Bytes="+messageOut.getLength());
+		System.out.println(" - UDP ScrapeRequest message sent to the multicast group. From " + socketSend.getLocalAddress().getHostAddress() +":"+
+				socketSend.getLocalPort() + " to " + multicastIP.getHostAddress()+":"+DESTINATION_PORT +" (Bytes="+messageOut.getLength()+ ")");
 		try {
 			socketSend.send(messageOut);
 		} catch (IOException e) {
@@ -282,7 +282,7 @@ public class ClientController {
 			}
 		} catch (SocketException e1) {
 			System.out.println("ERROR: Timeout exception in 'ScrapeResponseReceivedLoop'");
-			e1.printStackTrace();
+//			e1.printStackTrace();
 		}
 	}
 	

@@ -295,12 +295,17 @@ public class MulticastSocketTracker implements Runnable {
 								System.out.println("	Number of infoHashes asked about: " +scraperequest.getInfoHashes().size());
 								// We get the typical data:
 								int transacctionId_scrape = scraperequest.getTransactionId();
-								long connectionId_scrape = scraperequest.getConnectionId();
 								List<String> infohashes = scraperequest.getInfoHashes();
 								// Now, the idea is to get information related to the info hashes we are asked about.
 								// Information required: num. of leechers, num. of seeders and num. of completed
 								List<ScrapeInfo> scrapeInfoList = collectScrapeInformation(infohashes);
-//								ScrapeResponse scrape_response = prepareScrapeResponse(connectionId_scrape, transacctionId_scrape, );
+								ScrapeResponse scrape_response = prepareScrapeResponse(transacctionId_scrape, scrapeInfoList);
+								
+								if (ismaster) {
+									//Once the message is created, we send it	
+									sendUDPMessage(scrape_response, ip, destinationPort);
+									System.out.println("Sending ScrapeResponse UPD message back to the peer with transactionID "+scrape_response.getTransactionId()+" ... ");	
+								}
 							} else {
 								if (ismaster) {
 									//Send error regarding size of message incorrect
@@ -453,8 +458,11 @@ public class MulticastSocketTracker implements Runnable {
 		return response;
 	}
 	
-	public ScrapeResponse prepareScrapeResponse() {
-		return null;
+	public ScrapeResponse prepareScrapeResponse(int transactionid, List<ScrapeInfo> scrapeInfoList) {
+		ScrapeResponse response = new ScrapeResponse();
+		response.setAction(Action.SCRAPE);
+		response.setTransactionId(transactionid);
+		return response;
 	}
 	
 	private List<ScrapeInfo> collectScrapeInformation(List<String> infohashes) {
@@ -463,10 +471,10 @@ public class MulticastSocketTracker implements Runnable {
 			ScrapeInfo sf = new ScrapeInfo();
 			sf.setLeechers(dms.getSwarmList().get(infohash).getTotalLeecher());
 			sf.setSeeders(dms.getSwarmList().get(infohash).getTotalSeeders());
-			// sf.setCompleted...
-			
+			sf.setCompleted(dms.getSwarmList().get(infohash).countCompleted());
+			resul.add(sf);
 		}
-		return null;
+		return resul;
 	}
 	
 	public Error prepareError(String errormessage, int transactionId){

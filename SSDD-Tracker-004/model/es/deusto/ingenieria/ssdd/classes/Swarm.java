@@ -108,6 +108,22 @@ public class Swarm {
 		}
 		return null;
 	}
+	
+	/**
+	 * Counts the amount of torrents that are finished by now (left = 0) for each Peer
+	 * @return the number of files that have left = 0
+	 */
+	public int countCompleted() {
+		if (peerList.size() != 0) {
+			int counter = 0;
+			for (Peer p : peerList.values()) {
+				if (p.getSwarmList().get(infoHash).getLeft() == 0) {counter++;}
+			}
+			return counter;
+		} else {
+			return -1;
+		}
+	}
 
 	public int getAppropiateInterval(HashMap<String, Swarm> hashMap) {
 		//we will determine the interval considering the number of peers / seeders

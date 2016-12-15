@@ -127,21 +127,5 @@ public class Peer {
 	public void setAnnounceRequest_lastupdate(Date announceRequest_lastupdate) {
 		this.announceRequest_lastupdate = announceRequest_lastupdate;
 	}
-	
-	/**
-	 * Counts the amount of torrents that are finished by now (left = 0)
-	 * @return the number of files that have left = 0
-	 */
-	public int countCompleted() {
-		if (swarmList.size() != 0) {
-			int counter = 0;
-			for (PeerTorrent pt : swarmList.values()) {
-				if (pt.getLeft() == 0) {counter++;}
-			}
-			return counter;
-		} else {
-			return -1;
-		}
-	}
 
 }
