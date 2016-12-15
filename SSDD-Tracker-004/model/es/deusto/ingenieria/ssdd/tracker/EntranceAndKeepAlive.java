@@ -108,7 +108,7 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		//Start checking the availability of the rest of the trackers:
 	        		keepAliveCheckerThreadStart(producer, session, topic, database);
 	        		System.out.println("Your randomly chosen ID was approved by the tracker master successfuly!");
-	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
+	        		System.err.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
 	        		
 	        		// The slave must subscribe to the JMS topic that handles the incoming peers and their information.
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
@@ -143,7 +143,7 @@ public class EntranceAndKeepAlive implements Runnable{
             		keepAliveCheckerThreadStart(producer, session, topic, database);
             		
 	        		System.out.println("Your ID is elegible and available!");
-	        		System.out.println("You are a TRACKER MASTER with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
+	        		System.err.println("You are a TRACKER MASTER with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
 	        		
 	        		// The tracker master must subscribe to a new JMS topic in order to handle the upcoming peers and their information.
 	        		// Every tracker (either slave or master) should be able to send and receive messages:
@@ -178,7 +178,7 @@ public class EntranceAndKeepAlive implements Runnable{
     	        		keepAliveCheckerThreadStart(producer, session, topic, database);
     	        		
     	        		System.out.println("Your randomly chosen ID was approved by the tracker master successfuly!");
-    	        		System.out.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
+    	        		System.err.println("You are a TRACKER SLAVE with ID='"+dmc.getId()+"' currently sending and checking keepalive messages...");
     	        		
     	        		// The slave must subscribe to the JMS topic that handles the incoming peers and their information.
     	        		// Every tracker (either slave or master) should be able to send and receive messages:

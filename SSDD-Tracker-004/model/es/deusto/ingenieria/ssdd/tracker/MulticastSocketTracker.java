@@ -94,6 +94,7 @@ public class MulticastSocketTracker implements Runnable {
 	@Override
 	public void run() {
 		while(!cancel) {
+			System.out.println("-----------------------------------------------------------------");
 			System.out.println("MulticastSocket: waiting for incoming messages...");
 			this.incomingMessage = new DatagramPacket(buffer, buffer.length);
 			try {
@@ -101,9 +102,7 @@ public class MulticastSocketTracker implements Runnable {
 				System.out.println("UDP message arrived at Multicast group! :)");
 				System.out.println("	Sender's IP: " + incomingMessage.getAddress().getHostAddress()); // This might be either an IP from the multicast group or peer's IP.
 				System.out.println("	Sender's Port: " + incomingMessage.getPort()); // This might be either an port from the multicast group or peer's port.
-				System.out.println("	Sender's message length: " + incomingMessage.getLength());
-				//System.out.println("Sender's data: " + new String(incomingMessage.getData()));
-				
+				System.out.println("	Sender's message length: " + incomingMessage.getLength());				
 				
 				if (!incomingMessage.getAddress().equals(group)) {
 					// In this case, the incoming message comes from an IP different from any tracker's IP, then, it is NOT a message from within the multicast group.
@@ -114,7 +113,6 @@ public class MulticastSocketTracker implements Runnable {
 					switch(incomingMessage.getLength()){
 						case 16:
 							//If length is 16 bytes, then it's a ConnectRequest
-							System.out.println("The UDP message received was a ConnectionRequest!");
 							ConnectRequest request = ConnectRequest.parse(incomingMessage.getData());
 							if(request != null){
 								long connectionId = request.getConnectionId();
@@ -123,6 +121,7 @@ public class MulticastSocketTracker implements Runnable {
 								
 								if(connectionId == 41727101980L){
 									if(action.compareTo(Action.CONNECT) == 0){
+										System.out.println("The UDP message received was a ConnectionRequest!");
 										//Then, this means the first connection between the peer and the tracker
 										//So, we have to add the peer to a list and response back to the peer if we are the master
 										//First, create a peer
@@ -134,17 +133,17 @@ public class MulticastSocketTracker implements Runnable {
 											p.setTransaction_id(transacctionId);
 											p.setConnection_id_lastupdate(new Date());
 											dmp.peerlist.put(p.getTransaction_id(), p);
-											System.out.println("The transaction_id of the peer is: "+ p.getTransaction_id());
+											System.out.println("		·The transaction_id of the peer is: "+ p.getTransaction_id());
 											// If the current tracker is the master. Then, it has to response to the peer with a connection_id
 											if(ismaster){
 												//Create Response
 												ConnectResponse response = prepareConnectResponse(transacctionId);
 												p.setConnection_id(response.getConnectionId());
-												System.out.println("Asigned ConnectionID "+ p.getConnection_id() + " to this peer.");
+												System.out.println("		·ConnectionID "+ p.getConnection_id());
 												
 												//Once the message is created, we send it	
 												sendUDPMessage(response, ip, destinationPort);
-												System.out.println("Sending ConnectResponse UPD message back to the peer...");
+												System.out.println("		·Sending ConnectResponse UPD message back to the peer...");
 											}	
 										}
 										else{
@@ -171,7 +170,7 @@ public class MulticastSocketTracker implements Runnable {
 								else{
 									if (ismaster) {
 										//Send error regarding connection ID incorrect
-										Error error = prepareError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match with the default onr or the one stored at the tracker.", transacctionId);
+										Error error = prepareError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match", transacctionId);
 										sendUDPMessage(error, ip, destinationPort);													
 									}
 								}
@@ -190,7 +189,7 @@ public class MulticastSocketTracker implements Runnable {
 							AnnounceRequest announcerequest = AnnounceRequest.parse(incomingMessage.getData());
 							if(announcerequest != null){
 								System.out.println("The UDP message received was a AnnounceRequests!");
-								System.out.println("	InfoHash: "+announcerequest.getHexInfoHash());
+								System.out.println("		·InfoHash: "+announcerequest.getHexInfoHash());
 								String infoHash = announcerequest.getHexInfoHash();
 								int transacctionIdA = announcerequest.getTransactionId();
 								long connectionIdA = announcerequest.getConnectionId();
@@ -198,12 +197,11 @@ public class MulticastSocketTracker implements Runnable {
 								long uploaded = announcerequest.getUploaded();
 								long left = announcerequest.getLeft();
 								Peer temp = dmp.peerlist.get(transacctionIdA);
-								System.out.println("Received PEER ID: " + Integer.parseInt(announcerequest.getPeerId().trim()));
+								System.out.println("		·Received PEER ID: " + Integer.parseInt(announcerequest.getPeerId().trim()));
 								if(temp != null){
 									// This means that the communication is going on the right path.
 									// The tracker knew about the transaction ID, so we continue with the process.
 									// Check if the information is coherent:
-									System.out.println("Action: "+ announcerequest.getAction());
 									boolean connectionIDcorrect = true; // by default is true
 									if (ismaster) {
 										if (temp.getConnection_id() != connectionIdA) {
@@ -213,14 +211,14 @@ public class MulticastSocketTracker implements Runnable {
 									if (!connectionIDcorrect) {
 										if (ismaster) {
 											// Send error regarding connection ID incorrect
-											Error error = prepareError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match with the one stored at the tracker.", transacctionIdA);
+											Error error = prepareError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match", transacctionIdA);
 											sendUDPMessage(error, ip, destinationPort);													
 										}
 										
 									} else {
-										System.out.println("ConnectionID CORRECT");
+										System.out.println("		·ConnectionID CORRECT");
 										if(announcerequest.getAction().compareTo(Action.ANNOUNCE) == 0){
-											System.out.println("AnnounceRequest CORRECT");
+											System.out.println("		·Action = ANNOUNCE");
 											if(temp.getAnnounceRequest_lastupdate() == null){
 												// This means that it is the first time in receiving an AnnounceRequest.
 												temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
@@ -231,7 +229,7 @@ public class MulticastSocketTracker implements Runnable {
 												if (ismaster) {
 													//Once the message is created, we send it	
 													sendUDPMessage(ann_response, ip, destinationPort);
-													System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
+													System.out.println("		·Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
 												}
 											}
 											else{
@@ -248,7 +246,7 @@ public class MulticastSocketTracker implements Runnable {
 													if (ismaster) {
 														//Once the message is created, we send it	
 														sendUDPMessage(ann_response, ip, destinationPort);
-														System.out.println("Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
+														System.out.println("		·Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
 													}
 												}
 												else{
@@ -273,7 +271,7 @@ public class MulticastSocketTracker implements Runnable {
 								else{
 									if(ismaster){
 										//Send error regarding transactionId incorrect
-										Error error = prepareError("[TransactionIdIncorrectError]: Incorrect transactionID. No registered with ConnectRequest before.", transacctionIdA);
+										Error error = prepareError("[TransactionIdIncorrectError]: Incorrect transactionID. No registered previously.", transacctionIdA);
 										sendUDPMessage(error, ip, destinationPort);	
 									}
 								}
@@ -292,7 +290,8 @@ public class MulticastSocketTracker implements Runnable {
 							ScrapeRequest scraperequest = ScrapeRequest.parse(incomingMessage.getData());
 							if (scraperequest != null) {
 								System.out.println("The UDP message received was a ScrapeRequest!");
-								System.out.println("	Number of infoHashes asked about: " +scraperequest.getInfoHashes().size());
+								System.out.println("		·Number of infoHashes asked about: " +scraperequest.getInfoHashes().size());
+								System.out.println("		· otros atributos: " + scraperequest.getConnectionId() + " | " + scraperequest.getTransactionId());
 								// We get the typical data:
 								int transacctionId_scrape = scraperequest.getTransactionId();
 								List<String> infohashes = scraperequest.getInfoHashes();
@@ -304,7 +303,7 @@ public class MulticastSocketTracker implements Runnable {
 								if (ismaster) {
 									//Once the message is created, we send it	
 									sendUDPMessage(scrape_response, ip, destinationPort);
-									System.out.println("Sending ScrapeResponse UPD message back to the peer with transactionID "+scrape_response.getTransactionId()+" ... ");	
+									System.out.println("		·Sending ScrapeResponse UPD message back to the peer with transactionID "+scrape_response.getTransactionId()+" ... ");	
 								}
 							} else {
 								if (ismaster) {

@@ -31,7 +31,7 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 	
 	@Override
 	public byte[] getBytes() {
-		ByteBuffer buffer = ByteBuffer.allocate(98);
+		ByteBuffer buffer = ByteBuffer.allocate(16+20*(infoHashes.size()));
 		buffer.order(ByteOrder.BIG_ENDIAN);
 		
 		buffer.putLong(0, super.getConnectionId());

@@ -73,7 +73,8 @@ public class ClientController {
 		}
 		else if (metaInfoFromTorrent instanceof MetainfoHandlerSingleFile){
 			MetainfoHandlerSingleFile single = (MetainfoHandlerSingleFile) metaInfoFromTorrent;
-			System.out.println("Obtained \n"+single.getMetainfo());
+			System.out.println("Single file obtained: \n"+single.getMetainfo());
+			System.out.println("-----------------------------------------------------------------");
 			// Start with the connection to the tracker
 			// First of all, send request to the multicast group. If the request doesn't have a response in 3 secs
 			// we will send the request again until we receive it.
@@ -84,7 +85,6 @@ public class ClientController {
 					peerListenerSocket = new ServerSocket();
 					peerListenerPort = peerListenerSocket.getLocalPort();
 				}catch (SocketException e) {
-					// TODO Auto-generated catch block
 					System.out.println("ERROR: Error opening UDP sender/listener Socket.");
 					e.printStackTrace();
 				} catch (IOException e) {
@@ -133,8 +133,7 @@ public class ClientController {
 			DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length, multicastIP, DESTINATION_PORT);
 			socket.send(messageOut);
 			
-			System.out.println(" - Sent a message to '" + messageOut.getAddress().getHostAddress() + ":" + messageOut.getPort() + 
-			                   "' -> " + new String(messageOut.getData()) + " [" + messageOut.getLength() + " byte(s)]");
+			System.out.println(" - Sending ConnectRequest to '" + messageOut.getAddress().getHostAddress() + ":" + messageOut.getPort() + " [" + messageOut.getLength() + " byte(s)]...");			                   
 		} catch (SocketException e) {
 			System.err.println("# Socket Error: " + e.getMessage());
 			e.printStackTrace();
@@ -153,8 +152,7 @@ public class ClientController {
 			DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length, multicastIP, DESTINATION_PORT);
 			socket.send(messageOut);
 			
-			System.out.println(" - Sent a message to '" + messageOut.getAddress().getHostAddress() + ":" + messageOut.getPort() + 
-			                   "' -> " + new String(messageOut.getData()) + " [" + messageOut.getLength() + " byte(s)]");
+			System.out.println(" - Sending a AnnounceRequest to '" + messageOut.getAddress().getHostAddress() + ":" + messageOut.getPort() + " [" + messageOut.getLength() + " byte(s)]...");
 		} catch (SocketException e) {
 			System.err.println("# Socket Error: " + e.getMessage());
 			e.printStackTrace();
@@ -183,7 +181,7 @@ public class ClientController {
 			socketListen.setSoTimeout(3000);
 			byte[] buffer = new byte[1024];
 			boolean responseReceived = false;
-			while(!responseReceived){     // recieve data until timeout
+			while(!responseReceived){     // Receive data until timeout
 	            try {
 	            	sendConnectRequest(single, socketSend, firstime);
 	            	DatagramPacket response = new DatagramPacket(buffer, buffer.length);
@@ -275,14 +273,14 @@ public class ClientController {
 							}
 						}
 					}
-				} catch (IOException e) {
-					System.out.println("ERROR occurred receiving from the listening socket in 'ScrapeResponseReceivedLoop'");
-					e.printStackTrace();
+				} catch (SocketTimeoutException e1) {
+					System.out.println("ERROR: Timeout exception in 'ScrapeResponseReceivedLoop'");
+//			e1.printStackTrace();
 				} 
 			}
-		} catch (SocketException e1) {
-			System.out.println("ERROR: Timeout exception in 'ScrapeResponseReceivedLoop'");
-//			e1.printStackTrace();
+		} catch (IOException e) {
+			System.out.println("ERROR occurred receiving from the listening socket in 'ScrapeResponseReceivedLoop'");
+			e.printStackTrace();
 		}
 	}
 	
@@ -330,6 +328,7 @@ public class ClientController {
 		for (String s : this.torrents.keySet()) {
 			if (j < 74) {
 				scrape.addInfoHash(s);
+				System.out.println("Metiendo infohash en el ScrapeRequest!");
 				j++;				
 			} else {
 				break; // We cannot request information about more than 74 swarms, that's the limit! :)
