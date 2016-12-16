@@ -235,6 +235,9 @@ public class ClientController {
 	            			//TransactionId validation
 	            			if(announceResponse.getTransactionId() == transactionID){
 		            			responseReceived = true;
+		            			if(downloadNotifier != null){
+		            				downloadNotifier.setInterval(announceResponse.getInterval());
+		            			}
 		            		}
 	            		}
 	            	}

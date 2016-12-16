@@ -49,7 +49,7 @@ public class DownloadStateNotifier implements Runnable{
         cancel = true;
     }
 	
-	private void setInterval(int interval){
+	public void setInterval(int interval){
 		this.interval = interval;
 	}
 }
