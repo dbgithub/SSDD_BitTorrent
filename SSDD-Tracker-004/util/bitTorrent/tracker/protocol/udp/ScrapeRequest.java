@@ -31,7 +31,7 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 	
 	@Override
 	public byte[] getBytes() {
-		ByteBuffer buffer = ByteBuffer.allocate(16+(20*infoHashes.size()));
+		ByteBuffer buffer = ByteBuffer.allocate(16+(40*infoHashes.size()));
 		buffer.order(ByteOrder.BIG_ENDIAN);
 		
 		buffer.putLong(0, super.getConnectionId());
@@ -41,7 +41,7 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		System.out.println("Remaining: " + buffer.remaining());
 		for(String t: infoHashes){
 			System.out.println("Length of infohash: "+ t.getBytes().length);
-			buffer.put(t.getBytes(), 0, 20);
+			buffer.put(t.getBytes(), 0, 40);
 		}
 		
 		buffer.flip();
@@ -59,14 +59,14 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		    msg.setConnectionId(buffer.getLong(0));
 		    msg.setAction(Action.valueOf(buffer.getInt(8)));	    
 		    msg.setTransactionId(buffer.getInt(12));
-		    
+		    buffer.position(16);
 		    int index = 16;
 		    
-		    while ((index + 20) <= byteArray.length ) {
-		    	byte[] msgB = new byte[20];
+		    while ((index + 40) <= byteArray.length ) {
+		    	byte[] msgB = new byte[40];
 			    buffer.get(msgB);
 			    msg.getInfoHashes().add(new String(msgB));
-		    	index += 20;
+		    	index += 40;
 		    }		    
 			
 			return msg;
@@ -91,8 +91,8 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		temp.setAction(Action.ANNOUNCE);
 		temp.setConnectionId(0020011212);
 		temp.setTransactionId(999999999);
-		String infohash1 = "ABF02E0FSAF70SAAAQW1";
-		String infohash2 = "ABF02E0F6F6F01233232";
+		String infohash1 = "ABF02E0F6F6F352DAC22F8706799C147F40AF701";
+		String infohash2 = "ABF02E0F6F6F352DAC22F8706799C147F40AF701";
 		temp.infoHashes.add(infohash1);
 		temp.infoHashes.add(infohash2);
 		byte[] array = temp.getBytes();
