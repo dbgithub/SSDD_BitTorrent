@@ -30,18 +30,18 @@ public class ScrapeResponse extends BitTorrentUDPMessage {
 	
 	@Override
 	public byte[] getBytes() {
-		//TODO: Complete this method
-		ByteBuffer buffer = ByteBuffer.allocate(8+12*scrapeInfos.size());
+		ByteBuffer buffer = ByteBuffer.allocate(8+(12*scrapeInfos.size()));
 		buffer.order(ByteOrder.BIG_ENDIAN);
 		
-		buffer.putLong(0, super.getAction().value());
-		buffer.putLong(4, super.getTransactionId());
+		buffer.putInt(0, super.getAction().value());
+		System.out.println(super.getTransactionId());
+		buffer.putInt(4, super.getTransactionId());
 		
 		int index = 8;
 		for(ScrapeInfo t: scrapeInfos){
-			buffer.putLong(index, t.getSeeders());
-			buffer.putLong(index+4, t.getCompleted());
-			buffer.putLong(index+8, t.getLeechers());
+			buffer.putInt(index, t.getSeeders());
+			buffer.putInt(index+4, t.getCompleted());
+			buffer.putInt(index+8, t.getLeechers());
 			index = index + 12;
 		}
 		buffer.flip();
@@ -58,7 +58,7 @@ public class ScrapeResponse extends BitTorrentUDPMessage {
 		    
 		    msg.setAction(Action.valueOf(buffer.getInt(0)));	    
 		    msg.setTransactionId(buffer.getInt(4));
-		    
+		    System.out.println(msg.getTransactionId());
 		    int index = 8;
 		    ScrapeInfo scrapeInfo = null;
 		    
@@ -67,6 +67,7 @@ public class ScrapeResponse extends BitTorrentUDPMessage {
 		    	scrapeInfo.setSeeders(buffer.getInt(index));
 		    	scrapeInfo.setCompleted(buffer.getInt(index+4));
 		    	scrapeInfo.setLeechers(buffer.getInt(index+8));
+		    	msg.getScrapeInfos().add(scrapeInfo);
 		    	index += 12;
 		    }		    
 			
@@ -85,5 +86,26 @@ public class ScrapeResponse extends BitTorrentUDPMessage {
 		if (scrapeInfo != null && !this.scrapeInfos.contains(scrapeInfo)) {
 			this.scrapeInfos.add(scrapeInfo);
 		}
+	}
+	public static void main(String[]args){
+		ScrapeResponse sp = new ScrapeResponse();
+		sp.setAction(Action.SCRAPE);
+		sp.setTransactionId(64345655);
+		List<ScrapeInfo> temp = new ArrayList<>();
+		ScrapeInfo si = new ScrapeInfo();
+		si.setCompleted(10);
+		si.setLeechers(9);
+		si.setSeeders(8);
+		ScrapeInfo si2 = new ScrapeInfo();
+		si2.setCompleted(7);
+		si2.setLeechers(6);
+		si2.setSeeders(5);
+		temp.add(si);
+		temp.add(si2);
+		sp.scrapeInfos.add(si);
+		sp.scrapeInfos.add(si2);
+		byte[] bytes = sp.getBytes();
+		ScrapeResponse temp2 = ScrapeResponse.parse(bytes);
+		System.out.println(temp2.getAction()+ " "+temp2.getTransactionId() + " "+ temp2.scrapeInfos.get(0).getLeechers());
 	}
 }

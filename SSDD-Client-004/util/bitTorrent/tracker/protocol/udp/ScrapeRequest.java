@@ -38,10 +38,13 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		buffer.putInt(8, super.getAction().value());
 		buffer.putInt(12, super.getTransactionId());
 		buffer.position(16);
+		int index = 16;
 		System.out.println("Remaining: " + buffer.remaining());
 		for(String t: infoHashes){
 			System.out.println("Length of infohash: "+ t.getBytes().length);
 			buffer.put(t.getBytes(), 0, 40);
+			buffer.position(index+40);
+			index = index + 40;
 		}
 		
 		buffer.flip();
@@ -59,6 +62,7 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		    msg.setConnectionId(buffer.getLong(0));
 		    msg.setAction(Action.valueOf(buffer.getInt(8)));	    
 		    msg.setTransactionId(buffer.getInt(12));
+		    
 		    buffer.position(16);
 		    int index = 16;
 		    
@@ -67,6 +71,7 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 			    buffer.get(msgB);
 			    msg.getInfoHashes().add(new String(msgB));
 		    	index += 40;
+		    	buffer.position(index);
 		    }		    
 			
 			return msg;
@@ -92,12 +97,14 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		temp.setConnectionId(0020011212);
 		temp.setTransactionId(999999999);
 		String infohash1 = "ABF02E0F6F6F352DAC22F8706799C147F40AF701";
-		String infohash2 = "ABF02E0F6F6F352DAC22F8706799C147F40AF701";
+		String infohash2 = "ABF02E0F6F6F352DAC22F87067221C147F40AF21";
+		String infohash3 = "sadasdasdasdadadasdadsadsadsadasdadadadd";
 		temp.infoHashes.add(infohash1);
 		temp.infoHashes.add(infohash2);
+		temp.infoHashes.add(infohash3);
 		byte[] array = temp.getBytes();
 		ScrapeRequest otro = ScrapeRequest.parse(array);
-		System.out.println("Transaction ID: "+otro.getTransactionId() + " infohash: "+ otro.getInfoHashes().get(1));
+		System.out.println("Transaction ID: "+otro.getTransactionId() + " infohash: "+ otro.getInfoHashes().get(2));
 		
 	}
 }
