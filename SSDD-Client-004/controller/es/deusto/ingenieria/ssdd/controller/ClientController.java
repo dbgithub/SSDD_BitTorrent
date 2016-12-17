@@ -47,6 +47,7 @@ public class ClientController {
 	private static int transactionID;
 	private static final int DESTINATION_PORT = 9000;
 	private static int peerListenerPort;
+	public static int interval;
 	
 	// List of swarms
 	public HashMap<String, Swarm> torrents = new HashMap<>();
@@ -118,7 +119,7 @@ public class ClientController {
 			torrents.put(single.getMetainfo().getInfo().getHexInfoHash(), s);
 			
 			//Start a thread to notify the state of the download periodically
-			createDownloadStateNotifier(single, multicastsocketSend, socketReceive, announceResponse.getInterval());
+			createDownloadStateNotifier(single, multicastsocketSend, socketReceive);
 		}
 	}
 
@@ -235,9 +236,7 @@ public class ClientController {
 	            			//TransactionId validation
 	            			if(announceResponse.getTransactionId() == transactionID){
 		            			responseReceived = true;
-		            			if(downloadNotifier != null){
-		            				downloadNotifier.setInterval(announceResponse.getInterval());
-		            			}
+		            			interval = announceResponse.getInterval();
 		            		}
 	            		}
 	            	}
@@ -264,7 +263,7 @@ public class ClientController {
 				DatagramPacket response = new DatagramPacket(buffer, buffer.length);
 				try {
 					socketReceive.receive(response); // We wait until a response is received
-					if (response.getLength() >= 48) { 
+					if (response.getLength() >= 4) { 
 						scrapeResponse = ScrapeResponse.parse(response.getData());
 						if (scrapeResponse != null) {
 							if (scrapeResponse.getAction().equals(Action.SCRAPE)) {
@@ -337,6 +336,7 @@ public class ClientController {
 				break; // We cannot request information about more than 74 swarms, that's the limit! :)
 			}
 		}
+		System.out.println(scrape.getInfoHashes().size());
 		return scrape;
 	}
 	
@@ -348,8 +348,8 @@ public class ClientController {
 	}
 	
 	private void createDownloadStateNotifier(MetainfoHandlerSingleFile single, DatagramSocket send,
-			DatagramSocket receive, int interval) {
-		DownloadStateNotifier dsn = new DownloadStateNotifier(send, receive, single, interval, this);
+			DatagramSocket receive) {
+		DownloadStateNotifier dsn = new DownloadStateNotifier(send, receive, single, this);
 		downloadNotifier = dsn;
 		downloadNotifierThread = new Thread(dsn); 
 		downloadNotifierThread.start();

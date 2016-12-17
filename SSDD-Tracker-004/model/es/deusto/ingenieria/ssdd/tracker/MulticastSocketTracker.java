@@ -8,6 +8,7 @@ import java.net.MulticastSocket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -54,7 +55,7 @@ public class MulticastSocketTracker implements Runnable {
 	private DataModelPeer dmp;
 	private DataModelTracker dmt;
 	private DataModelSwarm dms;
-	private int interval = 60; // number of seconds to wait before receiving another AnnounceRequest from a peer.
+	private int interval = 15; // number of seconds to wait before receiving another AnnounceRequest from a peer.
 	
 	//THREAD
 	private ConnectionIdChecker connectionChecker;
@@ -225,7 +226,10 @@ public class MulticastSocketTracker implements Runnable {
 												temp.setAnnounceRequest_lastupdate(new Date());
 												// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
 												AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
-												
+												System.out.println(">>>>>>>>>>>>>>>>>>>>>>>"+ann_response.getAction());
+												if(ann_response.getPeers().size() > 0){
+													System.out.println(">>>>>>>>>>>>>>>>>>>>>>>"+ ann_response.getPeers().get(0));	
+												}
 												if (ismaster) {
 													//Once the message is created, we send it	
 													sendUDPMessage(ann_response, ip, destinationPort);
@@ -237,7 +241,7 @@ public class MulticastSocketTracker implements Runnable {
 												Date last = temp.getAnnounceRequest_lastupdate();
 												long diffInMillies = new Date().getTime() - last.getTime();
 												long secondsPassed = TimeUnit.SECONDS.convert(diffInMillies,TimeUnit.MILLISECONDS);
-												if(secondsPassed >= 60){
+												if(secondsPassed >= interval){
 													// This means that one minute or more has elapsed 
 													temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
 													// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
@@ -287,11 +291,11 @@ public class MulticastSocketTracker implements Runnable {
 							break;
 						default:
 							// We are supposing that the received message corresponds to a ScrapeRequest.
-							ScrapeRequest scraperequest = ScrapeRequest.parse(incomingMessage.getData());
+							ScrapeRequest scraperequest = ScrapeRequest.parse(Arrays.copyOfRange(incomingMessage.getData(), 0, incomingMessage.getLength()));
 							if (scraperequest != null) {
 								System.out.println("The UDP message received was a ScrapeRequest!");
 								System.out.println("		·Number of infoHashes asked about: " +scraperequest.getInfoHashes().size());
-								System.out.println("		· otros atributos: " + scraperequest.getConnectionId() + " | " + scraperequest.getTransactionId());
+								System.out.println("		· Other attributes: " + scraperequest.getConnectionId() + " | " + scraperequest.getTransactionId());
 								// We get the typical data:
 								int transacctionId_scrape = scraperequest.getTransactionId();
 								List<String> infohashes = scraperequest.getInfoHashes();
@@ -374,7 +378,7 @@ public class MulticastSocketTracker implements Runnable {
 		AnnounceResponse response = new AnnounceResponse();
 		response.setAction(Action.ANNOUNCE);
 		response.setTransactionId(transactionId);
-		response.setInterval(interval);
+		//response.setInterval(interval);
 		
 		// Now, it is compulsory to check whether the peer we are communicating with has already been interested in the swarm.
 		// In other words, check if the swarm already exists or not.
@@ -390,7 +394,9 @@ public class MulticastSocketTracker implements Runnable {
 			//We don't know nothing about the swarm, so we establish a default interval
 			//We determinate an interval
 			int period = temp.getAppropiateInterval(dms.getSwarmList());
+			System.out.println("Interval selected: " + period);
 			response.setInterval(period);
+			interval = period;
 			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
 			// Now we extract/capture the peer from the memory and update is properties

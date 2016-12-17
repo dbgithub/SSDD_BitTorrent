@@ -12,16 +12,13 @@ public class DownloadStateNotifier implements Runnable{
 	private MetainfoHandlerSingleFile single;
 	private String urlHash;
 	private ClientController controller;
-	//The time between notifications in seconds
-	private int interval;
 	volatile boolean cancel = false;
 
-	public DownloadStateNotifier(DatagramSocket send, DatagramSocket receive, MetainfoHandlerSingleFile single, int interval, ClientController controller) {
+	public DownloadStateNotifier(DatagramSocket send, DatagramSocket receive, MetainfoHandlerSingleFile single, ClientController controller) {
 		this.send = send;
 		this.receive = receive;
 		this.single = single;
 		this.urlHash = single.getMetainfo().getInfo().getHexInfoHash();
-		this.interval = interval;
 		this.controller = controller;
 	}
 
@@ -30,7 +27,7 @@ public class DownloadStateNotifier implements Runnable{
 		while(!cancel) {
 			try {
 				//The time is expressed in seconds and the sleep methods only accepts millis
-				Thread.sleep(interval*1000);
+				Thread.sleep(ClientController.interval*1000);
 				//Get the actual status of the swarm
 				Swarm temp = controller.torrents.get(urlHash);
 				System.out.println("Sending AnnounceRequest to renew the state...");
@@ -48,8 +45,4 @@ public class DownloadStateNotifier implements Runnable{
 	public void cancel() {
         cancel = true;
     }
-	
-	public void setInterval(int interval){
-		this.interval = interval;
-	}
 }

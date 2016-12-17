@@ -155,22 +155,37 @@ public class Swarm {
 					minSize = temp.getSize();
 				}
 			}
+			
 			//normalized values
 			double thisSize = this.size - minSize / (maxSize - minSize);
 			double thisLeechers = this.totalLeecher - minLeechers /(maxLeechers - minLeechers);
 			double thisSeeders = this.totalSeeders - minSeeders /(maxSeeders - minSeeders);
 			//If the file is big and the number of leechers high, we get a relative low interval
-			return (int) Math.round(70 - thisSize * 30 - thisLeechers * 30 + 60 * thisSeeders);
+			int returnedValue = (int) Math.round(70 - thisSize * 30 - thisLeechers * 30 + 60 * thisSeeders);
+			System.out.println("Returned interval: "+ returnedValue);
+			return returnedValue;
 		}
 		else{
 			//This means that this swarm is the only one
 			//Just check number of peers (seeders/leechers)
+			if(totalSeeders == 1 && totalLeecher == 0){
+				System.out.println("Returned interval default: "+ 60);
+				return 60;
+			}
 			double seederLeechersRatio = totalSeeders/totalLeecher;
 			if(seederLeechersRatio >= 1){
-				return (int) Math.round(60 + 60 * seederLeechersRatio);
+				int returnedValue = (int) Math.round(60 + 60 * seederLeechersRatio);
+				System.out.println("Returned interval: "+ returnedValue);
+				return returnedValue;
+			}
+			else if(seederLeechersRatio != 0){
+				int returnedValue = (int) Math.round(60 * seederLeechersRatio);
+				System.out.println("Returned interval: "+ returnedValue);
+				return returnedValue;
 			}
 			else{
-				return (int) Math.round(60 * seederLeechersRatio);
+				System.out.println("Returned interval default: "+ 15);
+				return 15;
 			}
 		}
 	}
