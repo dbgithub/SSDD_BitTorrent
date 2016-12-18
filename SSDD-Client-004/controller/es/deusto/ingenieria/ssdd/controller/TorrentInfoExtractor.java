@@ -2,15 +2,13 @@ package es.deusto.ingenieria.ssdd.controller;
 
 import java.io.File;
 
-import bitTorrent.metainfo.InfoDictionary;
-import bitTorrent.metainfo.MetainfoFile;
 import bitTorrent.metainfo.handler.MetainfoHandler;
 import bitTorrent.metainfo.handler.MetainfoHandlerMultipleFile;
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 
 public class TorrentInfoExtractor {
 	
-	
+	@SuppressWarnings("rawtypes")
 	public MetainfoHandler extractInformationFromDirectory()
 	{
 		try {			
@@ -45,6 +43,7 @@ public class TorrentInfoExtractor {
 		return null;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public MetainfoHandler extractInformationFromFile(File torrent)
 	{
 		try {
@@ -73,6 +72,7 @@ public class TorrentInfoExtractor {
 		return null;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public static void main(String[]args){
 		TorrentInfoExtractor t = new TorrentInfoExtractor();
 		MetainfoHandler prueba = t.extractInformationFromDirectory();

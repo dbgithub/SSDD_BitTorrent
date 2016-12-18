@@ -1,13 +1,12 @@
 package es.deusto.ingenieria.ssdd.classes;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import bitTorrent.tracker.protocol.udp.PeerInfo;
 
 /**
- * Class that represents a Swarm of the network
+ * Class that represents a combination of a simple Swarm, plus information regarding the state of the .torrent file with respect to the current peer
  * @author kevin & aitor
  *
  */
@@ -19,9 +18,9 @@ public class Swarm {
 	private int totalSeeders; // Peers who are uploading the file
 	private int totalLeecher; // Peers who are downloading the file
 	private List<PeerInfo> peerList; //Peer list
-	private long downloaded;
-	private long uploaded;
-	private long left;
+	private long downloaded; // the amount of downloaded stuff regarding the current peer
+	private long uploaded; // the amount of uploaded stuff regarding the current peer
+	private long left; // the amount of stuff left regarding the current peer
 	
 	public Swarm(String infoHash, String file, int size) {
 		this.infoHash = infoHash;
@@ -109,8 +108,4 @@ public class Swarm {
 	public void setLeft(long left) {
 		this.left = left;
 	}
-	
-	
-	
-
 }

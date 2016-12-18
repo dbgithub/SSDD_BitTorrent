@@ -15,6 +15,19 @@ import es.deusto.ingenieria.ssdd.classes.PeerTorrent;
 
 /**
  * DBManager will handle and manage the operations done against the database for every tracker.
+ * Overral, you will find methods such as:
+ * 	· Insert peer
+ * 	· Insert torrent
+ * 	· Insert (peer-torrent)
+ * 	· Retrieve all peers with their corresponding peer-torrent information
+ * 	· Retrieve all torrents
+ * 	· Retrieve all peer-torrents
+ * 	· Update peer
+ * 	· Update torrent
+ * 	· Update peer-torrent
+ * 	· Delete peer
+ * 	· Delete torrent
+ * 	· Delete peer-torrent
  * @author aitor & kevin
  *
  */

@@ -44,6 +44,7 @@ public class MainFrame extends JFrame{
 				// When the user clicks on another tab, the recently opened tab (Peers) will disappear
 				if (tabbedPane.getSelectedIndex() != 3 && tabbedPane.getTabCount() == 4) {
 					tabbedPane.removeTabAt(3);
+					dc.setCurrentlyDisplayedInfoHash("");
 				}
 			}
 		});

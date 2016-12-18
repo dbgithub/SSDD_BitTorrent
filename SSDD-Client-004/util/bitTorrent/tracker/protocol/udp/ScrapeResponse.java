@@ -5,8 +5,6 @@ import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.List;
 
-import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
-
 /**
  *
  * Offset      	Size            	Name            Value
@@ -34,8 +32,8 @@ public class ScrapeResponse extends BitTorrentUDPMessage {
 		buffer.order(ByteOrder.BIG_ENDIAN);
 		
 		buffer.putInt(0, super.getAction().value());
-		System.out.println(super.getTransactionId());
 		buffer.putInt(4, super.getTransactionId());
+//		System.out.println(super.getTransactionId());
 		
 		int index = 8;
 		for(ScrapeInfo t: scrapeInfos){
@@ -58,7 +56,7 @@ public class ScrapeResponse extends BitTorrentUDPMessage {
 		    
 		    msg.setAction(Action.valueOf(buffer.getInt(0)));	    
 		    msg.setTransactionId(buffer.getInt(4));
-		    System.out.println(msg.getTransactionId());
+//		    System.out.println(msg.getTransactionId());
 		    int index = 8;
 		    ScrapeInfo scrapeInfo = null;
 		    

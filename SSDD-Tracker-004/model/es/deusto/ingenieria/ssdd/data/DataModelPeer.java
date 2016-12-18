@@ -12,7 +12,7 @@ import es.deusto.ingenieria.ssdd.classes.Peer;
  */
 public class DataModelPeer extends Observable {
 	
-	public HashMap<Integer, Peer> peerlist; // A list of key-value pairs containing all Peers
+	public HashMap<Integer, Peer> peerlist;
 	
 	public DataModelPeer() {
 		this.peerlist = new HashMap<Integer, Peer>();
@@ -32,7 +32,4 @@ public class DataModelPeer extends Observable {
 		setChanged();
 		notifyObservers(p);
 	}
-	
-	
-
 }

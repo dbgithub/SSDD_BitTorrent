@@ -9,15 +9,14 @@ import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.Dimension;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import java.util.Observable;
 import java.util.Observer;
-
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListSelectionModel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.JScrollPane;
-
 import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.controllers.*;
 
@@ -33,7 +32,7 @@ import es.deusto.ingenieria.ssdd.data.DataModelPeer;;
 public class SeePeersPane extends JPanel implements Observer{
 
 	private JPanel PeersSee;
-	@SuppressWarnings("unused")
+	private JTable peerTable;
 	private DashboardController controller;
 
 	/**
@@ -93,8 +92,8 @@ public class SeePeersPane extends JPanel implements Observer{
 					.addGap(5))
 		);
 		
-		JTable table = new JTable();
-		table.setModel(new DefaultTableModel(
+		peerTable = new JTable();
+		peerTable.setModel(new DefaultTableModel(
 			new Object[][] {
 				{null, null, null, null, null},
 				{null, null, null, null, null},
@@ -112,19 +111,19 @@ public class SeePeersPane extends JPanel implements Observer{
 				return columnEditables[column];
 			}
 		});
-		table.getColumnModel().getColumn(0).setPreferredWidth(150);
-		table.getColumnModel().getColumn(0).setMinWidth(150);
-		table.getColumnModel().getColumn(1).setPreferredWidth(130);
-		table.getColumnModel().getColumn(1).setMinWidth(130);
-		table.getColumnModel().getColumn(2).setPreferredWidth(100);
-		table.getColumnModel().getColumn(2).setMinWidth(100);
-		table.getColumnModel().getColumn(3).setPreferredWidth(100);
-		table.getColumnModel().getColumn(3).setMinWidth(100);
-		table.getColumnModel().getColumn(4).setPreferredWidth(100);
-		table.getColumnModel().getColumn(4).setMinWidth(100);
-		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-		table.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
-		scrollPane.setViewportView(table);
+		peerTable.getColumnModel().getColumn(0).setPreferredWidth(150);
+		peerTable.getColumnModel().getColumn(0).setMinWidth(150);
+		peerTable.getColumnModel().getColumn(1).setPreferredWidth(130);
+		peerTable.getColumnModel().getColumn(1).setMinWidth(130);
+		peerTable.getColumnModel().getColumn(2).setPreferredWidth(100);
+		peerTable.getColumnModel().getColumn(2).setMinWidth(100);
+		peerTable.getColumnModel().getColumn(3).setPreferredWidth(100);
+		peerTable.getColumnModel().getColumn(3).setMinWidth(100);
+		peerTable.getColumnModel().getColumn(4).setPreferredWidth(100);
+		peerTable.getColumnModel().getColumn(4).setMinWidth(100);
+		peerTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		peerTable.setFont(new Font("Noto Sans CJK JP Regular", Font.PLAIN, 16));
+		scrollPane.setViewportView(peerTable);
 		
 		PeersSee.setLayout(groupLayout);
 	}
@@ -132,20 +131,27 @@ public class SeePeersPane extends JPanel implements Observer{
 	/**
 	 * This method is called from the Model side, to provoke certain changes in the View. 
 	 */
-	@SuppressWarnings("null")
 	@Override
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelPeer){
-			//The update is related with the value that we are observing
-			if(arg == null)
-			{
-				//This is the peer object that provoked the notification
-				Peer p = (Peer)arg;
-				System.out.println(p.toString());
+			if (controller.getCurrentlyDisplayedInfoHash() != "") { // If no infohash was set, the this means that the user is not watching "Peers" tab. Then, there is no need no update anything
+				DataModelPeer dmp = (DataModelPeer)o;
+				SwingUtilities.invokeLater(new Runnable(){public void run(){
+					int size = dmp.getPeerlist().values().size();
+					String[][] arrayTable = new String[size][5];
+					int l = 0;
+					for (Peer pr : dmp.getPeerlist().values()) {
+						arrayTable[l][0] = pr.getId()+"";
+						arrayTable[l][1] = pr.getIp()+"";
+						arrayTable[l][2] = pr.getPort()+"";
+						arrayTable[l][3] = pr.getSwarmList().get(controller.getCurrentlyDisplayedInfoHash()).getDownloaded()+"";
+						arrayTable[l][4] = pr.getSwarmList().get(controller.getCurrentlyDisplayedInfoHash()).getUploaded()+"";
+					}
+					peerTable.setModel(new DefaultTableModel(arrayTable, new String[] {
+							"Peers ID", "IP", "Port", "Downloaded", "Uploaded"
+					}));
+				}});			
 			}
-			
-			
-		}
-		
+		}		
 	}
 }

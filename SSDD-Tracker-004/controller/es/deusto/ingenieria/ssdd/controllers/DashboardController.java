@@ -13,7 +13,7 @@ import es.deusto.ingenieria.ssdd.view.SeeSwarmsPane;
 import es.deusto.ingenieria.ssdd.view.SeeTrackersPane;
 
 /**
- * This is the Controller for the application. Everything has to go through this class theoretically.
+ * This is the Controller for the application. The business logic flow has to go through this class theoretically.
  * Within this class, the DataModels corresponding to each and every View class are created.
  * @author aitor & kevin
  *
@@ -111,7 +111,11 @@ public class DashboardController {
 		dmc.destroyDataRepository();
 	}
 	
-	public void sendRepositoryUpdateRequestMessage() {
-//		dmt.sendRepositoryUpdateRequestMessage();
+	public void setCurrentlyDisplayedInfoHash(String infohash) {
+		dms.setDisplayedInfoHash(infohash);
+	}
+	
+	public String getCurrentlyDisplayedInfoHash() {
+		return dms.getDisplayedInfoHash();
 	}
 }

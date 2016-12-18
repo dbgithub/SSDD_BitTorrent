@@ -3,6 +3,12 @@ package es.deusto.ingenieria.ssdd.controller;
 import java.net.DatagramSocket;
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 
+/**
+ * This runnable class will represent a thread to renew the connection ID every 60 seconds.
+ * The renewal of the connection ID is done in tracker side, not client side. The renewal of the connection ID is based on a random number
+ * @author aitor & kevin
+ *
+ */
 public class ConnectionIdRenewer implements Runnable{
 	
 	private DatagramSocket socketSend;
@@ -25,7 +31,6 @@ public class ConnectionIdRenewer implements Runnable{
 				Thread.sleep(60000);
 				controller.sendAndWaitUntilConnectResponseReceivedLoop(single, socketSend, socketReceive, false);
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			

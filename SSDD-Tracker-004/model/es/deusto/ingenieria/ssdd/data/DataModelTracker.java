@@ -61,5 +61,4 @@ public class DataModelTracker extends Observable{
 	public void sendRepositoryUpdateRequestMessage(String IP, int port, int peerID, String infohash) {
 		this.repositorySyncListener.sendUpdateRequestMessage(IP,port,peerID,infohash);
 	}
-
 }

@@ -3,8 +3,6 @@ package bitTorrent.tracker.protocol.udp;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
-
 /**
  * 
  * Offset  Size            	Name            	Value

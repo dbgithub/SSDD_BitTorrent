@@ -5,6 +5,12 @@ import java.net.DatagramSocket;
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 
+/**
+ * This runnable class will represent a thread to re-send an AnnounceRequest in the interval specified by the tracker.
+ * The tracker is the one who is telling the peer at which pace should the peer send AnnounceRequests
+ * @author aitor & kevin
+ *
+ */
 public class DownloadStateNotifier implements Runnable{
 	
 	private DatagramSocket send;
@@ -30,16 +36,13 @@ public class DownloadStateNotifier implements Runnable{
 				Thread.sleep(ClientController.interval*1000);
 				//Get the actual status of the swarm
 				Swarm temp = controller.torrents.get(urlHash);
-				System.out.println("Sending AnnounceRequest to renew the state...");
+				System.out.println(" - Sending a AnnounceRequest to RENEW the state:");
 				controller.sendAndWaitUntilAnnounceResponseReceivedLoop(single, send, receive, temp.getDownloaded(), temp.getLeft(), temp.getUploaded());
 				
 			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}
-			
-		}
-		
+			}			
+		}		
 	}
 
 	public void cancel() {

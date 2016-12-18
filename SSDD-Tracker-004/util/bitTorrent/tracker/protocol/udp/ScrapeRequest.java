@@ -35,9 +35,9 @@ public class ScrapeRequest extends BitTorrentUDPRequestMessage {
 		buffer.putInt(12, super.getTransactionId());
 		buffer.position(16);
 		int index = 16;
-		System.out.println("Remaining: " + buffer.remaining());
+//		System.out.println("Remaining: " + buffer.remaining());
 		for(String t: infoHashes){
-			System.out.println("Length of infohash: "+ t.getBytes().length);
+//			System.out.println("Length of infohash: "+ t.getBytes().length);
 			buffer.put(t.getBytes(), 0, 40);
 			buffer.position(index+40);
 			index = index + 40;

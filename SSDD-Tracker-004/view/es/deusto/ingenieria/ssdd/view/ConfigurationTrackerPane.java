@@ -11,6 +11,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.GroupLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.Dimension;
@@ -151,7 +152,8 @@ public class ConfigurationTrackerPane extends JPanel implements Observer {
 		btnIncomingPeer.setEnabled(false);
 		btnIncomingPeer.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				controller.sendRepositoryUpdateRequestMessage();
+				JOptionPane.showMessageDialog(ConfigurationTrackerPane.this, "Hey! There is no need to simulate an incoming peer message anymore.\n" + 
+						"Please, launch the client side to test the communication between the cluster of trackers and peers", "Not used anymore!", JOptionPane.INFORMATION_MESSAGE);
 			}
 		});
 		btnIncomingPeer.setForeground(Color.WHITE);

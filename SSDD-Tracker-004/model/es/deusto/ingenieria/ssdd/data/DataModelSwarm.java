@@ -12,9 +12,11 @@ import es.deusto.ingenieria.ssdd.classes.Swarm;
  */
 public class DataModelSwarm extends Observable{
 	
+	private String displayedInfoHash; // This is the infohash of the corresponding Swarm that the user click on (with respect to the GUI)
 	private HashMap<String, Swarm> swarmList; // A list of Swarms, each one strictly related to a certain content shared. Key represents the InfoHash.
 	
 	public DataModelSwarm() {
+		this.displayedInfoHash = "";
 		this.swarmList = new HashMap<String, Swarm>();
 	}
 
@@ -28,6 +30,14 @@ public class DataModelSwarm extends Observable{
 	    notifyObservers();
 	}
 	
+	public String getDisplayedInfoHash() {
+		return displayedInfoHash;
+	}
+
+	public void setDisplayedInfoHash(String displayedInfoHash) {
+		this.displayedInfoHash = displayedInfoHash;
+	}
+
 	public void notifySwarmChanged(Swarm s){
 		setChanged();
 	    notifyObservers(s); 

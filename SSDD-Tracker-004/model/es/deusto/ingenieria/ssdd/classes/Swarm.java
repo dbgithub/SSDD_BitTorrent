@@ -9,7 +9,7 @@ import bitTorrent.tracker.protocol.udp.PeerInfo;
 import es.deusto.ingenieria.ssdd.tracker.MulticastSocketTracker;
 
 /**
- * Class that represents a Swarm of the network
+ * Class that represents a Swarm
  * @author kevin & aitor
  *
  */
@@ -162,29 +162,29 @@ public class Swarm {
 			double thisSeeders = this.totalSeeders - minSeeders /(maxSeeders - minSeeders);
 			//If the file is big and the number of leechers high, we get a relative low interval
 			int returnedValue = (int) Math.round(70 - thisSize * 30 - thisLeechers * 30 + 60 * thisSeeders);
-			System.out.println("Returned interval: "+ returnedValue);
+			System.out.println("		·Returned interval: "+ returnedValue);
 			return returnedValue;
 		}
 		else{
 			//This means that this swarm is the only one
 			//Just check number of peers (seeders/leechers)
 			if(totalSeeders == 1 && totalLeecher == 0){
-				System.out.println("Returned interval default: "+ 60);
+				System.out.println("		·Returned interval default: "+ 60);
 				return 60;
 			}
 			double seederLeechersRatio = totalSeeders/totalLeecher;
 			if(seederLeechersRatio >= 1){
 				int returnedValue = (int) Math.round(60 + 60 * seederLeechersRatio);
-				System.out.println("Returned interval: "+ returnedValue);
+				System.out.println("		·Returned interval: "+ returnedValue);
 				return returnedValue;
 			}
 			else if(seederLeechersRatio != 0){
 				int returnedValue = (int) Math.round(60 * seederLeechersRatio);
-				System.out.println("Returned interval: "+ returnedValue);
+				System.out.println("		·Returned interval: "+ returnedValue);
 				return returnedValue;
 			}
 			else{
-				System.out.println("Returned interval default: "+ 15);
+				System.out.println("		·Returned interval default: "+ 15);
 				return 15;
 			}
 		}

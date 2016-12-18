@@ -34,12 +34,13 @@ import es.deusto.ingenieria.ssdd.data.DataModelTracker;
 
 /**
  * This runnable class represents a thread that will be executed, taking care of the folllowing:
- * · Creating a multicast group
- * · Join the corresponding tracker (the one who is launching this thread) to the multicast group.
- * · Handle incoming messages from the multicast group (send & receive)
- * Apart from that, this class will make sure that in case the tracker is the master, then, a new UDP socket will be opened
- * to communicate with the peer.
- * In summary, this class manages the multicast group socket + UDP vanilla socket.
+ * · Create a multicast group
+ * · Join the corresponding tracker (the one who is launching this thread) to the multicast group (if the tracker is the master, a new UDP socket will be opened to communicate with the peer).
+ * · Handle incoming messages from the multicast group (send & receive):
+ * 		· Create a ConnectResponse message
+ * 		· Create an AnnounceResponse message
+ * 		· Create a ScrapeRequest message
+ * · Error handling
  * @author aitor & kevin
  *
  */
@@ -48,7 +49,6 @@ public class MulticastSocketTracker implements Runnable {
 	private MulticastSocket socketMulticast; // Socket for the multicast group. This will send messages to the members from within the multicast group, plus receive messages from peers.
 	private DatagramSocket socketUDP; // Socket for the UDP socket, NOT multicast. This will send message to the peers (the node/party) in the otehr side of the communication socket.
 	private InetAddress group;
-	private byte[] buffer;
 	private DatagramPacket incomingMessage;
 	volatile boolean cancel = false;
 	private boolean ismaster;
@@ -58,7 +58,6 @@ public class MulticastSocketTracker implements Runnable {
 	private int interval = 15; // number of seconds to wait before receiving another AnnounceRequest from a peer.
 	
 	//THREAD
-	private ConnectionIdChecker connectionChecker;
 	private Thread connectionCheckerThread;
 	
 	
@@ -74,13 +73,12 @@ public class MulticastSocketTracker implements Runnable {
 			System.out.println("ERROR creating and/or joining a multicast group in 'MulticastSocketTracker'!");
 			e.printStackTrace();
 		};
-		this.buffer = new byte[1024];	
 		this.incomingMessage = null;
 		this.ismaster = ismaster;
 		if (ismaster) {
 			// Only when the tracker who is launching this thread is the master, this code will be executed.
 			// Since the tracker master needs a direct communication between him and the peer, it is necessary to create a datagram socket
-			// in order to send UPD messages to the peer.
+			// in order to send UDP messages to the peer.
 			try {
 				socketUDP = new DatagramSocket();
 				System.out.println("UDP (DatagramSocket) vanilla socket created successfully!");
@@ -97,6 +95,7 @@ public class MulticastSocketTracker implements Runnable {
 		while(!cancel) {
 			System.out.println("-----------------------------------------------------------------");
 			System.out.println("MulticastSocket: waiting for incoming messages...");
+			byte[] buffer = new byte[1024]; 
 			this.incomingMessage = new DatagramPacket(buffer, buffer.length);
 			try {
 				this.socketMulticast.receive(incomingMessage);
@@ -112,8 +111,7 @@ public class MulticastSocketTracker implements Runnable {
 					int originPort = incomingMessage.getPort();
 					int destinationPort = originPort;
 					switch(incomingMessage.getLength()){
-						case 16:
-							//If length is 16 bytes, then it's a ConnectRequest
+						case 16: //If length is 16 bytes, then it's a ConnectRequest
 							ConnectRequest request = ConnectRequest.parse(incomingMessage.getData());
 							if(request != null){
 								long connectionId = request.getConnectionId();
@@ -122,11 +120,11 @@ public class MulticastSocketTracker implements Runnable {
 								
 								if(connectionId == 41727101980L){
 									if(action.compareTo(Action.CONNECT) == 0){
-										System.out.println("The UDP message received was a ConnectionRequest!");
+										System.out.println("The UDP message received was a ConnectRequest!");
 										//Then, this means the first connection between the peer and the tracker
 										//So, we have to add the peer to a list and response back to the peer if we are the master
-										//First, create a peer
 										if(!(dmp.peerlist.containsKey(transacctionId))){
+											//First, create a peer.
 											Peer p = new Peer();
 											p.setIp(ip);
 											p.setAnnounceRequest_lastupdate(null);
@@ -144,14 +142,14 @@ public class MulticastSocketTracker implements Runnable {
 												
 												//Once the message is created, we send it	
 												sendUDPMessage(response, ip, destinationPort);
-												System.out.println("		·Sending ConnectResponse UPD message back to the peer...");
+												System.out.println("		·Sending ConnectResponse UDP message back to the peer...");
 											}	
 										}
 										else{
+											//Then is trying to renew its connectionId
 											if (ismaster) {
-												//Then is trying to renew its connectionId
-												Peer selected = dmp.peerlist.get(transacctionId);
 												//We have to response to the peer with a new connection_id
+												Peer selected = dmp.peerlist.get(transacctionId);
 												ConnectResponse response = prepareConnectResponse(transacctionId);
 												selected.setConnection_id(response.getConnectionId());
 												selected.setConnection_id_lastupdate(new Date());
@@ -161,32 +159,18 @@ public class MulticastSocketTracker implements Runnable {
 										}
 									}
 									else{
-										if(ismaster){
-											// Send error regarding action incorrect: connect
-											Error error = prepareError("[ActionIncorrectError]: Action incorrect, should be ANNOUNCE.", transacctionId);
-											sendUDPMessage(error, ip, destinationPort);
-										}
+										if(ismaster){sendError("[ActionIncorrectError]: Action incorrect, should be ANNOUNCE.", transacctionId, ip, destinationPort);} // Send error regarding ACTION incorrect (connect)
 									}
 								}
 								else{
-									if (ismaster) {
-										//Send error regarding connection ID incorrect
-										Error error = prepareError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match", transacctionId);
-										sendUDPMessage(error, ip, destinationPort);													
-									}
+									if (ismaster) {sendError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match", transacctionId, ip, destinationPort);} //Send error regarding connection ID incorrect
 								}
 							}
 							else{
-								if (ismaster) {
-									//Send error regarding transactionId incorrect
-									int defaultTransactionId = 0;
-									Error error = prepareError("[ParsingError]: Error parsing the ConnectRequest message. Try to send it again.", defaultTransactionId);
-									sendUDPMessage(error, ip, destinationPort);	
-								}
+								if (ismaster) {sendError("[ParsingError]: Error parsing the ConnectRequest message. Try to send it again.", 0, ip, destinationPort);} //Send error regarding transactionId incorrect
 							}
 							break;
-						case 98:
-							//If length is 98 bytes, then it's an AnnounceRequest
+						case 98: //If length is 98 bytes, then it's an AnnounceRequest
 							AnnounceRequest announcerequest = AnnounceRequest.parse(incomingMessage.getData());
 							if(announcerequest != null){
 								System.out.println("The UDP message received was a AnnounceRequests!");
@@ -205,36 +189,26 @@ public class MulticastSocketTracker implements Runnable {
 									// Check if the information is coherent:
 									boolean connectionIDcorrect = true; // by default is true
 									if (ismaster) {
-										if (temp.getConnection_id() != connectionIdA) {
-											connectionIDcorrect = false;									
-										}
+										if (temp.getConnection_id() != connectionIdA) {connectionIDcorrect = false;}
 									}
 									if (!connectionIDcorrect) {
-										if (ismaster) {
-											// Send error regarding connection ID incorrect
-											Error error = prepareError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match", transacctionIdA);
-											sendUDPMessage(error, ip, destinationPort);													
-										}
-										
+										if (ismaster) {sendError("[ConnectionIdIncorrectError]: The ConnectionId doesn't match", transacctionIdA, ip, destinationPort);} // Send error regarding connection ID incorrect
 									} else {
 										System.out.println("		·ConnectionID CORRECT");
 										if(announcerequest.getAction().compareTo(Action.ANNOUNCE) == 0){
-											System.out.println("		·Action = ANNOUNCE");
+											System.out.println("		· >>>>> Action = ANNOUNCE");
 											if(temp.getAnnounceRequest_lastupdate() == null){
 												// This means that it is the first time in receiving an AnnounceRequest.
 												temp.setId(Integer.parseInt(announcerequest.getPeerId().trim())); // first we assign the ID
 												temp.setAnnounceRequest_lastupdate(new Date());
 												// Then, we send an AnnounceResponse (checking the swarm and saving data in memory is done within the following method):
 												AnnounceResponse ann_response = prepareAnnounceResponse(connectionIdA, transacctionIdA, infoHash, downloaded, uploaded, left, temp);
-												System.out.println(">>>>>>>>>>>>>>>>>>>>>>>"+ann_response.getAction());
-												if(ann_response.getPeers().size() > 0){
-													System.out.println(">>>>>>>>>>>>>>>>>>>>>>>"+ ann_response.getPeers().get(0));	
-												}
 												if (ismaster) {
 													//Once the message is created, we send it	
 													sendUDPMessage(ann_response, ip, destinationPort);
-													System.out.println("		·Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
+													System.out.println("		·Sending AnnounceResponse UDP message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
 												}
+												dmp.notifyPeerChanged(temp);
 											}
 											else{
 												//Check if the required amount of time has elapsed so as to accept or not the message from the peer:
@@ -250,47 +224,29 @@ public class MulticastSocketTracker implements Runnable {
 													if (ismaster) {
 														//Once the message is created, we send it	
 														sendUDPMessage(ann_response, ip, destinationPort);
-														System.out.println("		·Sending AnnounceResponse UPD message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
+														System.out.println("		·Sending AnnounceResponse UDP message back to the peer with transactionID "+ann_response.getTransactionId()+" ... ");	
 													}
+													dmp.notifyPeerChanged(temp);
 												}
 												else{
 													// Less than one minute has elapsed. Such a short time to receive another request from the peer so soon. Send error!
-													if (ismaster) {
-														//Send error regarding request to early
-														Error error = prepareError("[IntervalIncorrectError]: AnnounceRequest too early.", transacctionIdA);
-														sendUDPMessage(error, ip, destinationPort);													
-													}
-													
+													if (ismaster) {sendError("[IntervalIncorrectError]: AnnounceRequest too early.", transacctionIdA, ip, destinationPort);} //Send error regarding request to early	
 												}
 											}
 										} else {
-											if(ismaster){
-												// Send error regarding action incorrect: announce
-												Error error = prepareError("[ActionIncorrectError]: Action incorrect, should be ANNOUNCE.", transacctionIdA);
-												sendUDPMessage(error, ip, destinationPort);
-											}
+											if(ismaster){sendError("[ActionIncorrectError]: Action incorrect, should be ANNOUNCE.", transacctionIdA, ip, destinationPort);} // Send error regarding ACTION incorrect (announce)	
 										}		
 									}
 								}
 								else{
-									if(ismaster){
-										//Send error regarding transactionId incorrect
-										Error error = prepareError("[TransactionIdIncorrectError]: Incorrect transactionID. No registered previously.", transacctionIdA);
-										sendUDPMessage(error, ip, destinationPort);	
-									}
+									if(ismaster){sendError("[TransactionIdIncorrectError]: Incorrect transactionID. No registered previously.", transacctionIdA, ip, destinationPort);} //Send error regarding transactionId incorrect			
 								}
 							}
 							else{
-								if (ismaster) {
-									//Send error regarding transactionId incorrect
-									int defaultTransactionId = 0;
-									Error error = prepareError("[ParsingError]: Error parsing AnnounceRequest message. Try to send it again.", defaultTransactionId);
-									sendUDPMessage(error, ip, destinationPort);	
-								}
+								if (ismaster) {sendError("[ParsingError]: Error parsing AnnounceRequest message. Try to send it again.", 0, ip, destinationPort);} //Send error regarding transactionId incorrect
 							}
 							break;
-						default:
-							// We are supposing that the received message corresponds to a ScrapeRequest.
+						default: // We are supposing that the received message corresponds to a ScrapeRequest.
 							ScrapeRequest scraperequest = ScrapeRequest.parse(Arrays.copyOfRange(incomingMessage.getData(), 0, incomingMessage.getLength()));
 							if (scraperequest != null) {
 								System.out.println("The UDP message received was a ScrapeRequest!");
@@ -307,15 +263,10 @@ public class MulticastSocketTracker implements Runnable {
 								if (ismaster) {
 									//Once the message is created, we send it	
 									sendUDPMessage(scrape_response, ip, destinationPort);
-									System.out.println("		·Sending ScrapeResponse UPD message back to the peer with transactionID "+scrape_response.getTransactionId()+" ... ");	
+									System.out.println("		·Sending ScrapeResponse UDP message back to the peer with transactionID "+scrape_response.getTransactionId()+" ... ");	
 								}
 							} else {
-								if (ismaster) {
-									//Send error regarding size of message incorrect
-									int defaultTransactionId = 0;
-									Error error = prepareError("[SizeIncorrectError]: Size incorrect, not matching any of the messages.", defaultTransactionId);
-									sendUDPMessage(error, ip, destinationPort);													
-								}						
+								if (ismaster) {sendError("[SizeIncorrectError]: Size incorrect, not matching any of the messages.", 0, ip, destinationPort);} //Send error regarding size of message incorrect					
 							}
 							break;
 					}
@@ -327,7 +278,11 @@ public class MulticastSocketTracker implements Runnable {
 		} // END while
 	}
 	
-	// Sends a message to the members of the MULTICAST group
+	/**
+	 * Sends a message to the members of the MULTICAST group
+	 * @param msg
+	 * @param port
+	 */
 	public void sendMulticastMessage(String msg, int port) {
 		DatagramPacket outgoingMessage = new DatagramPacket(msg.getBytes(), msg.length(), group, port);
 		try {
@@ -339,8 +294,12 @@ public class MulticastSocketTracker implements Runnable {
 		}
 	}
 	
-	// Sends a message to the node/party in the other side of the UDP socket.
-	// This message will NOT go to the multicast group
+	/**
+	 * Sends a message to the node/party in the other side of the UDP socket. This message will NOT go to the multicast group
+	 * @param msg
+	 * @param IP
+	 * @param port
+	 */
 	public void sendUDPMessage(BitTorrentUDPMessage msg, String IP, int port) {
 		InetAddress serverHost;
 		try {
@@ -355,6 +314,9 @@ public class MulticastSocketTracker implements Runnable {
 		}			
 	}
 	
+	/**
+	 * Cancel the thread
+	 */
 	public void cancel() {
         cancel = true;
         Thread.currentThread().interrupt(); // Since 'socket.receive(...)' is a blocking call, it might be useful to just directly call ".interrupt()" instead of waiting the while loop to realize that 'cancel' is not false anymore. 
@@ -366,6 +328,11 @@ public class MulticastSocketTracker implements Runnable {
 		}
     }
 	
+	/**
+	 * Creates a ConnectResponse message given the values in the parameters
+	 * @param transactionId
+	 * @return
+	 */
 	public ConnectResponse prepareConnectResponse(int transactionId){
 		ConnectResponse response = new ConnectResponse();
 		response.setAction(Action.CONNECT);
@@ -374,6 +341,17 @@ public class MulticastSocketTracker implements Runnable {
 		return response;
 	}
 	
+	/**
+	 * Creates an AnnounceResponse message given the values in the parameters
+	 * @param connectionId
+	 * @param transactionId
+	 * @param stringinfohash
+	 * @param downloaded
+	 * @param uploaded
+	 * @param left
+	 * @param peer
+	 * @return
+	 */
 	public AnnounceResponse prepareAnnounceResponse(long connectionId, int transactionId, String stringinfohash, long downloaded, long uploaded, long left, Peer peer){
 		AnnounceResponse response = new AnnounceResponse();
 		response.setAction(Action.ANNOUNCE);
@@ -394,7 +372,7 @@ public class MulticastSocketTracker implements Runnable {
 			//We don't know nothing about the swarm, so we establish a default interval
 			//We determinate an interval
 			int period = temp.getAppropiateInterval(dms.getSwarmList());
-			System.out.println("Interval selected: " + period);
+			System.out.println("		·Interval selected: " + period);
 			response.setInterval(period);
 			interval = period;
 			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
@@ -410,7 +388,7 @@ public class MulticastSocketTracker implements Runnable {
 			}
 			else{
 				//The peer isn't at the swarm
-				tempPeer = dmp.peerlist.get(peer.getId());
+				tempPeer = dmp.peerlist.get(transactionId);
 				if(left > 0){
 					//leecher
 					temp.setTotalLeecher(temp.getTotalSeeders()+1);
@@ -426,6 +404,7 @@ public class MulticastSocketTracker implements Runnable {
 			temp.addPeerToList(tempPeer.getId(), tempPeer);
 			temp_SwarmMap.put(temp.getInfoHash(), temp);
 			dms.setSwarmList(temp_SwarmMap);
+			dms.notifySwarmChanged(temp);
 			// So now, it is necessary to tell the rest of the trackers (IF WE ARE THE MASTER) to update the information repository:
 			if (ismaster) {dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);}
 		} else {
@@ -456,6 +435,7 @@ public class MulticastSocketTracker implements Runnable {
 			s.addPeerToList(peer.getId(), peer);
 			temp_SwarmMap.put(stringinfohash, s);
 			dms.setSwarmList(temp_SwarmMap);
+			dms.notifySwarmChanged(s);
 			// So, this means that it is the first time a peer requests the mentioned swarm.
 			// We need to include/save the new swarm and inform the rest of the trackers:
 			if (ismaster) {dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);}
@@ -463,6 +443,12 @@ public class MulticastSocketTracker implements Runnable {
 		return response;
 	}
 	
+	/**
+	 * Creates a ScrapeResponse message given the values in the parameters
+	 * @param transactionid
+	 * @param scrapeInfoList
+	 * @return
+	 */
 	public ScrapeResponse prepareScrapeResponse(int transactionid, List<ScrapeInfo> scrapeInfoList) {
 		ScrapeResponse response = new ScrapeResponse();
 		response.setAction(Action.SCRAPE);
@@ -482,6 +468,12 @@ public class MulticastSocketTracker implements Runnable {
 		return resul;
 	}
 	
+	/**
+	 * Creates an Error message
+	 * @param errormessage
+	 * @param transactionId
+	 * @return
+	 */
 	public Error prepareError(String errormessage, int transactionId){
 		Error response = new Error();
 		response.setAction(Action.ERROR);
@@ -490,10 +482,23 @@ public class MulticastSocketTracker implements Runnable {
 		return response;
 	}
 	
+	/**
+	 * Send an error message through a UDP socket (first, it creates an ErrorMessage)
+	 * @param msg
+	 * @param transactionID
+	 * @param ip
+	 * @param destinationport
+	 */
+	private void sendError(String msg, int transactionID, String ip, int destinationport) {
+		Error error = prepareError(msg, transactionID);
+		sendUDPMessage(error, ip, destinationport);
+	}
+	
+	/**
+	 * Launches a thread that checks every 10 seconds if the connection ID of every peer of all existing swarms have expired or not.
+	 */
 	private void startConnectionIdChecker() {
-		ConnectionIdChecker checker = new ConnectionIdChecker(this, dmp);
-		connectionChecker = checker;
-		connectionCheckerThread = new Thread(checker); 
+		connectionCheckerThread = new Thread(new ConnectionIdChecker(dmp)); 
 		connectionCheckerThread.start();
 	}
 	

@@ -144,7 +144,6 @@ public class SeeTrackersPane extends JPanel implements Observer{
 			//System.out.println("Updating Tracker Table...");
 			DataModelTracker dmt = (DataModelTracker)o;
 			ArrayList<Tracker> trackers = new ArrayList<Tracker>(dmt.getTrackerlist().values());
-			//System.out.println("Size : "+ trackers.size());
 			SwingUtilities.invokeLater(new Runnable(){public void run(){
 				String[][] arrayTable = new String[trackers.size()][5];
 				for(int i =0; i<trackers.size(); i++){
