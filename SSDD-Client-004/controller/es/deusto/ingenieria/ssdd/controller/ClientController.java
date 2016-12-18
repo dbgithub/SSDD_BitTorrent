@@ -227,8 +227,6 @@ public class ClientController {
 	            		connectResponse = ConnectResponse.parse(response.getData());
 	            		//Parse and Action Validation
 	            		if(connectResponse != null){
-	            			System.out.println("A VER... (connectID): " + connectResponse.getConnectionId());
-	            			System.out.println("A VER... (transactID): " + connectResponse.getTransactionId());
 	            			if(connectResponse.getAction().equals(Action.CONNECT)){
 	            				//TransactionId validation
 	            				if(connectResponse.getTransactionId() == transactionID){

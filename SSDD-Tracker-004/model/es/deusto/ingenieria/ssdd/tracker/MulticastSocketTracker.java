@@ -251,7 +251,7 @@ public class MulticastSocketTracker implements Runnable {
 							if (scraperequest != null) {
 								System.out.println("The UDP message received was a ScrapeRequest!");
 								System.out.println("		·Number of infoHashes asked about: " +scraperequest.getInfoHashes().size());
-								System.out.println("		· Other attributes: " + scraperequest.getConnectionId() + " | " + scraperequest.getTransactionId());
+								System.out.println("		·Other attributes: " + scraperequest.getConnectionId() + " | " + scraperequest.getTransactionId());
 								// We get the typical data:
 								int transacctionId_scrape = scraperequest.getTransactionId();
 								List<String> infohashes = scraperequest.getInfoHashes();
