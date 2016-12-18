@@ -385,6 +385,7 @@ public class MulticastSocketTracker implements Runnable {
 			if(temp.getPeerListHashMap().containsKey(peer.getId())){
 				//The peer is already in the peer, just is necessary to update it
 				tempPeer = temp.getPeerListHashMap().get(peer.getId());
+				tempPeer.updatePeerTorrentInfo(stringinfohash, downloaded, uploaded, left);
 			}
 			else{
 				//The peer isn't at the swarm
@@ -397,9 +398,13 @@ public class MulticastSocketTracker implements Runnable {
 					//seeder
 					temp.setTotalSeeders(temp.getTotalLeecher()+1);
 				}
+				
+				//Then we insert it
+				tempPeer.getSwarmList().put(stringinfohash, new PeerTorrent(stringinfohash, uploaded, downloaded, left));
+				
 			}
 			
-			tempPeer.updatePeerTorrentInfo(stringinfohash, downloaded, uploaded, left);
+
 			// Now we put the peer back to its place in the memory:
 			temp.addPeerToList(tempPeer.getId(), tempPeer);
 			temp_SwarmMap.put(temp.getInfoHash(), temp);

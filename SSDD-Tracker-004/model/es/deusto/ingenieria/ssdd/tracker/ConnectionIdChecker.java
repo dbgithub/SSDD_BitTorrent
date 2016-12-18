@@ -6,6 +6,7 @@ import java.util.concurrent.TimeUnit;
 import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.data.DBManager;
 import es.deusto.ingenieria.ssdd.data.DataModelPeer;
+import es.deusto.ingenieria.ssdd.redundancy.RepositorySyncListener;
 
 public class ConnectionIdChecker implements Runnable{
 	
@@ -15,6 +16,7 @@ public class ConnectionIdChecker implements Runnable{
 	
 	public ConnectionIdChecker(DataModelPeer dmp) {
 		this.dmp = dmp;
+		this.dbm = RepositorySyncListener.database;
 	}
 
 	@Override
