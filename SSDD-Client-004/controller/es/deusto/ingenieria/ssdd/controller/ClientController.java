@@ -2,6 +2,7 @@ package es.deusto.ingenieria.ssdd.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.math.BigInteger;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -12,6 +13,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import bitTorrent.metainfo.InfoDictionarySingleFile;
 import bitTorrent.metainfo.handler.MetainfoHandler;
@@ -103,6 +105,10 @@ public class ClientController {
 					e.printStackTrace();
 				}
 			}
+			//Allocate space
+			FileAllocateUtil fd = new FileAllocateUtil(single);
+			RandomAccessFile fileAllocated = fd.getFileAllocated();
+			
 			//Let's send the ConnectionRequest and wait for the response (we try again if timeout reached)
 			sendAndWaitUntilConnectResponseReceivedLoop(single, multicastsocketSend, socketReceive, true);
 
@@ -143,6 +149,9 @@ public class ClientController {
 					}
 				}
 			}
+			
+			//Start connecting to peers...
+			
 		}
 	}
 
