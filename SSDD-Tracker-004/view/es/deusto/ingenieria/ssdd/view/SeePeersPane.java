@@ -144,6 +144,7 @@ public class SeePeersPane extends JPanel implements Observer{
 						arrayTable[l][0] = pr.getId()+"";
 						arrayTable[l][1] = pr.getIp()+"";
 						arrayTable[l][2] = pr.getPort()+"";
+						System.out.println("displayed info hash: " + controller.getCurrentlyDisplayedInfoHash());
 						arrayTable[l][3] = pr.getSwarmList().get(controller.getCurrentlyDisplayedInfoHash()).getDownloaded()+"";
 						arrayTable[l][4] = pr.getSwarmList().get(controller.getCurrentlyDisplayedInfoHash()).getUploaded()+"";
 					}

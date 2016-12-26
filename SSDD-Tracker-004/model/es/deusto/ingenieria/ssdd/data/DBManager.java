@@ -261,7 +261,9 @@ public class DBManager {
 				} else {// This statement will occur when there is no such peer in the result list. Thus, we instantiate a new one.
 					HashMap<String, PeerTorrent> temp = new HashMap<String, PeerTorrent>();
 					temp.put(rs.getString("FK_InfoHash"), new PeerTorrent(rs.getString("FK_InfoHash"),rs.getInt("Uploaded"),rs.getInt("Downloaded"),rs.getInt("Left")));
-					list.add(new Peer(rs.getInt("IDpeer"),rs.getString("IP"),rs.getInt("Port"),temp));
+					Peer peertoAdd = new Peer(0,0,rs.getInt("IDpeer"),rs.getString("IP"),rs.getInt("Port"));
+						peertoAdd.setSwarmList(temp);
+					list.add(peertoAdd);
 					System.out.println("[Retrieving peers...] New peer inserted -> "+rs.getInt("IDpeer") +" | "+  rs.getString("IP") + " | " + rs.getInt("Port"));
 				}
 			}		

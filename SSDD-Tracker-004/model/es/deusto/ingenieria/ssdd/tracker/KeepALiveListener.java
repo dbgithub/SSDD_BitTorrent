@@ -79,7 +79,6 @@ public class KeepALiveListener implements MessageListener{
 						}
 						break;
 					case "IDSelection":
-						// **PREGUNTAR a Kevin si este 'case' esta bien definido aqui donde esta.
 						// This 'case' should check whether the ID requested from the new tracker is free or already taken.
 						// If it is not taken, then, the master sends back the database to the tracker slave.
 						if(dmc.isMaster()){
@@ -96,6 +95,7 @@ public class KeepALiveListener implements MessageListener{
 								MessageProducer producer = session.createProducer(topic);
 					            producer.send(masterdb);
 					            db_stream.close();
+					            System.out.println(">>>>>>>>>>>>>>>>> Sending DB.");
 						}
 						
 						}
@@ -129,7 +129,6 @@ public class KeepALiveListener implements MessageListener{
 						//this message is for me
 						dmt.idCorrect = true;
 						//Save database in a local file
-						System.out.println(">>>>>>>>>>>>>>>>>Sending DB.");
 						BytesMessage databaseMessage = (BytesMessage) message;
 						byte[] incomingDB = new byte[(int) databaseMessage.getBodyLength()];
 						databaseMessage.readBytes(incomingDB, (int)databaseMessage.getBodyLength());
@@ -137,15 +136,13 @@ public class KeepALiveListener implements MessageListener{
 						FileOutputStream db_stream = new FileOutputStream(db);
 						db_stream.write(incomingDB);
 						db_stream.close();
+						System.out.println("DB received and saved correctly!");
 					}
 				} catch (JMSException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (FileNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

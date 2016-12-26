@@ -443,7 +443,6 @@ public class ClientController {
 	}
 	
 	// THIS METHOD IS FOR THE NEAR FUTURE. WE ARE NOT USING IT IN THIS PART OF THE PROJECT
-	@SuppressWarnings("unused")
 	private InetAddress convertIntToIP(int ip) throws UnknownHostException{
 		byte[] bytes = BigInteger.valueOf(ip).toByteArray();
 		InetAddress address = InetAddress.getByAddress(bytes);

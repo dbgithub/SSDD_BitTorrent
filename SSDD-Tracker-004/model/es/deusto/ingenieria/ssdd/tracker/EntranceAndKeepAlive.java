@@ -113,6 +113,9 @@ public class EntranceAndKeepAlive implements Runnable{
 	        		
 	        		// Initiate, open and join a multicast socket in order to be informed about incoming peers' messages:
 	        		multicastSocketStart();
+	        		
+	        		// Now it is necessary to dump or save the information that is within the database into the application's memory
+					dmc.dumpDBintoMemory(dms, dmp);
 	            }
 	            else{
 	            	//Master response is negative, so you have to start the process again
@@ -183,6 +186,9 @@ public class EntranceAndKeepAlive implements Runnable{
     	        		
     	        		// Initiate, open and join a multicast socket in order to be informed about incoming peers' messages:
     	        		multicastSocketStart();
+    	        		
+    	        		// Now it is necessary to dump or save the information that is within the database into the application's memory
+						dmc.dumpDBintoMemory(dms, dmp);
     	            }
     	            else{
     	            	//Master response is negative, so you have to start the process again
