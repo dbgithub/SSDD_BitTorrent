@@ -130,6 +130,19 @@ public class ClientController {
 			
 			//Start a thread to notify the state of the download periodically
 			createDownloadStateNotifier(single, multicastsocketSend, socketReceive);
+			System.out.println("Received Peers...");
+			for(Swarm s2 : torrents.values()){
+				for(PeerInfo temporal: s2.getPeerList()){
+					try {
+						if(temporal.getIpAddress()!=0){
+							System.out.println(convertIntToIP(temporal.getIpAddress()) + " "+ temporal.getPort());
+						}
+					} catch (UnknownHostException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
 		}
 	}
 
@@ -171,7 +184,7 @@ public class ClientController {
 		try{
 			InfoDictionarySingleFile info = single.getMetainfo().getInfo();
 			System.out.println("	· InfoHash: "+ info.getHexInfoHash());
-			AnnounceRequest request = createAnnounceRequest(info.getInfoHash(), 0, info.getLength(), 0, Event.NONE, 0, peerListenerPort);
+			AnnounceRequest request = createAnnounceRequest(info.getInfoHash(), 0, info.getLength(), 0, Event.NONE, convertIpAddressToInt(peerListenerSocket.getInetAddress().getAddress()), peerListenerPort);
 			
 			byte[] requestBytes = request.getBytes();	
 			DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length, multicastIP, DESTINATION_PORT);
@@ -436,6 +449,20 @@ public class ClientController {
 		InetAddress address = InetAddress.getByAddress(bytes);
 		return address;
 	}
+	
+	public static int convertIpAddressToInt(byte[] ip){
+		
+		int result = 0;
+		if(ip != null){
+			for (byte b: ip)  
+			{  
+			    result = result << 8 | (b & 0xFF);  
+			}
+		}
+		return result;
+		
+	}
+
 
 	/**
 	 * If Client side doesn't have a transaction ID set yet, then we cannot proceed with the ScrapeRequest message
