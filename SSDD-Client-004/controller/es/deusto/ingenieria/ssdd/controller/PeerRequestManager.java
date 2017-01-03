@@ -81,7 +81,7 @@ public class PeerRequestManager extends Thread{
 						break;
 					case INTERESTED:
 						//The other peer is interested, so will request blocks soon
-						//(IF it is unchoked)
+						//(If it is unchoked)
 						interested = true;
 						break;
 					case NOT_INTERESTED:
@@ -94,10 +94,13 @@ public class PeerRequestManager extends Thread{
 						// Send request (INTERESTED) if this peer hasn't that piece
 						break;
 					case BITFIELD:
-						//Sended after the handshake (first message)
+						//Sent after the handshake (first message)
+						//TODO: register the pieces that it has and check if we need those
+						//If we need some, send appropriate requests
 						break;
 					case REQUEST:
-						
+						//It is requesting one block, so we have to serve it 
+						//TODO: Look for the piece that wants and send it 
 						break;
 					case PIECE:
 						
@@ -106,7 +109,7 @@ public class PeerRequestManager extends Thread{
 						//Cancel download of the block
 						break;
 					case PORT:
-						//Sets listenning port
+						//Sets listening port
 						PortMsg portMsg = (PortMsg) message;
 						port = portMsg.getPort();
 						break;

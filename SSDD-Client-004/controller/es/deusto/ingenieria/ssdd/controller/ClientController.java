@@ -95,7 +95,21 @@ public class ClientController {
 				try {
 					multicastsocketSend = new DatagramSocket();
 					socketReceive = multicastsocketSend;
-					peerListenerSocket = new ServerSocket();
+					//This is mandatory because in Announce Messages the port
+					//Is represented with a Short, so max. value is 32767.
+					//We can't choose randomly or leave S.O to choose
+					Random rn = new Random();
+					int random = 0 + rn.nextInt(32766 - 0 + 1);
+					boolean itsfreeport = false;
+					while(!itsfreeport){
+						try{
+							peerListenerSocket = new ServerSocket(random);
+				            itsfreeport = true;
+				        }
+						catch(Exception ex){
+							itsfreeport = false;
+						}
+					}
 					peerListenerPort = peerListenerSocket.getLocalPort();
 				}catch (SocketException e) {
 					System.out.println("ERROR: Error opening UDP sender/listener Socket.");
@@ -141,7 +155,11 @@ public class ClientController {
 				for(PeerInfo temporal: s2.getPeerList()){
 					try {
 						if(temporal.getIpAddress()!=0){
-							System.out.println(convertIntToIP(temporal.getIpAddress()) + " "+ temporal.getPort());
+							if(temporal.getIpAddress() == convertIpAddressToInt(InetAddress.getLocalHost().getAddress()) && temporal.getPort() == peerListenerPort){
+								System.out.println("The next peer information is about this peer:");
+							}
+							//System.out.println(InetAddress.getLocalHost().getHostAddress()+ " "+ peerListenerPort);
+							System.out.println("-> "+convertIntToIP(temporal.getIpAddress()) + " "+ temporal.getPort());
 						}
 					} catch (UnknownHostException e) {
 						// TODO Auto-generated catch block
@@ -193,13 +211,14 @@ public class ClientController {
 		try{
 			InfoDictionarySingleFile info = single.getMetainfo().getInfo();
 			System.out.println("	· InfoHash: "+ info.getHexInfoHash());
-			AnnounceRequest request = createAnnounceRequest(info.getInfoHash(), 0, info.getLength(), 0, Event.NONE, convertIpAddressToInt(peerListenerSocket.getInetAddress().getAddress()), peerListenerPort);
+			AnnounceRequest request = createAnnounceRequest(info.getInfoHash(), 0, info.getLength(), 0, Event.NONE, convertIpAddressToInt(InetAddress.getLocalHost().getAddress()), peerListenerPort);
 			
 			byte[] requestBytes = request.getBytes();	
 			DatagramPacket messageOut = new DatagramPacket(requestBytes, requestBytes.length, multicastIP, DESTINATION_PORT);
 			socket.send(messageOut);
 			
 			System.out.println(" - Sending a AnnounceRequest to '" + messageOut.getAddress().getHostAddress() + ":" + messageOut.getPort() + " [" + messageOut.getLength() + " byte(s)]...");
+			AnnounceRequest prove = AnnounceRequest.parse(requestBytes);
 		} catch (SocketException e) {
 			System.err.println("# Socket Error: " + e.getMessage());
 			e.printStackTrace();

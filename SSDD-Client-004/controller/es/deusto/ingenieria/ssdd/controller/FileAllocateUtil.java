@@ -14,7 +14,15 @@ public class FileAllocateUtil {
 		this.single= single;
 	}
 	public RandomAccessFile getFileAllocated(){
-		File file = new File("/downloads/"+single.getMetainfo().getInfo().getName());
+		File file = new File("downloads/"+single.getMetainfo().getInfo().getName());
+		if(!(file.exists())){
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		long bytes = single.getMetainfo().getInfo().getLength();
 		RandomAccessFile rf = null;
 		try{

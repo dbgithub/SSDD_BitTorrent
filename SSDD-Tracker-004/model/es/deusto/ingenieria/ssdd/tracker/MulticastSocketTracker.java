@@ -181,6 +181,8 @@ public class MulticastSocketTracker implements Runnable {
 								long downloaded = announcerequest.getDownloaded();
 								long uploaded = announcerequest.getUploaded();
 								long left = announcerequest.getLeft();
+								int port = announcerequest.getPeerInfo().getPort();
+								int ipPeer = announcerequest.getPeerInfo().getIpAddress();
 								Peer temp = dmp.peerlist.get(transacctionIdA);
 								System.out.println("		·Received PEER ID: " + Integer.parseInt(announcerequest.getPeerId().trim()));
 								if(temp != null){
@@ -188,6 +190,11 @@ public class MulticastSocketTracker implements Runnable {
 									// The tracker knew about the transaction ID, so we continue with the process.
 									// Check if the information is coherent:
 									boolean connectionIDcorrect = true; // by default is true
+									
+									//Set the correct IP and port for connections of peers
+									temp.setIp(InetAddress.getByAddress(convertIntToBytes(ipPeer)).getHostAddress());
+									temp.setPort(port);
+									
 									if (ismaster) {
 										if (temp.getConnection_id() != connectionIdA) {connectionIDcorrect = false;}
 									}
@@ -525,4 +532,13 @@ public class MulticastSocketTracker implements Runnable {
 		return result;
 		
 	}
+	
+	byte[] convertIntToBytes(int bytes) {
+		  return new byte[] {
+		    (byte)((bytes >>> 24) & 0xff),
+		    (byte)((bytes >>> 16) & 0xff),
+		    (byte)((bytes >>>  8) & 0xff),
+		    (byte)((bytes       ) & 0xff)
+		  };
+		}
 }
