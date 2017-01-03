@@ -13,6 +13,7 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import bitTorrent.metainfo.InfoDictionarySingleFile;
@@ -114,9 +115,6 @@ public class ClientController {
 				}catch (SocketException e) {
 					System.out.println("ERROR: Error opening UDP sender/listener Socket.");
 					e.printStackTrace();
-				} catch (IOException e) {
-					System.out.println("ERROR: Error opening TCP listener Socket.");
-					e.printStackTrace();
 				}
 			}
 			//Allocate space
@@ -139,34 +137,18 @@ public class ClientController {
 			System.out.println("AnnounceResponse: "+ announceResponse.getTransactionId());
 			
 			//Adding information about the swarm
-			String urlInfohash = single.getMetainfo().getInfo().getHexInfoHash();
+			String infohash = single.getMetainfo().getInfo().getHexInfoHash();
 			String file = single.getMetainfo().getInfo().getName();
 			int fileLength = single.getMetainfo().getInfo().getLength();
-			Swarm s = new Swarm(urlInfohash, file, fileLength);
+			Swarm s = new Swarm(infohash, file, fileLength);
 			s.setPeerList(announceResponse.getPeers());
 			s.setTotalLeecher(announceResponse.getLeechers());
 			s.setTotalSeeders(announceResponse.getSeeders());
-			torrents.put(single.getMetainfo().getInfo().getHexInfoHash(), s);
+			torrents.put(infohash, s);
+			processReceivedPeerList(announceResponse.getPeers()); // This just displays (shows) a list of peers in the console.
 			
 			//Start a thread to notify the state of the download periodically
-			createDownloadStateNotifier(single, multicastsocketSend, socketReceive);
-			System.out.println("Received Peers...");
-			for(Swarm s2 : torrents.values()){
-				for(PeerInfo temporal: s2.getPeerList()){
-					try {
-						if(temporal.getIpAddress()!=0){
-							if(temporal.getIpAddress() == convertIpAddressToInt(InetAddress.getLocalHost().getAddress()) && temporal.getPort() == peerListenerPort){
-								System.out.println("The next peer information is about this peer:");
-							}
-							//System.out.println(InetAddress.getLocalHost().getHostAddress()+ " "+ peerListenerPort);
-							System.out.println("-> "+convertIntToIP(temporal.getIpAddress()) + " "+ temporal.getPort());
-						}
-					} catch (UnknownHostException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-			}
+			createDownloadStateNotifier(single, multicastsocketSend, socketReceive);	
 			
 			//Start connecting to peers...
 			
@@ -218,7 +200,6 @@ public class ClientController {
 			socket.send(messageOut);
 			
 			System.out.println(" - Sending a AnnounceRequest to '" + messageOut.getAddress().getHostAddress() + ":" + messageOut.getPort() + " [" + messageOut.getLength() + " byte(s)]...");
-			AnnounceRequest prove = AnnounceRequest.parse(requestBytes);
 		} catch (SocketException e) {
 			System.err.println("# Socket Error: " + e.getMessage());
 			e.printStackTrace();
@@ -321,6 +302,8 @@ public class ClientController {
 	            			if(announceResponse.getTransactionId() == transactionID){
 		            			responseReceived = true;
 		            			interval = announceResponse.getInterval();
+		            			updateSwarmInformation(single.getMetainfo().getInfo().getHexInfoHash(), announceResponse); // We can make use of 'MetainfoHandlerSingleFile' because at this point we have confirmed the TransactionID
+		            			processReceivedPeerList(announceResponse.getPeers());
 		            		}
 	            		}
 	            	}
@@ -470,7 +453,6 @@ public class ClientController {
 		downloadNotifierThread.start();
 	}
 	
-	// THIS METHOD IS FOR THE NEAR FUTURE. WE ARE NOT USING IT IN THIS PART OF THE PROJECT
 	private InetAddress convertIntToIP(int ip) throws UnknownHostException{
 		byte[] bytes = BigInteger.valueOf(ip).toByteArray();
 		InetAddress address = InetAddress.getByAddress(bytes);
@@ -498,6 +480,32 @@ public class ClientController {
 	 */
 	public static int getTransactionID() {
 		return transactionID;
+	}
+	
+	private void updateSwarmInformation(String infohash, AnnounceResponse res) {
+		if (torrents.get(infohash) != null) {
+			torrents.get(infohash).setPeerList(res.getPeers());
+			torrents.get(infohash).setTotalLeecher(res.getLeechers());
+			torrents.get(infohash).setTotalSeeders(res.getSeeders());
+		}
+	}
+	private void processReceivedPeerList(List<PeerInfo> peerlist) {
+		System.out.println("Displaying the received list of Peers from tracker...");
+		for(Swarm s2 : torrents.values()){
+			for(PeerInfo temporal: s2.getPeerList()){
+				try {
+					if(temporal.getIpAddress()!=0){
+						if(temporal.getIpAddress() == convertIpAddressToInt(InetAddress.getLocalHost().getAddress()) && temporal.getPort() == peerListenerPort){
+							System.out.println("		· (YOU, current Peer) "+convertIntToIP(temporal.getIpAddress()) + ":"+ temporal.getPort());
+							continue;
+						}
+						System.out.println("		· "+convertIntToIP(temporal.getIpAddress()) + ":"+ temporal.getPort());
+					}
+				} catch (UnknownHostException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 
 }

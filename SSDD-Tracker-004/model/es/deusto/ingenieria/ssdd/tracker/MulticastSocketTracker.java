@@ -375,8 +375,7 @@ public class MulticastSocketTracker implements Runnable {
 			//Set new value of peers/seeders
 			response.setLeechers(temp.getTotalLeecher());
 			response.setSeeders(temp.getTotalSeeders());
-			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
-			//We don't know nothing about the swarm, so we establish a default interval
+			//We don't know anything about the swarm, so we establish a default interval
 			//We determinate an interval
 			int period = temp.getAppropiateInterval(dms.getSwarmList());
 			System.out.println("		·Interval selected: " + period);
@@ -390,12 +389,12 @@ public class MulticastSocketTracker implements Runnable {
 			HashMap<String, Swarm> temp_SwarmMap = dms.getSwarmList();
 			Peer tempPeer = null;
 			if(temp.getPeerListHashMap().containsKey(peer.getId())){
-				//The peer is already in the peer, just is necessary to update it
+				//The peer is already in the swarm, is just necessary to update it:
 				tempPeer = temp.getPeerListHashMap().get(peer.getId());
 				tempPeer.updatePeerTorrentInfo(stringinfohash, downloaded, uploaded, left);
 			}
 			else{
-				//The peer isn't at the swarm
+				//The peer isn't in the swarm
 				tempPeer = dmp.peerlist.get(transactionId);
 				if(left > 0){
 					//leecher
@@ -410,13 +409,14 @@ public class MulticastSocketTracker implements Runnable {
 				tempPeer.getSwarmList().put(stringinfohash, new PeerTorrent(stringinfohash, uploaded, downloaded, left));
 				
 			}
+			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
 			
-
 			// Now we put the peer back to its place in the memory:
 			temp.addPeerToList(tempPeer.getId(), tempPeer);
 			temp_SwarmMap.put(temp.getInfoHash(), temp);
 			dms.setSwarmList(temp_SwarmMap);
 			dms.notifySwarmChanged(temp);
+			
 			// So now, it is necessary to tell the rest of the trackers (IF WE ARE THE MASTER) to update the information repository:
 			if (ismaster) {dmt.sendRepositoryUpdateRequestMessage(peer.getIp(),peer.getPort(),peer.getId(),stringinfohash);}
 		} else {
