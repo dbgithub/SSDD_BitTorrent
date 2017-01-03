@@ -83,7 +83,7 @@ public class PeerRequestManager extends Thread{
 						choked = false;
 						break;
 					case INTERESTED:
-						// len=0001><id=2>
+						// <len=0001><id=2>
 						//The other peer is interested, so will request blocks soon
 						//(If it is unchoked)
 						interested = true;
