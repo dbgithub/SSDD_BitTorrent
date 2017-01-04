@@ -89,6 +89,7 @@ public class Swarm {
 			List<PeerTorrent> peerTorrent = new ArrayList<PeerTorrent>();
 			for(Peer p : peerList.values()){
 				peerTorrent.add(p.getSwarmList().get(infohash));
+				System.out.println(p.getSwarmList().get(infohash).getIp()+ " "+p.getSwarmList().get(infohash).getPort());
 			}
 			if(left == 0){
 				//Then the peer is a complete seeder, don't need another seeders

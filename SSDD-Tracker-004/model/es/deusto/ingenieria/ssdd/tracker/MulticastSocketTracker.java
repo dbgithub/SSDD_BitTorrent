@@ -406,7 +406,11 @@ public class MulticastSocketTracker implements Runnable {
 				}
 				
 				//Then we insert it
-				tempPeer.getSwarmList().put(stringinfohash, new PeerTorrent(stringinfohash, uploaded, downloaded, left));
+				PeerTorrent ptorrent = new PeerTorrent(stringinfohash, uploaded, downloaded, left);
+				ptorrent.setId(peer.getId());
+				ptorrent.setIp(peer.getIp());
+				ptorrent.setPort(peer.getPort());
+				tempPeer.getSwarmList().put(stringinfohash, ptorrent);
 				
 			}
 			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
@@ -443,7 +447,11 @@ public class MulticastSocketTracker implements Runnable {
 				s.setTotalSeeders(1);
 			}
 			s.setSize(downloaded + left);
-			peer.getSwarmList().put(stringinfohash, new PeerTorrent(stringinfohash, uploaded, downloaded, left));
+			PeerTorrent ptorrent = new PeerTorrent(stringinfohash, uploaded, downloaded, left);
+			ptorrent.setId(peer.getId());
+			ptorrent.setIp(peer.getIp());
+			ptorrent.setPort(peer.getPort());
+			peer.getSwarmList().put(stringinfohash, ptorrent);
 			s.addPeerToList(peer.getId(), peer);
 			temp_SwarmMap.put(stringinfohash, s);
 			dms.setSwarmList(temp_SwarmMap);
