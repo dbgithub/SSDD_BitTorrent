@@ -134,7 +134,7 @@ public class SeePeersPane extends JPanel implements Observer{
 	@Override
 	public void update(Observable o, Object arg) {
 		if( o instanceof DataModelPeer){
-			if (controller.getCurrentlyDisplayedInfoHash() != "") { // If no infohash was set, the this means that the user is not watching "Peers" tab. Then, there is no need no update anything
+			if (controller.getCurrentlyDisplayedInfoHash() != "") { // If no infohash was set, then this means that the user is not watching "Peers" tab. Then, there is no need no update anything
 				DataModelPeer dmp = (DataModelPeer)o;
 				SwingUtilities.invokeLater(new Runnable(){public void run(){
 					int size = dmp.getPeerlist().values().size();
@@ -144,9 +144,10 @@ public class SeePeersPane extends JPanel implements Observer{
 						arrayTable[l][0] = pr.getId()+"";
 						arrayTable[l][1] = pr.getIp()+"";
 						arrayTable[l][2] = pr.getPort()+"";
-						System.out.println("displayed info hash: " + controller.getCurrentlyDisplayedInfoHash());
+						System.out.println("Selected Swarm (infohash): " + controller.getCurrentlyDisplayedInfoHash());
 						arrayTable[l][3] = pr.getSwarmList().get(controller.getCurrentlyDisplayedInfoHash()).getDownloaded()+"";
 						arrayTable[l][4] = pr.getSwarmList().get(controller.getCurrentlyDisplayedInfoHash()).getUploaded()+"";
+						l++;
 					}
 					peerTable.setModel(new DefaultTableModel(arrayTable, new String[] {
 							"Peers ID", "IP", "Port", "Downloaded", "Uploaded"

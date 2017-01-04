@@ -89,7 +89,7 @@ public class Swarm {
 			List<PeerTorrent> peerTorrent = new ArrayList<PeerTorrent>();
 			for(Peer p : peerList.values()){
 				peerTorrent.add(p.getSwarmList().get(infohash));
-				System.out.println(p.getSwarmList().get(infohash).getIp()+ " "+p.getSwarmList().get(infohash).getPort());
+//				System.out.println(p.getSwarmList().get(infohash).getIp()+ " "+p.getSwarmList().get(infohash).getPort());
 			}
 			if(left == 0){
 				//Then the peer is a complete seeder, don't need another seeders
@@ -108,9 +108,9 @@ public class Swarm {
 				result.add(pf);
 				index++;
 			}
-			System.out.println("- PeerList to send:");
+			System.out.println("List of peers to send back to the peer:");
 			for(PeerInfo p: result){
-				System.out.println(p.toString());
+				System.out.println("		·"+p.toString());
 			}
 			
 			return result;

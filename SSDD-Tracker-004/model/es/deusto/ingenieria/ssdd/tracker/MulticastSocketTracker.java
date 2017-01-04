@@ -372,9 +372,6 @@ public class MulticastSocketTracker implements Runnable {
 			// First, we prepare the response to the peer and we will handle the update process (concerning all trackers) afterwards:
 			Swarm temp = dms.getSwarmList().get(stringinfohash);
 			
-			//Set new value of peers/seeders
-			response.setLeechers(temp.getTotalLeecher());
-			response.setSeeders(temp.getTotalSeeders());
 			//We don't know anything about the swarm, so we establish a default interval
 			//We determinate an interval
 			int period = temp.getAppropiateInterval(dms.getSwarmList());
@@ -398,11 +395,11 @@ public class MulticastSocketTracker implements Runnable {
 				tempPeer = dmp.peerlist.get(transactionId);
 				if(left > 0){
 					//leecher
-					temp.setTotalLeecher(temp.getTotalSeeders()+1);
+					temp.setTotalLeecher(temp.getTotalLeecher()+1);
 				}
 				if(downloaded > 0){
 					//seeder
-					temp.setTotalSeeders(temp.getTotalLeecher()+1);
+					temp.setTotalSeeders(temp.getTotalSeeders()+1);
 				}
 				
 				//Then we insert it
@@ -413,6 +410,9 @@ public class MulticastSocketTracker implements Runnable {
 				tempPeer.getSwarmList().put(stringinfohash, ptorrent);
 				
 			}
+			//Set corresponding values for leechers and seeders
+			response.setLeechers(temp.getTotalLeecher());
+			response.setSeeders(temp.getTotalSeeders());
 			response.setPeers(temp.getPeerInfoList(left, stringinfohash, 50));
 			
 			// Now we put the peer back to its place in the memory:
