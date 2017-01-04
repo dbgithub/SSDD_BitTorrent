@@ -1,5 +1,8 @@
 package es.deusto.ingenieria.ssdd.classes;
 
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -103,7 +106,12 @@ public class Swarm {
 				pf.setPort(peerTorrent.get(index).getPort());
 				result.add(pf);
 				index++;
-			}	
+			}
+			System.out.println("- PeerList to send:");
+			for(PeerInfo p: result){
+				System.out.println(p.toString());
+			}
+			
 			return result;
 		}
 		return null;
@@ -188,6 +196,12 @@ public class Swarm {
 				return 15;
 			}
 		}
+	}
+	
+	private InetAddress convertIntToIP(int ip) throws UnknownHostException{
+		byte[] bytes = BigInteger.valueOf(ip).toByteArray();
+		InetAddress address = InetAddress.getByAddress(bytes);
+		return address;
 	}
 	
 
