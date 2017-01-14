@@ -1,6 +1,7 @@
 package es.deusto.ingenieria.ssdd.controller;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.math.BigInteger;
@@ -119,7 +120,15 @@ public class ClientController {
 			}
 			//Allocate space
 			FileAllocateUtil fd = new FileAllocateUtil(single);
-			RandomAccessFile fileAllocated = fd.getFileAllocated();
+			try {
+				RandomAccessFile fileAllocated = fd.getFileAllocated();
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			
 			//Let's send the ConnectionRequest and wait for the response (we try again if timeout reached)
 			sendAndWaitUntilConnectResponseReceivedLoop(single, multicastsocketSend, socketReceive, true);
@@ -151,7 +160,7 @@ public class ClientController {
 			createDownloadStateNotifier(single, multicastsocketSend, socketReceive);	
 			
 			//Start connecting to peers...
-			
+			//Utilizar bitset para saber las piezas descargadas
 		}
 	}
 

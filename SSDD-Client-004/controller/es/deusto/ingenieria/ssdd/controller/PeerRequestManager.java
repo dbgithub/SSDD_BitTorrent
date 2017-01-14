@@ -10,6 +10,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.Date;
 
+import bitTorrent.peer.protocol.BitfieldMsg;
 import bitTorrent.peer.protocol.Handsake;
 import bitTorrent.peer.protocol.PeerProtocolMessage;
 import bitTorrent.peer.protocol.PortMsg;
@@ -104,6 +105,8 @@ public class PeerRequestManager extends Thread{
 						//Sent after the handshake (first message)
 						//TODO: register the pieces that it has and check if we need those
 						//If we need some, send appropriate requests
+						BitfieldMsg bitmessage = (BitfieldMsg) message;
+						byte[] bytes = bitmessage.getBytes();
 						break;
 					case REQUEST:
 						// <len=0013><id=6><index><begin><length>
