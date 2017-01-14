@@ -1,6 +1,7 @@
 package es.deusto.ingenieria.ssdd.controller;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -37,21 +38,25 @@ import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage;
 public class PeerConnectionListener implements Runnable {
 
 	private ServerSocket peerListenerSocket;
+	private RandomAccessFile downloadFile;
+	private int piece;
 	volatile boolean cancel = false;
 	
 //	THREAD
 //	private Thread connectionCheckerThread; // Esto es necesario???
 	
 	
-	public PeerConnectionListener(ServerSocket peerListenerSocket) {
+	public PeerConnectionListener(ServerSocket peerListenerSocket, RandomAccessFile downloadFile, int pieceLength) {
 		this.peerListenerSocket = peerListenerSocket;
+		this.downloadFile = downloadFile;
+		this.piece = pieceLength;
 	}
 	
 	@Override
 	public void run() {
 		while(!cancel) {				
 			try {
-				new PeerRequestManager(peerListenerSocket.accept());
+				new PeerRequestManager(peerListenerSocket.accept(), downloadFile, piece);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

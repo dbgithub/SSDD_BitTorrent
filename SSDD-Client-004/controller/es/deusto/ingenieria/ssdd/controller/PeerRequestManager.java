@@ -4,16 +4,22 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.util.BitSet;
 import java.util.Date;
+
+import com.sun.corba.se.impl.protocol.giopmsgheaders.RequestMessage;
 
 import bitTorrent.peer.protocol.BitfieldMsg;
 import bitTorrent.peer.protocol.Handsake;
 import bitTorrent.peer.protocol.PeerProtocolMessage;
+import bitTorrent.peer.protocol.PieceMsg;
 import bitTorrent.peer.protocol.PortMsg;
+import bitTorrent.peer.protocol.RequestMsg;
 
 public class PeerRequestManager extends Thread{
 
@@ -21,6 +27,10 @@ public class PeerRequestManager extends Thread{
 	private DataInputStream in;
 	private DataOutputStream out;
 	private Socket tcpSocket;
+	private BitSet donwloadedChunks;
+	private BitSet otherPeerChunks;
+	private RandomAccessFile downloadingFile;
+	private int pieceLength;
 	volatile boolean cancel = false;
 	
 	//State flags
@@ -28,13 +38,15 @@ public class PeerRequestManager extends Thread{
 	private boolean interested = false;
 	private int port;
 
-	public PeerRequestManager(Socket socket) {
+	public PeerRequestManager(Socket socket, RandomAccessFile downloadingFile, int piece) {
 		try {
 			//set socket timeout to two minutes if no message is received
 			socket.setSoTimeout(120000);
 			this.tcpSocket = socket;
 		    this.in = new DataInputStream(socket.getInputStream());
 			this.out = new DataOutputStream(socket.getOutputStream());
+			this.downloadingFile = downloadingFile;
+			this.pieceLength = piece;
 			this.start();
 		} catch (IOException e) {
 			System.err.println("# TCPConnection IO error:" + e.getMessage());
@@ -103,15 +115,35 @@ public class PeerRequestManager extends Thread{
 					case BITFIELD:
 						// <len=0001+X><id=5><bitfield>
 						//Sent after the handshake (first message)
-						//TODO: register the pieces that it has and check if we need those
 						//If we need some, send appropriate requests
 						BitfieldMsg bitmessage = (BitfieldMsg) message;
 						byte[] bytes = bitmessage.getBytes();
+						otherPeerChunks = new BitSet(bytes.length);
+						int index = 0;
+						//Checking if bits of the bytes retrieved
+						//Each bit represents a piece at the file
+						while (index < bytes.length){
+							if(isSet(bytes, index)){
+								otherPeerChunks.set(index);
+							}
+						}
+						//TODO: we should ask for the pieces that we don't have sending requests
 						break;
 					case REQUEST:
 						// <len=0013><id=6><index><begin><length>
 						//It is requesting one block, so we have to serve it 
 						//TODO: Look for the piece that wants and send it 
+						RequestMsg requestmessage = (RequestMsg) message;
+						int pieceIndex = requestmessage.getIndex();
+						int begin = requestmessage.getBegin();
+						int pieceL = requestmessage.getRLength();
+						//Just to be sure, check if we have it
+						if(donwloadedChunks.get(pieceIndex)){
+							byte[] bufferFile = new byte[pieceL];
+							downloadingFile.read(bufferFile, begin, pieceL);
+							PieceMsg piece = new PieceMsg(pieceIndex, begin, bufferFile);
+							this.out.write(piece.getBytes());
+						}
 						break;
 					case PIECE:
 						// <len=0009+X><id=7><index><begin><block>
@@ -155,5 +187,12 @@ public class PeerRequestManager extends Thread{
         cancel = true;
         Thread.currentThread().interrupt(); // Since 'socket.receive(...)' is a blocking call, it might be useful to just directly call ".interrupt()" instead of waiting the while loop to realize that 'cancel' is not false anymore. 
     }
+	
+	public boolean isSet(byte[] arr, int bit) {
+	    int index = bit / 8;  
+	    int bitPosition = bit % 8;
+
+	    return (arr[index] >> bitPosition & 1) == 1;
+	}
 	
 }
