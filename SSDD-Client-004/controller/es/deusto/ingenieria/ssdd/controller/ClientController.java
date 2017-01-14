@@ -1,5 +1,7 @@
 package es.deusto.ingenieria.ssdd.controller;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -8,6 +10,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -20,12 +23,14 @@ import bitTorrent.metainfo.InfoDictionarySingleFile;
 import bitTorrent.metainfo.handler.MetainfoHandler;
 import bitTorrent.metainfo.handler.MetainfoHandlerMultipleFile;
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
+import bitTorrent.peer.protocol.Handsake;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest;
 import bitTorrent.tracker.protocol.udp.ConnectRequest;
 import bitTorrent.tracker.protocol.udp.ConnectResponse;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest.Event;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
+import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 import bitTorrent.tracker.protocol.udp.PeerInfo;
 import bitTorrent.tracker.protocol.udp.ScrapeInfo;
@@ -67,10 +72,15 @@ public class ClientController {
 	public HashMap<String, Swarm> torrents = new HashMap<>();
 	// Information about each and every swarm (leechers, seeders and completed), ScrapeInfos:
 	public ArrayList<ScrapeInfo> listScrapeInfo = new ArrayList<ScrapeInfo>();
+	// List of peers for each swarm
+	public HashMap<String, ArrayList<Peer>> listPeers = new HashMap<>();
+	// An auxiliary list that maintains a control of the number of peers  to whom the Handsake has been sent:
+	private HashMap<String, Integer> auxListPeers = new HashMap<>();
 	
 	//THREADS
 	private Thread connectionRenewerThread;
 	private Thread downloadNotifierThread;
+	private Thread peerConnectionThread;
 	
 	public void startConnection(File torrentFile){
 		//Create Object to extract the information related with the torrent file
@@ -151,7 +161,9 @@ public class ClientController {
 			createDownloadStateNotifier(single, multicastsocketSend, socketReceive);	
 			
 			//Start connecting to peers...
-			
+				// Let's launch a thread using the ServerSocket initialized before, to wait for incoming Peer's connections and requests:
+				peerConnectionThread = new Thread(new PeerConnectionListener(peerListenerSocket));
+				peerConnectionThread.start();
 		}
 	}
 
@@ -304,6 +316,7 @@ public class ClientController {
 		            			interval = announceResponse.getInterval();
 		            			updateSwarmInformation(single.getMetainfo().getInfo().getHexInfoHash(), announceResponse); // We can make use of 'MetainfoHandlerSingleFile' because at this point we have confirmed the TransactionID
 		            			processReceivedPeerList(announceResponse.getPeers());
+		            			connectToPeers();
 		            		}
 	            		}
 	            	}
@@ -491,10 +504,21 @@ public class ClientController {
 	}
 	private void processReceivedPeerList(List<PeerInfo> peerlist) {
 		System.out.println("Displaying the received list of Peers from tracker...");
+		ArrayList<Peer> tempListPeers;
 		for(Swarm s2 : torrents.values()){
+			// Checking whether we already knew about this list of peers:
+			if (listPeers.containsKey(s2.getInfoHash())) {
+				tempListPeers = listPeers.get(s2.getInfoHash());
+			} else {
+				tempListPeers = new ArrayList<Peer>();
+			}
 			for(PeerInfo temporal: s2.getPeerList()){
 				try {
 					if(temporal.getIpAddress()!=0){
+						Peer temp_peer = new Peer(convertIntToIP(temporal.getIpAddress()), temporal.getPort());
+						// We add the Peer to the list of peers corresponding the current Swarm (InfoHash)
+						if (!tempListPeers.contains(temp_peer)) {tempListPeers.add(temp_peer);}
+						// Print the peer in the console:
 						if(temporal.getIpAddress() == convertIpAddressToInt(InetAddress.getLocalHost().getAddress()) && temporal.getPort() == peerListenerPort){
 							System.out.println("		· (YOU, current Peer) "+convertIntToIP(temporal.getIpAddress()) + ":"+ temporal.getPort());
 							continue;
@@ -504,7 +528,53 @@ public class ClientController {
 				} catch (UnknownHostException e) {
 					e.printStackTrace();
 				}
+			} // END PeerInfo loop
+			// Now, it's time to relate the list of peers that we have captured with the Swarm (InfoHash):
+			listPeers.put(s2.getInfoHash(), tempListPeers); // If the old key already existed, then it's replaced.
+		} // END Swarm loop
+		
+		
+		// Just checking if the peers are saved correctly into the list:
+//		System.out.println("SIZE of listPeers:" + listPeers.size());
+//		for(String infohash : listPeers.keySet()){
+//			for(Peer peer: listPeers.get(infohash)){
+//				System.out.println("INFOHASH -> " + infohash);
+//				System.out.println("PEER.IP -> " + peer.getIp().getHostAddress());
+//				System.out.println("PEER.port -> " + peer.getPort());
+//			} // END PeerInfo loop
+//		} // END
+		
+		
+	}
+	
+	/**
+	 * For every swarm and for every list of peers within that swarm, a TCP connection is established.
+	 */
+	private void connectToPeers() {
+		for (String infohash : torrents.keySet()) {
+			// With the following IF we are trying to identify whether exists or not a new peer for current Swarm (apart from the ones)
+			// who were already in the list of peers. If yes, then it means that we need to establish a connection with him/her, otherwise,
+			// it means that all peers of the list for that Swarm were already sent the Handsake messages.
+			if (auxListPeers.containsKey(infohash)) {
+				if (listPeers.get(infohash).size() == auxListPeers.get(infohash)) {System.out.println("CONTINUE!!!!!!!!"); continue; }
 			}
+			for (Peer peer : listPeers.get(infohash)) {
+				if (listPeers.get(infohash).size() == 1) {System.out.println("BREAAAAKKKKKK!!!!!!!!");break;} // Here we skip sending intentionally a Handsake to ourselves
+				try {
+					Socket socket = new Socket(peer.getIp().getHostAddress(), peer.getPort());
+					DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+					// The first message that has to be sent to the peer it's Handsake type:
+					System.out.println(" - Sending a Handsake to '" + peer.getIp().getHostAddress() + ":" + peer.getPort() + " (InfoHash:" + infohash + ")...");
+					Handsake outgoing_message = new Handsake();
+					outgoing_message.setInfoHash(infohash.getBytes());
+					outgoing_message.setPeerId(String.valueOf(idPeer));
+					out.write(outgoing_message.getBytes());
+					// TODO: avoid sending a Handsake to yourself when the list of peers contains more peers than yourself only
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}			
+			auxListPeers.put(infohash, listPeers.get(infohash).size());
 		}
 	}
 

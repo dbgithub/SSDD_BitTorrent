@@ -28,14 +28,9 @@ import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage;
 
 /**
- * This runnable class represents a thread that will be executed, taking care of the folllowing:
- * · Create a multicast group
- * · Join the corresponding tracker (the one who is launching this thread) to the multicast group (if the tracker is the master, a new UDP socket will be opened to communicate with the peer).
- * · Handle incoming messages from the multicast group (send & receive):
- * 		· Create a ConnectResponse message
- * 		· Create an AnnounceResponse message
- * 		· Create a ScrapeRequest message
- * · Error handling
+ * This runnable class represents a thread that will be executed, taking care of the following:
+ * · Declaring and using the ServerSocket that is passed as an argument
+ * · For each incoming request from other peers, a new RequestManager (which is a listener) is created.
  * @author aitor & kevin
  *
  */
@@ -44,8 +39,8 @@ public class PeerConnectionListener implements Runnable {
 	private ServerSocket peerListenerSocket;
 	volatile boolean cancel = false;
 	
-	//THREAD
-	private Thread connectionCheckerThread;
+//	THREAD
+//	private Thread connectionCheckerThread; // Esto es necesario???
 	
 	
 	public PeerConnectionListener(ServerSocket peerListenerSocket) {
@@ -58,7 +53,6 @@ public class PeerConnectionListener implements Runnable {
 			try {
 				new PeerRequestManager(peerListenerSocket.accept());
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} // END while
