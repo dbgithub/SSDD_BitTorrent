@@ -130,8 +130,9 @@ public class ClientController {
 			}
 			//Allocate space
 			FileAllocateUtil fd = new FileAllocateUtil(single);
+			RandomAccessFile fileAllocated = null;
 			try {
-				RandomAccessFile fileAllocated = fd.getFileAllocated();
+				fileAllocated = fd.getFileAllocated();
 			} catch (FileNotFoundException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -171,7 +172,7 @@ public class ClientController {
 			
 			//Start connecting to peers...
 				// Let's launch a thread using the ServerSocket initialized before, to wait for incoming Peer's connections and requests:
-				peerConnectionThread = new Thread(new PeerConnectionListener(peerListenerSocket));
+				peerConnectionThread = new Thread(new PeerConnectionListener(peerListenerSocket, fileAllocated, single.getMetainfo().getInfo().getPieceLength()));
 				peerConnectionThread.start();
 
 			//Utilizar bitset para saber las piezas descargadas

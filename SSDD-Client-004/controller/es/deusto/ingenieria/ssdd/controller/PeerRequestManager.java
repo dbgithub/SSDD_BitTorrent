@@ -9,13 +9,18 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Date;
+import java.util.List;
 
 import com.sun.corba.se.impl.protocol.giopmsgheaders.RequestMessage;
 
 import bitTorrent.peer.protocol.BitfieldMsg;
 import bitTorrent.peer.protocol.Handsake;
+import bitTorrent.peer.protocol.HaveMsg;
 import bitTorrent.peer.protocol.PeerProtocolMessage;
 import bitTorrent.peer.protocol.PieceMsg;
 import bitTorrent.peer.protocol.PortMsg;
@@ -27,9 +32,17 @@ public class PeerRequestManager extends Thread{
 	private DataInputStream in;
 	private DataOutputStream out;
 	private Socket tcpSocket;
+	
+	//About this client
 	private BitSet donwloadedChunks;
-	private BitSet otherPeerChunks;
+	private ArrayList<BitSet> myBlockInfoByPiece;
 	private RandomAccessFile downloadingFile;
+	private ArrayList<byte[]> currentPiece;
+	
+	//About the other peer
+	private BitSet otherPeerChunks;
+	private int interestedPiece = 0;
+	
 	private int pieceLength;
 	volatile boolean cancel = false;
 	
@@ -108,9 +121,20 @@ public class PeerRequestManager extends Thread{
 						break;
 					case HAVE:
 						// <len=0005><id=4><piece index>
-						//Message when a peer download an piece and is validated 
+						//Message when a peer download a piece and is validated 
 						//TODO: Validate Index and drop the connection if it's out of bounds
 						// Send request (INTERESTED) if this peer hasn't that piece
+						HaveMsg havemessage = (HaveMsg) message;
+						int newpiece = havemessage.getIndex();
+						//The downloaded piece must be between the range
+						if(newpiece < otherPeerChunks.size() && newpiece >= 0){
+							otherPeerChunks.set(newpiece);
+						}
+						else{
+							//Drop connection
+							System.out.println("Dropped connection: Piece Outofbounds");
+							cancel();
+						}
 						break;
 					case BITFIELD:
 						// <len=0001+X><id=5><bitfield>
@@ -135,6 +159,7 @@ public class PeerRequestManager extends Thread{
 						//TODO: Look for the piece that wants and send it 
 						RequestMsg requestmessage = (RequestMsg) message;
 						int pieceIndex = requestmessage.getIndex();
+						interestedPiece = pieceIndex;
 						int begin = requestmessage.getBegin();
 						int pieceL = requestmessage.getRLength();
 						//Just to be sure, check if we have it
@@ -147,10 +172,45 @@ public class PeerRequestManager extends Thread{
 						break;
 					case PIECE:
 						// <len=0009+X><id=7><index><begin><block>
+						PieceMsg piecemessage = (PieceMsg) message;
+						byte[] block = piecemessage.getBlock();
+						int newpieceIndex = piecemessage.getIndex();
+						
+						//Add block to current piece download
+						currentPiece.add(block);
+						int numberOfBlock = piecemessage.getBegin() / 16384;
+						
+						//Setting block to downloaded (true)
+						myBlockInfoByPiece.get(newpieceIndex).set(numberOfBlock);
+						
+						//Check if all the piece is downloaded
+						if(myBlockInfoByPiece.get(newpieceIndex).cardinality() == myBlockInfoByPiece.get(newpieceIndex).size()){
+							//Downloaded
+							
+							//Take all the blocks and put them in a single byte array
+							int lengthtotal = 0;
+							for(byte[] bytes2 : currentPiece){
+								lengthtotal = lengthtotal + bytes2.length;
+							}
+							byte[] piecetotal = new byte[lengthtotal];
+							ByteBuffer target = ByteBuffer.wrap(piecetotal);
+							for(byte[] bytes2 : currentPiece){
+								target.put(bytes2);
+							}
+							
+							//Write to the file
+							downloadingFile.write(target.array(), newpieceIndex*pieceLength, lengthtotal);
+							
+							//Update downloaded
+							donwloadedChunks.set(newpieceIndex);
+							currentPiece = new ArrayList<>();
+							interestedPiece = 0;
+						}
 						break;
 					case CANCEL:
 						// <len=0013><id=8><index><begin><length>
 						//Cancel download of the block
+						interestedPiece = 0;
 						break;
 					case PORT:
 						// <len=0003><id=9><listen-port>
