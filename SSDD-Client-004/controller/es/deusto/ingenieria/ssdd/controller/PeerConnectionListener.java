@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+
+import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
 import bitTorrent.tracker.protocol.udp.ConnectRequest;
@@ -39,24 +41,25 @@ public class PeerConnectionListener implements Runnable {
 
 	private ServerSocket peerListenerSocket;
 	private RandomAccessFile downloadFile;
+	private String peerID;
 	private int piece;
+	private MetainfoHandlerSingleFile torrent;
 	volatile boolean cancel = false;
 	
-//	THREAD
-//	private Thread connectionCheckerThread; // Esto es necesario???
 	
-	
-	public PeerConnectionListener(ServerSocket peerListenerSocket, RandomAccessFile downloadFile, int pieceLength) {
+	public PeerConnectionListener(ServerSocket peerListenerSocket, MetainfoHandlerSingleFile single, RandomAccessFile downloadFile, int pieceLength, int peerid) {
 		this.peerListenerSocket = peerListenerSocket;
 		this.downloadFile = downloadFile;
 		this.piece = pieceLength;
+		this.peerID = peerid+"";
+		this.torrent = single;
 	}
 	
 	@Override
 	public void run() {
 		while(!cancel) {				
 			try {
-				new PeerRequestManager(peerListenerSocket.accept(), downloadFile, piece);
+				new PeerRequestManager(peerListenerSocket.accept(), torrent, downloadFile, piece, peerID);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

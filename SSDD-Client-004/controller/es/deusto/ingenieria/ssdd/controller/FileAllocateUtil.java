@@ -17,9 +17,9 @@ import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 public class FileAllocateUtil {
 	
 	private MetainfoHandlerSingleFile single;
-	private BitSet donwloadedChunks;
-	private ArrayList<BitSet> myBlockInfoByPiece;
-	private int numberOfPiecesDownloaded = 0;
+	public BitSet donwloadedChunks;
+	public ArrayList<BitSet> myBlockInfoByPiece;
+	public int numberOfPiecesDownloaded = 0;
 	
 	public FileAllocateUtil(MetainfoHandlerSingleFile single){
 		this.single= single;

@@ -17,8 +17,10 @@ import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import bitTorrent.metainfo.InfoDictionarySingleFile;
 import bitTorrent.metainfo.handler.MetainfoHandler;
@@ -76,12 +78,13 @@ public class ClientController {
 	// List of peers for each swarm
 	public HashMap<String, ArrayList<Peer>> listPeers = new HashMap<>();
 	// An auxiliary list that maintains a control of the number of peers  to whom the Handsake has been sent:
-	private HashMap<String, Integer> auxListPeers = new HashMap<>();
+	private HashMap<String, ArrayList<Peer>> auxListPeers = new HashMap<>();
 	
 	//THREADS
 	private Thread connectionRenewerThread;
 	private Thread downloadNotifierThread;
 	private Thread peerConnectionThread;
+	
 	
 	public void startConnection(File torrentFile){
 		//Create Object to extract the information related with the torrent file
@@ -89,9 +92,8 @@ public class ClientController {
 		//Extract information
 		@SuppressWarnings("rawtypes")
 		MetainfoHandler metaInfoFromTorrent = tie.extractInformationFromFile(torrentFile);
-		
+	
 		//Check if is multiple or single file information
-		//JUST DEVELOPED IF THE TORRENT CONTAINS ONE FILE (TODO: DEVELOP THE OTHER OPTION)
 		if(metaInfoFromTorrent instanceof MetainfoHandlerMultipleFile){
 			MetainfoHandlerMultipleFile multiple = (MetainfoHandlerMultipleFile) metaInfoFromTorrent;
 			System.out.println("Obtained \n"+multiple.getMetainfo());
@@ -165,17 +167,15 @@ public class ClientController {
 			s.setTotalLeecher(announceResponse.getLeechers());
 			s.setTotalSeeders(announceResponse.getSeeders());
 			torrents.put(infohash, s);
+			
+			// Let's launch a thread using the ServerSocket initialized before, to wait for incoming Peer's connections and requests:
+			peerConnectionThread = new Thread(new PeerConnectionListener(peerListenerSocket, single, fileAllocated, single.getMetainfo().getInfo().getPieceLength(), idPeer));
+			peerConnectionThread.start();
+			
 			processReceivedPeerList(announceResponse.getPeers()); // This just displays (shows) a list of peers in the console.
 			
 			//Start a thread to notify the state of the download periodically
 			createDownloadStateNotifier(single, multicastsocketSend, socketReceive);	
-			
-			//Start connecting to peers...
-				// Let's launch a thread using the ServerSocket initialized before, to wait for incoming Peer's connections and requests:
-				peerConnectionThread = new Thread(new PeerConnectionListener(peerListenerSocket, fileAllocated, single.getMetainfo().getInfo().getPieceLength()));
-				peerConnectionThread.start();
-
-			//Utilizar bitset para saber las piezas descargadas
 
 		}
 	}
@@ -569,26 +569,37 @@ public class ClientController {
 			// who were already in the list of peers. If yes, then it means that we need to establish a connection with him/her, otherwise,
 			// it means that all peers of the list for that Swarm were already sent the Handsake messages.
 			if (auxListPeers.containsKey(infohash)) {
-				if (listPeers.get(infohash).size() == auxListPeers.get(infohash)) {System.out.println("CONTINUE!!!!!!!!"); continue; }
+				//Checks if the list is the same that we have saved
+				if (listEqualsNoOrder(listPeers.get(infohash), auxListPeers.get(infohash))) {System.out.println("CONTINUE!!!!!!!!"); continue; }
 			}
-			for (Peer peer : listPeers.get(infohash)) {
-				if (listPeers.get(infohash).size() == 1) {System.out.println("BREAAAAKKKKKK!!!!!!!!");break;} // Here we skip sending intentionally a Handsake to ourselves
-				try {
-					Socket socket = new Socket(peer.getIp().getHostAddress(), peer.getPort());
-					DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-					// The first message that has to be sent to the peer it's Handsake type:
-					System.out.println(" - Sending a Handsake to '" + peer.getIp().getHostAddress() + ":" + peer.getPort() + " (InfoHash:" + infohash + ")...");
-					Handsake outgoing_message = new Handsake();
-					outgoing_message.setInfoHash(infohash.getBytes());
-					outgoing_message.setPeerId(String.valueOf(idPeer));
-					out.write(outgoing_message.getBytes());
-					// TODO: avoid sending a Handsake to yourself when the list of peers contains more peers than yourself only
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}			
-			auxListPeers.put(infohash, listPeers.get(infohash).size());
+			if (!(listEqualsNoOrder(listPeers.get(infohash), auxListPeers.get(infohash)))) {
+				for (Peer peer : listPeers.get(infohash)) {
+					if (listPeers.get(infohash).size() == 1) {System.out.println("BREAAAAKKKKKK!!!!!!!!");break;} // Here we skip sending intentionally a Handsake to ourselves
+					try {
+						Socket socket = new Socket(peer.getIp().getHostAddress(), peer.getPort());
+						DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+						// The first message that has to be sent to the peer it's Handsake type:
+						System.out.println(" - Sending a Handsake to '" + peer.getIp().getHostAddress() + ":" + peer.getPort() + " (InfoHash:" + infohash + ")...");
+						Handsake outgoing_message = new Handsake();
+						outgoing_message.setInfoHash(infohash.getBytes());
+						outgoing_message.setPeerId(String.valueOf(idPeer));
+						out.write(outgoing_message.getBytes());
+						// TODO: avoid sending a Handsake to yourself when the list of peers contains more peers than yourself only
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}			
+				auxListPeers.put(infohash, listPeers.get(infohash));
+			}
 		}
+	}
+	
+	//Checks if two lists are equal
+	public static <T> boolean listEqualsNoOrder(List<T> l1, List<T> l2) {
+	    final Set<T> s1 = new HashSet<>(l1);
+	    final Set<T> s2 = new HashSet<>(l2);
+
+	    return s1.equals(s2);
 	}
 
 }
