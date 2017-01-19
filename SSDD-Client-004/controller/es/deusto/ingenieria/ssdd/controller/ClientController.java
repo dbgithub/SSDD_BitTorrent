@@ -154,19 +154,15 @@ public class ClientController {
 			
 			//Send the first AnnounceRequest related with the torrent
 			System.out.println("PeerID: " +idPeer);
-			sendAndWaitUntilAnnounceResponseReceivedLoop(single, multicastsocketSend, socketReceive, 0, 0, 0);
-			
-			System.out.println("AnnounceResponse: "+ announceResponse.getTransactionId());
-			
-			//Adding information about the swarm
 			String infohash = single.getMetainfo().getInfo().getHexInfoHash();
 			String file = single.getMetainfo().getInfo().getName();
 			int fileLength = single.getMetainfo().getInfo().getLength();
 			Swarm s = new Swarm(infohash, file, fileLength);
-			s.setPeerList(announceResponse.getPeers());
-			s.setTotalLeecher(announceResponse.getLeechers());
-			s.setTotalSeeders(announceResponse.getSeeders());
-			torrents.put(infohash, s);
+			sendAndWaitUntilAnnounceResponseReceivedLoop(single, multicastsocketSend, socketReceive, 0, 0, 0, s);
+			
+			System.out.println("AnnounceResponse: "+ announceResponse.getTransactionId());
+			
+			//Adding information about the swarm
 			
 			// Let's launch a thread using the ServerSocket initialized before, to wait for incoming Peer's connections and requests:
 			peerConnectionThread = new Thread(new PeerConnectionListener(peerListenerSocket, single, fileAllocated, single.getMetainfo().getInfo().getPieceLength(), idPeer));
@@ -175,7 +171,7 @@ public class ClientController {
 			processReceivedPeerList(announceResponse.getPeers()); // This just displays (shows) a list of peers in the console.
 			
 			//Start a thread to notify the state of the download periodically
-			createDownloadStateNotifier(single, multicastsocketSend, socketReceive);	
+			createDownloadStateNotifier(single, multicastsocketSend, socketReceive, s);	
 
 		}
 	}
@@ -306,7 +302,7 @@ public class ClientController {
 	 * @param uploaded
 	 */
 	public void sendAndWaitUntilAnnounceResponseReceivedLoop(MetainfoHandlerSingleFile single,
-			DatagramSocket socketSend, DatagramSocket socketListen, long downloaded, long left, long uploaded) {
+			DatagramSocket socketSend, DatagramSocket socketListen, long downloaded, long left, long uploaded, Swarm s) {
 		try{
 			//Let's set a timeout if the tracker doesn't response
 			socketListen.setSoTimeout(3000);
@@ -327,6 +323,12 @@ public class ClientController {
 	            			if(announceResponse.getTransactionId() == transactionID){
 		            			responseReceived = true;
 		            			interval = announceResponse.getInterval();
+		            			if(!(torrents.containsKey(s.getInfoHash()))){
+		            				s.setPeerList(announceResponse.getPeers());
+		            				s.setTotalLeecher(announceResponse.getLeechers());
+		            				s.setTotalSeeders(announceResponse.getSeeders());
+		            				torrents.put(s.getInfoHash(), s);
+		            			}
 		            			updateSwarmInformation(single.getMetainfo().getInfo().getHexInfoHash(), announceResponse); // We can make use of 'MetainfoHandlerSingleFile' because at this point we have confirmed the TransactionID
 		            			processReceivedPeerList(announceResponse.getPeers());
 		            			connectToPeers();
@@ -472,10 +474,11 @@ public class ClientController {
 	 * @param single
 	 * @param send
 	 * @param receive
+	 * @param s 
 	 */
 	private void createDownloadStateNotifier(MetainfoHandlerSingleFile single, DatagramSocket send,
-			DatagramSocket receive) {
-		downloadNotifierThread = new Thread(new DownloadStateNotifier(send, receive, single, this)); 
+			DatagramSocket receive, Swarm s) {
+		downloadNotifierThread = new Thread(new DownloadStateNotifier(send, receive, single, this, s)); 
 		downloadNotifierThread.start();
 	}
 	
@@ -571,8 +574,7 @@ public class ClientController {
 			if (auxListPeers.containsKey(infohash)) {
 				//Checks if the list is the same that we have saved
 				if (listEqualsNoOrder(listPeers.get(infohash), auxListPeers.get(infohash))) {System.out.println("CONTINUE!!!!!!!!"); continue; }
-			}
-			if (!(listEqualsNoOrder(listPeers.get(infohash), auxListPeers.get(infohash)))) {
+				System.out.println(listPeers.get(infohash)+" "+auxListPeers.get(infohash) );
 				for (Peer peer : listPeers.get(infohash)) {
 					if (listPeers.get(infohash).size() == 1) {System.out.println("BREAAAAKKKKKK!!!!!!!!");break;} // Here we skip sending intentionally a Handsake to ourselves
 					try {
@@ -589,8 +591,25 @@ public class ClientController {
 						e.printStackTrace();
 					}
 				}			
-				auxListPeers.put(infohash, listPeers.get(infohash));
 			}
+			else{
+					for (Peer peer : listPeers.get(infohash)) {
+						if (listPeers.get(infohash).size() == 1) {System.out.println("BREAAAAKKKKKK!!!!!!!!");break;} // Here we skip sending intentionally a Handsake to ourselves
+						try {
+							Socket socket = new Socket(peer.getIp().getHostAddress(), peer.getPort());
+							DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+							// The first message that has to be sent to the peer it's Handsake type:
+							System.out.println(" - Sending a Handsake to '" + peer.getIp().getHostAddress() + ":" + peer.getPort() + " (InfoHash:" + infohash + ")...");
+							Handsake outgoing_message = new Handsake();
+							outgoing_message.setInfoHash(infohash.getBytes());
+							outgoing_message.setPeerId(String.valueOf(idPeer));
+							out.write(outgoing_message.getBytes());
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}			
+			}
+			auxListPeers.put(infohash, listPeers.get(infohash));
 		}
 	}
 	
@@ -600,6 +619,13 @@ public class ClientController {
 	    final Set<T> s2 = new HashSet<>(l2);
 
 	    return s1.equals(s2);
+	}
+	
+	public static <T> List<T> listSubstract(List<T> l1, List<T> l2){
+		Set<T> ad = new HashSet<T>(l1);
+		Set<T> bd = new HashSet<T>(l2);
+		bd.removeAll(ad);
+		return new ArrayList<>(bd);
 	}
 
 }

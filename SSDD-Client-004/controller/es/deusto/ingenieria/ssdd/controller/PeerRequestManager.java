@@ -27,6 +27,7 @@ import bitTorrent.peer.protocol.PeerProtocolMessage;
 import bitTorrent.peer.protocol.PieceMsg;
 import bitTorrent.peer.protocol.PortMsg;
 import bitTorrent.peer.protocol.RequestMsg;
+import bitTorrent.util.ByteUtils;
 
 public class PeerRequestManager extends Thread{
 
@@ -86,6 +87,7 @@ public class PeerRequestManager extends Thread{
 			
 			Handsake hansake = Handsake.parseHandsake(buffer);
 			if(hansake != null){
+				System.out.println("PeerRequestManager: Handshake received...");
 				//Obtaining information
 				InetAddress ip = tcpSocket.getInetAddress();
 				int port = tcpSocket.getPort();
@@ -169,6 +171,7 @@ public class PeerRequestManager extends Thread{
 						//If we need some, send appropriate requests
 						if(firstTime)
 						{
+							System.out.println("PeerRequestManager: BitField received...");
 							BitfieldMsg bitmessage = (BitfieldMsg) message;
 							byte[] bytes = bitmessage.getBytes();
 							otherPeerChunks = new BitSet(bytes.length);
@@ -237,22 +240,17 @@ public class PeerRequestManager extends Thread{
 								}
 								
 								//TODO: CHECK COMPLETE PIECE HASH IF IT'S CORRECT (NOT SURE IF IT IS OK)
-								String hash = torrent.getMetainfo().getInfo().getHexStringSHA1().get(newpieceIndex);
-								try {
-									if(hash.equals(SHAsum(piecetotal))){
-										//Write to the file
-										downloadingFile.write(target.array(), newpieceIndex*pieceLength, lengthtotal);
-										
-										//Update downloaded
-										donwloadedChunks.set(newpieceIndex);
-										currentPiece = new ArrayList<>();
-										interestedPiece = 0;
-									}
-								} catch (NoSuchAlgorithmException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
+								byte [] hashPiece = ByteUtils.generateSHA1Hash(piecetotal);
+								String correctHash = torrent.getMetainfo().getInfo().getHexStringSHA1().get(newpieceIndex);
+								if(correctHash.equals(hashPiece)){
+									//Write to the file
+									downloadingFile.write(target.array(), newpieceIndex*pieceLength, lengthtotal);
+									
+									//Update downloaded
+									donwloadedChunks.set(newpieceIndex);
+									currentPiece = new ArrayList<>();
+									interestedPiece = 0;
 								}
-								
 							}
 						}
 						break;
