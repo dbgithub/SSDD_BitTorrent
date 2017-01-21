@@ -18,16 +18,14 @@ public class DownloadStateNotifier implements Runnable{
 	private MetainfoHandlerSingleFile single;
 	private String urlHash;
 	private ClientController controller;
-	private Swarm swarm;
 	volatile boolean cancel = false;
 
-	public DownloadStateNotifier(DatagramSocket send, DatagramSocket receive, MetainfoHandlerSingleFile single, ClientController controller, Swarm s) {
+	public DownloadStateNotifier(DatagramSocket send, DatagramSocket receive, MetainfoHandlerSingleFile single, ClientController controller) {
 		this.send = send;
 		this.receive = receive;
 		this.single = single;
 		this.urlHash = single.getMetainfo().getInfo().getHexInfoHash();
 		this.controller = controller;
-		this.swarm = s;
 	}
 
 	@Override
@@ -39,7 +37,7 @@ public class DownloadStateNotifier implements Runnable{
 				//Get the actual status of the swarm
 				Swarm temp = controller.torrents.get(urlHash);
 				System.out.println(" - Sending a AnnounceRequest to RENEW the state:");
-				controller.sendAndWaitUntilAnnounceResponseReceivedLoop(single, send, receive, temp.getDownloaded(), temp.getLeft(), temp.getUploaded(), swarm);
+				controller.sendAndWaitUntilAnnounceResponseReceivedLoop(single, send, receive, temp.getDownloaded(), temp.getLeft(), temp.getUploaded());
 				
 			} catch (InterruptedException e) {
 				e.printStackTrace();
