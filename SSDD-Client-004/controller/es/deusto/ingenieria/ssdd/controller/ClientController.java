@@ -77,6 +77,10 @@ public class ClientController {
 	public HashMap<String, ArrayList<Peer>> listPeers = new HashMap<>();
 	// An auxiliary list that maintains a control of the number of peers  to whom the Handsake has been sent:
 	private HashMap<String, Integer> auxListPeers = new HashMap<>();
+	// This map determines to whom the handsake message has been sent. KEY: peerID, VALUE: boolean (either true or false)  
+	// If the VALUE is FALSE, then the first Hansake message was sent but an answer was not received yet!
+	// If the VALUE is TRUE, then the Handsake message was received from that peer to whom the Handsake was sent.
+	public static HashMap<Integer, Boolean> handsakeAlreadySent = new HashMap<>();
 	
 	//THREADS
 	private Thread connectionRenewerThread;
@@ -571,6 +575,10 @@ public class ClientController {
 			for (Peer peer : listPeers.get(infohash)) {
 				if (listPeers.get(infohash).size() == 1) {System.out.println("BREAAAAKKKKKK!!!!!!!!");break;} // Here we skip sending intentionally a Handsake to ourselves
 				try {
+					if(peer.getIp().getHostAddress().equals(InetAddress.getLocalHost().getHostAddress())  && peer.getPort() == peerListenerPort){
+						System.out.println("Skipped sending the Handsake to myself! :)");
+						continue;
+					}
 					Socket socket = new Socket(peer.getIp().getHostAddress(), peer.getPort());
 					DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 					// The first message that has to be sent to the peer it's Handsake type:
@@ -579,7 +587,7 @@ public class ClientController {
 					outgoing_message.setInfoHash(infohash.getBytes());
 					outgoing_message.setPeerId(String.valueOf(idPeer));
 					out.write(outgoing_message.getBytes());
-					// TODO: avoid sending a Handsake to yourself when the list of peers contains more peers than yourself only
+					handsakeAlreadySent.put(idPeer, false); // Here, we are indicating that we have affirmatively sent the Handsake mesage the mentioned Peer, but, an answer was not received back yet!
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
