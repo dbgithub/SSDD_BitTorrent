@@ -3,6 +3,8 @@ package es.deusto.ingenieria.ssdd.controller;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.net.ServerSocket;
+import java.util.BitSet;
+
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 
 /**
@@ -19,22 +21,24 @@ public class PeerConnectionListener implements Runnable {
 	private String peerID;
 	private int piece;
 	private MetainfoHandlerSingleFile torrent;
+	private BitSet downloadedChunks;
 	volatile boolean cancel = false;
 	
 	
-	public PeerConnectionListener(ServerSocket peerListenerSocket, MetainfoHandlerSingleFile single, RandomAccessFile downloadFile, int pieceLength, int peerid) {
+	public PeerConnectionListener(ServerSocket peerListenerSocket, MetainfoHandlerSingleFile single, RandomAccessFile downloadFile, int pieceLength, int peerid, BitSet bitSet) {
 		this.peerListenerSocket = peerListenerSocket;
 		this.downloadFile = downloadFile;
 		this.piece = pieceLength;
 		this.peerID = peerid+"";
 		this.torrent = single;
+		this.downloadedChunks = bitSet;
 	}
 	
 	@Override
 	public void run() {
 		while(!cancel) {				
 			try {
-				new PeerRequestManager(peerListenerSocket.accept(), torrent, downloadFile, piece, peerID);
+				new PeerRequestManager(peerListenerSocket.accept(), torrent, downloadFile, piece, peerID, downloadedChunks);
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

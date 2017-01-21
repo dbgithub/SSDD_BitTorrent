@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.Formatter;
+
+import javax.net.ssl.HandshakeCompletedEvent;
+
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 import bitTorrent.peer.protocol.BitfieldMsg;
 import bitTorrent.peer.protocol.Handsake;
@@ -38,7 +41,7 @@ public class PeerRequestManager extends Thread{
 	private BitSet donwloadedChunks;
 	private ArrayList<BitSet> myBlockInfoByPiece;
 	private RandomAccessFile downloadingFile;
-	private ArrayList<byte[]> currentPiece;
+	private byte[] currentPiece;
 	
 	//About the other peer
 	private BitSet otherPeerChunks;
@@ -54,13 +57,14 @@ public class PeerRequestManager extends Thread{
 	//Determines if we have received an Bitfield message yet, just after Handshake
 	private boolean firstTime = true;
 
-	public PeerRequestManager(Socket socket, MetainfoHandlerSingleFile torrent, RandomAccessFile downloadingFile, int piece, String peerid) {
+	public PeerRequestManager(Socket socket, MetainfoHandlerSingleFile torrent, RandomAccessFile downloadingFile, int piece, String peerid, BitSet donwloadedChunks) {
 		try {
 			//set socket timeout to two minutes if no message is received
 			socket.setSoTimeout(120000);
 			this.tcpSocket = socket;
 		    this.in = new DataInputStream(socket.getInputStream());
 			this.out = new DataOutputStream(socket.getOutputStream());
+			this.donwloadedChunks = donwloadedChunks;
 			this.downloadingFile = downloadingFile;
 			this.pieceLength = piece;
 			this.peerID = peerid;
@@ -83,16 +87,33 @@ public class PeerRequestManager extends Thread{
 			
 			Handsake hansake = Handsake.parseHandsake(buffer);
 			if(hansake != null){
-				System.out.println("PeerRequestManager: Handshake received...");
+				System.out.println("- PeerRequestManager: Handshake received...");
 				//Obtaining information
 				InetAddress ip = tcpSocket.getInetAddress();
 				int port = tcpSocket.getPort();
 				String peerid = hansake.getPeerId();
+				System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>"+port);
 				byte[] infohash = hansake.getInfoHash();
 				
+				
 				//sending response to the peer
-				hansake.setPeerId(peerID);
-				this.out.write(hansake.getBytes());
+				if(ClientController.handsakeAlreadySent.containsKey(port)){
+					if(!(ClientController.handsakeAlreadySent.get(port))){
+						//send bitfield if this sent the handshake
+						ClientController.handsakeAlreadySent.put(port, true);
+						System.out.println("- PeerRequestManager: Sending BitField");
+						BitfieldMsg bit = new BitfieldMsg(ByteUtils.bitSetToBytes(donwloadedChunks));
+						this.out.write(bit.getBytes());
+					}
+				}
+				else{
+					//this means that the peer hasn't sent the hanshake, so must respond to the received one
+					ClientController.handsakeAlreadySent.put(port, true);
+					hansake.setPeerId(peerID);
+					this.out.write(hansake.getBytes());
+				}
+				
+				
 				//Start waiting for other messages in this socket
 				while(!cancel && !(tcpSocket.isClosed())){
 					buffer = new byte[1024];
@@ -214,7 +235,8 @@ public class PeerRequestManager extends Thread{
 							int newpieceIndex = piecemessage.getIndex();
 							
 							//Add block to current piece download
-							currentPiece.add(block);
+							ByteUtils.concatenateByteArrays(currentPiece, block);
+							//currentPiece.add(block);
 							int numberOfBlock = piecemessage.getBegin() / 16384;
 							
 							//Setting block to downloaded (true)
@@ -224,27 +246,17 @@ public class PeerRequestManager extends Thread{
 							if(myBlockInfoByPiece.get(newpieceIndex).cardinality() == myBlockInfoByPiece.get(newpieceIndex).size()){
 								//Downloaded
 								
-								//Take all the blocks and put them in a single byte array
-								int lengthtotal = 0;
-								for(byte[] bytes2 : currentPiece){
-									lengthtotal = lengthtotal + bytes2.length;
-								}
-								byte[] piecetotal = new byte[lengthtotal];
-								ByteBuffer target = ByteBuffer.wrap(piecetotal);
-								for(byte[] bytes2 : currentPiece){
-									target.put(bytes2);
-								}
-								
 								//TODO: CHECK COMPLETE PIECE HASH IF IT'S CORRECT (NOT SURE IF IT IS OK)
-								byte [] hashPiece = ByteUtils.generateSHA1Hash(piecetotal);
+								byte [] hashPiece = ByteUtils.generateSHA1Hash(currentPiece);
 								String correctHash = torrent.getMetainfo().getInfo().getHexStringSHA1().get(newpieceIndex);
 								if(correctHash.equals(hashPiece)){
 									//Write to the file
-									downloadingFile.write(target.array(), newpieceIndex*pieceLength, lengthtotal);
+									downloadingFile.write(currentPiece, newpieceIndex*pieceLength, currentPiece.length);
 									
 									//Update downloaded
 									donwloadedChunks.set(newpieceIndex);
-									currentPiece = new ArrayList<>();
+									int dimension = pieceLength/16384;
+									currentPiece = new byte[dimension];
 									interestedPiece = 0;
 								}
 							}

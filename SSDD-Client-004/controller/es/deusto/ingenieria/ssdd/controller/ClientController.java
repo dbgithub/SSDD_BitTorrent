@@ -16,6 +16,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -67,7 +68,10 @@ public class ClientController {
 	private static final int DESTINATION_PORT = 9000;
 	private static int peerListenerPort;
 	public static int interval;
+	private MetainfoHandlerSingleFile torrent;
+	private RandomAccessFile file;
 	public static boolean ConnectResponseReceived = false;
+	private FileAllocateUtil downloaded;
 	
 	// List of swarms
 	public HashMap<String, Swarm> torrents = new HashMap<>();
@@ -77,10 +81,11 @@ public class ClientController {
 	public HashMap<String, ArrayList<Peer>> listPeers = new HashMap<>();
 	// An auxiliary list that maintains a control of the number of peers  to whom the Handsake has been sent:
 	private HashMap<String, Integer> auxListPeers = new HashMap<>();
-	// This map determines to whom the handsake message has been sent. KEY: peerID, VALUE: boolean (either true or false)  
+	// This map determines to whom the handsake message has been sent. KEY: port, VALUE: boolean (either true or false)  
 	// If the VALUE is FALSE, then the first Hansake message was sent but an answer was not received yet!
 	// If the VALUE is TRUE, then the Handsake message was received from that peer to whom the Handsake was sent.
 	public static HashMap<Integer, Boolean> handsakeAlreadySent = new HashMap<>();
+	public static HashMap<Integer, Boolean> alreadyConnected = new HashMap<>();
 	
 	//THREADS
 	private Thread connectionRenewerThread;
@@ -101,6 +106,7 @@ public class ClientController {
 		}
 		else if (metaInfoFromTorrent instanceof MetainfoHandlerSingleFile){
 			MetainfoHandlerSingleFile single = (MetainfoHandlerSingleFile) metaInfoFromTorrent;
+			torrent = single;
 			System.out.println("Single file obtained: \n"+single.getMetainfo());
 			System.out.println("-----------------------------------------------------------------");
 			// Start with the connection to the tracker
@@ -133,6 +139,7 @@ public class ClientController {
 			}
 			//Allocate space
 			FileAllocateUtil fd = new FileAllocateUtil(single);
+			downloaded = fd;
 			RandomAccessFile fileAllocated = null;
 			try {
 				fileAllocated = fd.getFileAllocated();
@@ -143,6 +150,7 @@ public class ClientController {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			file = fileAllocated;
 			
 			//Let's send the ConnectionRequest and wait for the response (we try again if timeout reached)
 			sendAndWaitUntilConnectResponseReceivedLoop(single, multicastsocketSend, socketReceive, true);
@@ -172,7 +180,7 @@ public class ClientController {
 					
 			// Start connecting to peers...
 			// Let's launch a thread using the ServerSocket initialized before, to wait for incoming Peer's connections and requests:
-			peerConnectionThread = new Thread(new PeerConnectionListener(peerListenerSocket, single, fileAllocated, single.getMetainfo().getInfo().getPieceLength(),idPeer));
+			peerConnectionThread = new Thread(new PeerConnectionListener(peerListenerSocket, single, fileAllocated, single.getMetainfo().getInfo().getPieceLength(),idPeer, downloaded.getDonwloadedChunks()));
 			peerConnectionThread.start();
 
 			//Start a thread to notify the state of the download periodically
@@ -579,15 +587,20 @@ public class ClientController {
 						System.out.println("Skipped sending the Handsake to myself! :)");
 						continue;
 					}
-					Socket socket = new Socket(peer.getIp().getHostAddress(), peer.getPort());
-					DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-					// The first message that has to be sent to the peer it's Handsake type:
-					System.out.println(" - Sending a Handsake to '" + peer.getIp().getHostAddress() + ":" + peer.getPort() + " (InfoHash:" + infohash + ")...");
-					Handsake outgoing_message = new Handsake();
-					outgoing_message.setInfoHash(infohash.getBytes());
-					outgoing_message.setPeerId(String.valueOf(idPeer));
-					out.write(outgoing_message.getBytes());
-					handsakeAlreadySent.put(idPeer, false); // Here, we are indicating that we have affirmatively sent the Handsake mesage the mentioned Peer, but, an answer was not received back yet!
+					if(!(ClientController.handsakeAlreadySent.containsKey(peer.getPort()))){
+						Socket socket = new Socket(peer.getIp().getHostAddress(), peer.getPort());
+						PeerRequestManager prm = new PeerRequestManager(socket, torrent, file, torrent.getMetainfo().getInfo().getPieceLength(),idPeer+"", downloaded.getDonwloadedChunks());
+						//prm.start();
+						DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+						// The first message that has to be sent to the peer it's Handsake type:
+						System.out.println(" - Sending a Handsake to '" + peer.getIp().getHostAddress() + ":" + peer.getPort() + " (InfoHash:" + infohash + ")...");
+						Handsake outgoing_message = new Handsake();
+						outgoing_message.setInfoHash(infohash.getBytes());
+						outgoing_message.setPeerId(String.valueOf(idPeer));
+						out.write(outgoing_message.getBytes());
+						System.out.println("********************"+ peer.getPort());
+						handsakeAlreadySent.put(peer.getPort(), false); // Here, we are indicating that we have affirmatively sent the Handsake mesage the mentioned Peer, but, an answer was not received back yet!
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
