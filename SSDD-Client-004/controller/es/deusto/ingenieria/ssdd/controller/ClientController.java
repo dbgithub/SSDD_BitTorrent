@@ -32,6 +32,7 @@ import bitTorrent.tracker.protocol.udp.ConnectResponse;
 import bitTorrent.tracker.protocol.udp.AnnounceRequest.Event;
 import bitTorrent.tracker.protocol.udp.AnnounceResponse;
 import bitTorrent.tracker.protocol.udp.BitTorrentUDPMessage.Action;
+import bitTorrent.util.ByteUtils;
 import es.deusto.ingenieria.ssdd.classes.Peer;
 import es.deusto.ingenieria.ssdd.classes.Swarm;
 import bitTorrent.tracker.protocol.udp.PeerInfo;
@@ -61,7 +62,7 @@ public class ClientController {
 	private DatagramSocket socketReceive; //Represents the socket for receiving messages
 	private ServerSocket peerListenerSocket; //Socket for listening other peer connections
 	
-	private int idPeer = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE); // Random ID for the peer
+	private int idPeer = ThreadLocalRandom.current().nextInt(1000000000, Integer.MAX_VALUE); // Random ID for the peer
 	private InetAddress multicastIP;
 	private static long connectionId = 41727101980L;
 	private static int transactionID = -1;
@@ -595,10 +596,13 @@ public class ClientController {
 						// The first message that has to be sent to the peer it's Handsake type:
 						System.out.println(" - Sending a Handsake to '" + peer.getIp().getHostAddress() + ":" + peer.getPort() + " (InfoHash:" + infohash + ")...");
 						Handsake outgoing_message = new Handsake();
-						outgoing_message.setInfoHash(infohash.getBytes());
-						outgoing_message.setPeerId(String.valueOf(idPeer));
+						outgoing_message.setInfoHash(torrent.getMetainfo().getInfo().getInfoHash());
+						System.out.println("HANSHAKE SENDED PEERID: "+ String.valueOf(idPeer));
+						System.out.println("HANSHAKE SENDED INFOHASH: "+ ByteUtils.toHexString(torrent.getMetainfo().getInfo().getInfoHash()));
+						//I add spaces to fit the 20 size of the string at the hansake
+						outgoing_message.setPeerId(String.valueOf(idPeer)+"          ");
 						out.write(outgoing_message.getBytes());
-						System.out.println("********************"+ peer.getPort());
+						System.out.println("HANSHAKE SENDED TO PORT: "+ peer.getPort());
 						handsakeAlreadySent.put(peer.getPort(), false); // Here, we are indicating that we have affirmatively sent the Handsake mesage the mentioned Peer, but, an answer was not received back yet!
 					}
 				} catch (IOException e) {

@@ -78,22 +78,26 @@ public class PeerRequestManager extends Thread{
 	public void run() {
 		//Echo server
 		try {
+			
 			byte[] buffer = new byte[1024];
 			int numberOfBytesReaded = this.in.read(buffer);
 			System.out.println(" - Received data from '" + tcpSocket.getInetAddress().getHostAddress() + ":" + tcpSocket.getPort());		
-			
+			System.out.println(" - Readed: "+ numberOfBytesReaded+ " bytes");
 			//We record the time when received message
 			lastTimeReceivedMessage = new Date();
 			
-			Handsake hansake = Handsake.parseHandsake(buffer);
+			Handsake hansake = Handsake.parseHandsake(ByteUtils.subArray(buffer, 0, numberOfBytesReaded));
 			if(hansake != null){
 				System.out.println("- PeerRequestManager: Handshake received...");
 				//Obtaining information
 				InetAddress ip = tcpSocket.getInetAddress();
 				int port = tcpSocket.getPort();
 				String peerid = hansake.getPeerId();
-				System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>"+port);
 				byte[] infohash = hansake.getInfoHash();
+				System.out.println("HANDSHAKE PEERID RECEIVED: "+peerid);
+				System.out.println("HANDSHAKE INFOHASH RECEIVED: "+ByteUtils.toHexString(infohash));
+				System.out.println("HANDSHAKE FROM PORT: "+port);
+				
 				
 				
 				//sending response to the peer
@@ -109,7 +113,7 @@ public class PeerRequestManager extends Thread{
 				else{
 					//this means that the peer hasn't sent the hanshake, so must respond to the received one
 					ClientController.handsakeAlreadySent.put(port, true);
-					hansake.setPeerId(peerID);
+					hansake.setPeerId(peerID+"          ");
 					this.out.write(hansake.getBytes());
 				}
 				

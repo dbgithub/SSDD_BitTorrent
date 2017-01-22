@@ -77,10 +77,15 @@ public class Handsake {
 			ByteArrayOutputStream result = new ByteArrayOutputStream();
 
 			result.write(this.nameLength);
+			//System.out.println("LEEENGTH: "+ nameLength);
 			result.write(this.protocolName.getBytes());
+			//System.out.println("LEEENGTH: "+ this.protocolName.getBytes().length);
 			result.write(this.reserved.getBytes());
+			//System.out.println("LEEENGTH: "+ this.reserved.getBytes().length);
 			result.write(this.infoHash);
+			//System.out.println("LEEENGTH: "+ this.infoHash.length);
 			result.write(this.peerId.getBytes());
+			//System.out.println("LEEENGTH: "+ this.peerId.getBytes().length);
 			
 			return result.toByteArray();
 		} catch (Exception ex) {
@@ -89,10 +94,10 @@ public class Handsake {
 	}
 	
 	public static Handsake parseHandsake(byte[] bytes) {
-		if (bytes.length != 68) {
+		if (bytes.length == 68) {
 			Handsake handsake = new Handsake();
-			handsake.setInfoHash(Arrays.copyOfRange(bytes, 28, 47));
-			handsake.setPeerId(DatatypeConverter.printBase64Binary(Arrays.copyOfRange(bytes, 48, 67)));
+			handsake.setInfoHash(Arrays.copyOfRange(bytes, 28, 48));
+			handsake.setPeerId(new String(Arrays.copyOfRange(bytes, 48, 68)));
 			
 			return handsake;
 		} else {
