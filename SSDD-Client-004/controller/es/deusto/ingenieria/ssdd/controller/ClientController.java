@@ -1,6 +1,5 @@
 package es.deusto.ingenieria.ssdd.controller;
 
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -16,7 +15,6 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
@@ -86,7 +84,15 @@ public class ClientController {
 	// If the VALUE is FALSE, then the first Hansake message was sent but an answer was not received yet!
 	// If the VALUE is TRUE, then the Handsake message was received from that peer to whom the Handsake was sent.
 	public static HashMap<Integer, Boolean> handsakeAlreadySent = new HashMap<>();
-	public static HashMap<Integer, Boolean> alreadyConnected = new HashMap<>();
+	// There exists an incoherence or mismatch between the PORTS that are used for TCP sockets and the PORTS that were used to establish
+	// the UDP connection from peers to trackers. This is why, when the peer's list is received, the peers' PORTS are those that were used
+	// in the UDP connection between trackers and peers. Therefore, we have to be very careful how we deal with this.
+	// The PORTS received in the peers list are used initially to send the Handshake messages, but they are (at the same time) different from
+	// those we are using to establish TCP connection. We must ENSURE that the Handshake procedure is not carried out TWICE between a couple of peers.
+	// This is why we are declaring another HashMap that saves the ID of those peers to whom the Handshake message was finished:
+	// KEY: peerID; VALUE: the port used to establish the connection. If exists a certain peerID in the HashMap, then the Handshake procedure finished
+	// correctly, then, there is no need to send other Handsake messages.
+	public static HashMap<String, Integer> alreadyConnected = new HashMap<>();
 	
 	//THREADS
 	private Thread connectionRenewerThread;
@@ -145,10 +151,8 @@ public class ClientController {
 			try {
 				fileAllocated = fd.getFileAllocated();
 			} catch (FileNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			file = fileAllocated;
@@ -489,12 +493,23 @@ public class ClientController {
 		downloadNotifierThread.start();
 	}
 	
+	/**
+	 * Auxiliary/Util method to convert Int to IP
+	 * @param ip
+	 * @return
+	 * @throws UnknownHostException
+	 */
 	private InetAddress convertIntToIP(int ip) throws UnknownHostException{
 		byte[] bytes = BigInteger.valueOf(ip).toByteArray();
 		InetAddress address = InetAddress.getByAddress(bytes);
 		return address;
 	}
 	
+	/**
+	 * Auxiliary/Util method to convert IP byte address to Int
+	 * @param ip
+	 * @return
+	 */
 	public static int convertIpAddressToInt(byte[] ip){
 		
 		int result = 0;
@@ -508,7 +523,6 @@ public class ClientController {
 		
 	}
 
-
 	/**
 	 * If Client side doesn't have a transaction ID set yet, then we cannot proceed with the ScrapeRequest message
 	 * The GUI calls this method to ensure that transaction ID is different from -1 (initial value)
@@ -518,6 +532,11 @@ public class ClientController {
 		return transactionID;
 	}
 	
+	/**
+	 * Whenever the peer receives an AnnounceResponse, it has to update the information regarding the downloaded content
+	 * @param infohash
+	 * @param res
+	 */
 	private void updateSwarmInformation(String infohash, AnnounceResponse res) {
 		if (torrents.get(infohash) != null) {
 			torrents.get(infohash).setPeerList(res.getPeers());
@@ -525,6 +544,12 @@ public class ClientController {
 			torrents.get(infohash).setTotalSeeders(res.getSeeders());
 		}
 	}
+	
+	/**
+	 * This method processes the list of peers received when an AnnounceResponse arrives.
+	 * The "process" involves checking the peers inside the list we received and add them to in-memory peers list in case they were not inside already.
+	 * @param peerlist
+	 */
 	private void processReceivedPeerList(List<PeerInfo> peerlist) {
 		System.out.println("Displaying the received list of Peers from tracker...");
 		ArrayList<Peer> tempListPeers;
@@ -535,6 +560,7 @@ public class ClientController {
 			} else {
 				tempListPeers = new ArrayList<Peer>();
 			}
+			// We iterate over all PeerInfos within the list.
 			for(PeerInfo temporal: s2.getPeerList()){
 				try {
 					if(temporal.getIpAddress()!=0){
@@ -572,38 +598,41 @@ public class ClientController {
 	
 	/**
 	 * For every swarm and for every list of peers within that swarm, a TCP connection is established.
+	 * The very first message is a Handsake.
+	 * In order not to send reptively a Handsake message to the same peer, we have implemented a HashMap that stores the port numbers
+	 * of those whom the Handsake messages was already sent to.
 	 */
 	private void connectToPeers() {
 		for (String infohash : torrents.keySet()) {
-			// With the following IF we are trying to identify whether exists or not a new peer for current Swarm (apart from the ones)
-			// who were already in the list of peers. If yes, then it means that we need to establish a connection with him/her, otherwise,
-			// it means that all peers of the list for that Swarm were already sent the Handsake messages.
+			// With the following IF we are trying to identify whether exists or not a new peer for current Swarm (apart from the ones
+			// who were already in the list of peers). If yes, then it means that we need to establish a connection with him/her, otherwise,
+			// it means that all peers of the list for that Swarm were already sent the Handsake message.
 			if (auxListPeers.containsKey(infohash)) {
-				if (listPeers.get(infohash).size() == auxListPeers.get(infohash)) {System.out.println("CONTINUE!!!!!!!!"); continue; }
+				if (listPeers.get(infohash).size() == auxListPeers.get(infohash)) {continue; }
 			}
+			// Now we iterate over all peers within current Swarm
 			for (Peer peer : listPeers.get(infohash)) {
-				if (listPeers.get(infohash).size() == 1) {System.out.println("BREAAAAKKKKKK!!!!!!!!");break;} // Here we skip sending intentionally a Handsake to ourselves
+				if (listPeers.get(infohash).size() == 1) {System.out.println("Skipped sending the Handsake to myself! :)");break;} // Here we skip sending intentionally a Handsake to ourselves
 				try {
+					// If the IP and Port numbers are equal to ours, then WE DON'T NEED to send a Handshake to ourselves.
 					if(peer.getIp().getHostAddress().equals(InetAddress.getLocalHost().getHostAddress())  && peer.getPort() == peerListenerPort){
 						System.out.println("Skipped sending the Handsake to myself! :)");
 						continue;
 					}
-					if(!(ClientController.handsakeAlreadySent.containsKey(peer.getPort()))){
+					if(!ClientController.handsakeAlreadySent.containsKey(peer.getPort())){
 						Socket socket = new Socket(peer.getIp().getHostAddress(), peer.getPort());
-						PeerRequestManager prm = new PeerRequestManager(socket, torrent, file, torrent.getMetainfo().getInfo().getPieceLength(),idPeer+"", downloaded.getDonwloadedChunks());
-						//prm.start();
+						new PeerRequestManager(socket, torrent, file, torrent.getMetainfo().getInfo().getPieceLength(),idPeer+"", downloaded.getDonwloadedChunks());
 						DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 						// The first message that has to be sent to the peer it's Handsake type:
 						System.out.println(" - Sending a Handsake to '" + peer.getIp().getHostAddress() + ":" + peer.getPort() + " (InfoHash:" + infohash + ")...");
 						Handsake outgoing_message = new Handsake();
 						outgoing_message.setInfoHash(torrent.getMetainfo().getInfo().getInfoHash());
-						System.out.println("HANSHAKE SENDED PEERID: "+ String.valueOf(idPeer));
-						System.out.println("HANSHAKE SENDED INFOHASH: "+ ByteUtils.toHexString(torrent.getMetainfo().getInfo().getInfoHash()));
-						//I add spaces to fit the 20 size of the string at the hansake
-						outgoing_message.setPeerId(String.valueOf(idPeer)+"          ");
+						outgoing_message.setPeerId(String.valueOf(idPeer)+"          "); // I add spaces to fit the 20 size of the string int the Hansake message
 						out.write(outgoing_message.getBytes());
-						System.out.println("HANSHAKE SENDED TO PORT: "+ peer.getPort());
-						handsakeAlreadySent.put(peer.getPort(), false); // Here, we are indicating that we have affirmatively sent the Handsake mesage the mentioned Peer, but, an answer was not received back yet!
+						System.out.println("		· HANSHAKE SENT PEERID: "+ String.valueOf(idPeer));
+						System.out.println("		· HANSHAKE SENT INFOHASH: "+ ByteUtils.toHexString(torrent.getMetainfo().getInfo().getInfoHash()));
+						System.out.println("		· HANSHAKE SENT TO PORT: "+ peer.getPort());
+						handsakeAlreadySent.put(peer.getPort(), false); // Here, we are indicating that we have affirmatively sent the Handsake message to the mentioned Peer, but, an answer was not received back yet!
 					}
 				} catch (IOException e) {
 					e.printStackTrace();

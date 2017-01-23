@@ -363,7 +363,6 @@ public class MulticastSocketTracker implements Runnable {
 		AnnounceResponse response = new AnnounceResponse();
 		response.setAction(Action.ANNOUNCE);
 		response.setTransactionId(transactionId);
-		//response.setInterval(interval);
 		
 		// Now, it is compulsory to check whether the peer we are communicating with has already been interested in the swarm.
 		// In other words, check if the swarm already exists or not.
@@ -372,12 +371,12 @@ public class MulticastSocketTracker implements Runnable {
 			// First, we prepare the response to the peer and we will handle the update process (concerning all trackers) afterwards:
 			Swarm temp = dms.getSwarmList().get(stringinfohash);
 			
-			//We don't know anything about the swarm, so we establish a default interval
-			//We determinate an interval
+			//We don't know anything about the swarm, so we establish a default interval determined by us:
 			int period = temp.getAppropiateInterval(dms.getSwarmList());
 			System.out.println("		·Interval selected: " + period);
 			response.setInterval(period);
 			interval = period;
+			
 			// No matter whether the tracker is the MASTER or SLAVE, it is necessary to save in memory the information regarding the SWARM.
 			// The corresponding update to the database will occur later on.
 			// Now we extract/capture the peer from the memory and update is properties
@@ -476,6 +475,11 @@ public class MulticastSocketTracker implements Runnable {
 		return response;
 	}
 	
+	/**
+	 * Collects information about Swarms and saves it in a lit of ScrapeInfo. This type of message is somethis sent by Peers
+	 * @param infohashes
+	 * @return
+	 */
 	private List<ScrapeInfo> collectScrapeInformation(List<String> infohashes) {
 		List<ScrapeInfo> resul = new ArrayList<ScrapeInfo>();
 		for (String infohash : infohashes) {
@@ -522,6 +526,10 @@ public class MulticastSocketTracker implements Runnable {
 		connectionCheckerThread.start();
 	}
 	
+	/** Auxiliary/Util method to convert an IP string to an Int
+	 * @param ip
+	 * @return
+	 */
 	public static int convertIpAddressToInt(String ip){
 		
 		int result = 0;
@@ -541,6 +549,11 @@ public class MulticastSocketTracker implements Runnable {
 		
 	}
 	
+	/**
+	 * Auxiliary/Util method to convert Int number to Bytes
+	 * @param bytes
+	 * @return
+	 */
 	byte[] convertIntToBytes(int bytes) {
 		  return new byte[] {
 		    (byte)((bytes >>> 24) & 0xff),

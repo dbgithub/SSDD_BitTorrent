@@ -155,7 +155,7 @@ public class ByteUtils {
         return 0x00 << 24 | b & 0xff;
     }
     
-    //Extract a subarray of bytes from a source array with a certanin length
+    //Extract a subarray of bytes from a source array with a certain length
     public static byte[] subArray(byte[] b, int offset, int length){
         byte[] sub = new byte[length];
         

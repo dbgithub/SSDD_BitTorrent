@@ -8,7 +8,9 @@ import java.util.BitSet;
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 
 /**
- * This runnable class represents a thread that will be executed, taking care of the following:
+ * This runnable class represents a thread that will be executed and will wait for incoming peer messages.
+ * This class doesn't initiate the connection with a peer. It just waits for incoming messages, and from that moment on, it will answer accordingly.
+ * It takes care of the following:
  * · Declaring and using the ServerSocket that is passed as an argument
  * · For each incoming request from other peers, a new RequestManager (which is a listener) is created.
  * @author aitor & kevin

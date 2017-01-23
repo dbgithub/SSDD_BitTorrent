@@ -8,15 +8,12 @@ import java.io.RandomAccessFile;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
-import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.Formatter;
-
-import javax.net.ssl.HandshakeCompletedEvent;
 
 import bitTorrent.metainfo.handler.MetainfoHandlerSingleFile;
 import bitTorrent.peer.protocol.BitfieldMsg;
@@ -28,6 +25,11 @@ import bitTorrent.peer.protocol.PortMsg;
 import bitTorrent.peer.protocol.RequestMsg;
 import bitTorrent.util.ByteUtils;
 
+/**
+ * This class handles all messages that are received from another peer. All messages are taken into consideration: 'Hansake', BitField, ...
+ * @author aitor & kevin
+ *
+ */
 public class PeerRequestManager extends Thread{
 
 	private MetainfoHandlerSingleFile torrent;
@@ -36,6 +38,7 @@ public class PeerRequestManager extends Thread{
 	private DataOutputStream out;
 	private Socket tcpSocket;
 	private String peerID;
+	volatile boolean cancel = false;
 	
 	//About this client
 	private BitSet donwloadedChunks;
@@ -46,15 +49,13 @@ public class PeerRequestManager extends Thread{
 	//About the other peer
 	private BitSet otherPeerChunks;
 	private int interestedPiece = 0;
-	
 	private int pieceLength;
-	volatile boolean cancel = false;
 	
 	//State flags
 	private boolean choked = true;
 	private boolean interested = false;
 	private int port;
-	//Determines if we have received an Bitfield message yet, just after Handshake
+	//Determines if we have received a Bitfield message, just after Handshake
 	private boolean firstTime = true;
 
 	public PeerRequestManager(Socket socket, MetainfoHandlerSingleFile torrent, RandomAccessFile downloadingFile, int piece, String peerid, BitSet donwloadedChunks) {
@@ -76,49 +77,54 @@ public class PeerRequestManager extends Thread{
 	}
 
 	public void run() {
-		//Echo server
 		try {
 			
 			byte[] buffer = new byte[1024];
-			int numberOfBytesReaded = this.in.read(buffer);
-			System.out.println(" - Received data from '" + tcpSocket.getInetAddress().getHostAddress() + ":" + tcpSocket.getPort());		
-			System.out.println(" - Readed: "+ numberOfBytesReaded+ " bytes");
+			int numberOfBytesReaded = this.in.read(buffer); // This will return -1 when the other end of the stream closes the TCP connection
+			System.out.println("[PeerRequestManager] - Received data from '" + tcpSocket.getInetAddress().getHostAddress() + ":" + tcpSocket.getPort());		
+			System.out.println("[PeerRequestManager] - Bytes read: "+ numberOfBytesReaded+ " bytes");
 			//We record the time when received message
 			lastTimeReceivedMessage = new Date();
-			
-			Handsake hansake = Handsake.parseHandsake(ByteUtils.subArray(buffer, 0, numberOfBytesReaded));
+			Handsake hansake = null;
+			if (numberOfBytesReaded >= 0) {hansake = Handsake.parseHandsake(ByteUtils.subArray(buffer, 0, numberOfBytesReaded));} // If the peer at the other side of the TCP connection does not close the connection, the length of bytes read will be greater than 0
 			if(hansake != null){
-				System.out.println("- PeerRequestManager: Handshake received...");
-				//Obtaining information
+				System.out.println("[PeerRequestManager] - Handshake received!");
+				// Obtaining information just in case
 				InetAddress ip = tcpSocket.getInetAddress();
 				int port = tcpSocket.getPort();
 				String peerid = hansake.getPeerId();
 				byte[] infohash = hansake.getInfoHash();
-				System.out.println("HANDSHAKE PEERID RECEIVED: "+peerid);
-				System.out.println("HANDSHAKE INFOHASH RECEIVED: "+ByteUtils.toHexString(infohash));
-				System.out.println("HANDSHAKE FROM PORT: "+port);
+				System.out.println("		· HANDSHAKE RECEIVED PEERID : "+peerid);
+				System.out.println("		· HANDSHAKE RECEIVED INFOHASH : "+ByteUtils.toHexString(infohash));
+				System.out.println("		· HANDSHAKE RECEIVED FROM PORT: "+port);
 				
-				
-				
-				//sending response to the peer
+				// Sending the response back to the peer:
+				// We check whether this current peer received a Handshake message before. We do this by checking whether we have saved the port number of the peer's incoming message.
 				if(ClientController.handsakeAlreadySent.containsKey(port)){
-					if(!(ClientController.handsakeAlreadySent.get(port))){
-						//send bitfield if this sent the handshake
+					// Now, we know that the peer of the incoming message was already sent a Handshake message before.
+					// We have to check if the connection between these two peers was already established or it is in process.
+					if(!ClientController.handsakeAlreadySent.get(port)){
+						// Sending BitField message since the Handshake process ended successfully:
 						ClientController.handsakeAlreadySent.put(port, true);
-						System.out.println("- PeerRequestManager: Sending BitField");
+						ClientController.alreadyConnected.put(peerid, port);
+						System.out.println("[PeerRequestManager] - Sending BitField message...");
 						BitfieldMsg bit = new BitfieldMsg(ByteUtils.bitSetToBytes(donwloadedChunks));
 						this.out.write(bit.getBytes());
 					}
 				}
-				else{
-					//this means that the peer hasn't sent the hanshake, so must respond to the received one
+				else if (!ClientController.alreadyConnected.containsKey(peerid)){
+					// This means that current peer did not answer yet the Handshake message that was received from another peer at this end-point
+					System.out.println("[PeerRequestManager] - Sending Handshake message back to the sender to eventually establish the connection...");
 					ClientController.handsakeAlreadySent.put(port, true);
-					hansake.setPeerId(peerID+"          ");
+					ClientController.alreadyConnected.put(peerid, port);
+					hansake.setPeerId(peerID+"          "); // I add spaces to fit the 20 size of the string int the Hansake message
 					this.out.write(hansake.getBytes());
+				} else {
+					System.out.println("[PeerRequestManager] - Handshake skipped, no need to establish a connection, TCP connection already set between peers :)");
 				}
 				
 				
-				//Start waiting for other messages in this socket
+				// Waits for other messages in this socket
 				while(!cancel && !(tcpSocket.isClosed())){
 					buffer = new byte[1024];
 					numberOfBytesReaded = this.in.read(buffer);
@@ -192,7 +198,7 @@ public class PeerRequestManager extends Thread{
 						//If we need some, send appropriate requests
 						if(firstTime)
 						{
-							System.out.println("PeerRequestManager: BitField received...");
+							System.out.println("[PeerRequestManager] - BitField received!");
 							BitfieldMsg bitmessage = (BitfieldMsg) message;
 							byte[] bytes = bitmessage.getBytes();
 							otherPeerChunks = new BitSet(bytes.length);

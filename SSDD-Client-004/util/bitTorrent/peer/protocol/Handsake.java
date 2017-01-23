@@ -18,9 +18,6 @@ package bitTorrent.peer.protocol;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
-
-import javax.xml.bind.DatatypeConverter;
-
 import bitTorrent.util.ByteUtils;
 
 public class Handsake {	
