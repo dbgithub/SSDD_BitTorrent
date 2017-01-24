@@ -50,6 +50,7 @@ public class PeerRequestManager extends Thread{
 	private BitSet otherPeerChunks;
 	private int interestedPiece = 0;
 	private int pieceLength;
+	private boolean sentBitfield = false;
 	
 	//State flags
 	private boolean choked = true;
@@ -107,6 +108,7 @@ public class PeerRequestManager extends Thread{
 						// Sending BitField message since the Handshake process ended successfully:
 						ClientController.handsakeAlreadySent.put(port, true);
 						ClientController.alreadyConnected.put(peerid, port);
+						sentBitfield = true;
 						System.out.println("[PeerRequestManager] - Sending BitField message...");
 						BitfieldMsg bit = new BitfieldMsg(ByteUtils.bitSetToBytes(downloadedChunks));
 						this.out.write(bit.getBytes());
@@ -199,20 +201,21 @@ public class PeerRequestManager extends Thread{
 						//If we need some, send appropriate requests
 						if(firstTime)
 						{
+							
 							System.out.println("[PeerRequestManager] - BitField received!");
 							BitfieldMsg bitmessage = (BitfieldMsg) message;
-							byte[] bytes = bitmessage.getBytes();
-							otherPeerChunks = new BitSet(bytes.length);
-							int index = 0;
-							//Checking if bits of the bytes retrieved
-							//Each bit represents a piece at the file
-							while (index < bytes.length){
-								if(isSet(bytes, index)){
-									otherPeerChunks.set(index);
-								}
+							byte [] bitfield = bitmessage.getPayload();
+							otherPeerChunks = ByteUtils.bytesToBitSet(bitfield);
+							
+							if(!sentBitfield){
+								//Send message if I didn't send the Bitfield initial request
+								BitfieldMsg newone = new BitfieldMsg(ByteUtils.bitSetToBytes(downloadedChunks));
+								out.write(newone.getBytes());
 							}
+							
 							//TODO: we should ask for the pieces that we don't have sending requests
 							//Create thread to start sending requests
+							System.out.println("[PeerRequestManager] -  Creating PeerRequestCreator...");
 							PeerRequestCreator prc = new PeerRequestCreator(downloadedChunks, otherPeerChunks, pieceLength, out, torrent);
 							prc.start();
 						}
