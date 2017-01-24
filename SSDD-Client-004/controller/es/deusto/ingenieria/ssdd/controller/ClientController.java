@@ -274,7 +274,7 @@ public class ClientController {
 	public void sendAndWaitUntilConnectResponseReceivedLoop(MetainfoHandlerSingleFile single, DatagramSocket socketSend, DatagramSocket socketListen, boolean firstime){
 		try{
 			//Let's set a timeout if the tracker doesn't response
-			socketListen.setSoTimeout(3000);
+			socketListen.setSoTimeout(8000);
 			byte[] buffer = new byte[1024];
 			boolean responseReceived = false;
 			while(!responseReceived){     // Receive data until timeout
@@ -323,7 +323,7 @@ public class ClientController {
 			DatagramSocket socketSend, DatagramSocket socketListen, long downloaded, long left, long uploaded) {
 		try{
 			//Let's set a timeout if the tracker doesn't response
-			socketListen.setSoTimeout(3000);
+			socketListen.setSoTimeout(8000);
 			byte[] buffer = new byte[1024];
 			boolean responseReceived = false;
 			while(!responseReceived){     // recieve data until timeout
@@ -365,7 +365,7 @@ public class ClientController {
 	 */
 	public void sendAndWaitUntilScrapeResponseReceivedLoop() {
 		try {
-			socketReceive.setSoTimeout(3000); //Let's set a timeout if the tracker doesn't response
+			socketReceive.setSoTimeout(8000); //Let's set a timeout if the tracker doesn't response
 			byte[] buffer = new byte[1024];
 			boolean responseReceived = false;
 			while(!responseReceived) {

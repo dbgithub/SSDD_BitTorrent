@@ -357,7 +357,7 @@ public class ByteUtils {
 		int currentIndex = 0;
 		
 		for (int i=0; i<arrays.length; i++) {			
-			System.arraycopy(arrays[i], 0, newArrayLength, currentIndex, arrays[i].length);
+			System.arraycopy(arrays[i], 0, newArray, currentIndex, arrays[i].length);
 			currentIndex += arrays[i].length;
 		}
 		

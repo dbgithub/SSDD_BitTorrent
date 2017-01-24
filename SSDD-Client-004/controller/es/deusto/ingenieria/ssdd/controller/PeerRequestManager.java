@@ -253,7 +253,7 @@ public class PeerRequestManager extends Thread{
 							
 							//Add block to current piece download
 							if(currentPiece == null){
-								currentPiece = new byte[pieceLength/16384];
+								currentPiece = new byte[0];
 							}
 							System.out.println(currentPiece+ " "+ block);
 							ByteUtils.concatenateByteArrays(currentPiece, block);
@@ -261,6 +261,10 @@ public class PeerRequestManager extends Thread{
 							int numberOfBlock = piecemessage.getBegin() / 16384;
 							
 							//Setting block to downloaded (true)
+							if(myBlockInfoByPiece == null){
+								myBlockInfoByPiece = new ArrayList<BitSet>();
+								myBlockInfoByPiece.add(new BitSet(pieceLength/16384));
+							}
 							myBlockInfoByPiece.get(newpieceIndex).set(numberOfBlock);
 							
 							//Check if all the piece is downloaded
