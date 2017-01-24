@@ -255,6 +255,7 @@ public class PeerRequestManager extends Thread{
 							if(currentPiece == null){
 								currentPiece = new byte[pieceLength/16384];
 							}
+							System.out.println(currentPiece+ " "+ block);
 							ByteUtils.concatenateByteArrays(currentPiece, block);
 							//currentPiece.add(block);
 							int numberOfBlock = piecemessage.getBegin() / 16384;
