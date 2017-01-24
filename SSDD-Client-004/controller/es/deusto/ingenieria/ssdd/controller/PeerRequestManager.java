@@ -201,7 +201,7 @@ public class PeerRequestManager extends Thread{
 						//If we need some, send appropriate requests
 						if(firstTime)
 						{
-							
+							firstTime = false;
 							System.out.println("[PeerRequestManager] - BitField received!");
 							BitfieldMsg bitmessage = (BitfieldMsg) message;
 							byte [] bitfield = bitmessage.getPayload();
@@ -230,6 +230,9 @@ public class PeerRequestManager extends Thread{
 							interestedPiece = pieceIndex;
 							int begin = requestmessage.getBegin();
 							int pieceL = requestmessage.getRLength();
+							
+							System.out.println("[PeerRequestManager] -  Asked for piece number "+pieceIndex+ " and block offset "+ begin);
+							
 							//Just to be sure, check if we have it
 							if(downloadedChunks.get(pieceIndex)){
 								byte[] bufferFile = new byte[pieceL];
