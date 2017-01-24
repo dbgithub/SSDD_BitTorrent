@@ -41,7 +41,7 @@ public class PeerRequestManager extends Thread{
 	volatile boolean cancel = false;
 	
 	//About this client
-	private BitSet donwloadedChunks;
+	private BitSet downloadedChunks;
 	private ArrayList<BitSet> myBlockInfoByPiece;
 	private RandomAccessFile downloadingFile;
 	private byte[] currentPiece;
@@ -65,7 +65,7 @@ public class PeerRequestManager extends Thread{
 			this.tcpSocket = socket;
 		    this.in = new DataInputStream(socket.getInputStream());
 			this.out = new DataOutputStream(socket.getOutputStream());
-			this.donwloadedChunks = donwloadedChunks;
+			this.downloadedChunks = donwloadedChunks;
 			this.downloadingFile = downloadingFile;
 			this.pieceLength = piece;
 			this.peerID = peerid;
@@ -108,7 +108,7 @@ public class PeerRequestManager extends Thread{
 						ClientController.handsakeAlreadySent.put(port, true);
 						ClientController.alreadyConnected.put(peerid, port);
 						System.out.println("[PeerRequestManager] - Sending BitField message...");
-						BitfieldMsg bit = new BitfieldMsg(ByteUtils.bitSetToBytes(donwloadedChunks));
+						BitfieldMsg bit = new BitfieldMsg(ByteUtils.bitSetToBytes(downloadedChunks));
 						this.out.write(bit.getBytes());
 					}
 				}
@@ -121,6 +121,7 @@ public class PeerRequestManager extends Thread{
 					this.out.write(hansake.getBytes());
 				} else {
 					System.out.println("[PeerRequestManager] - Handshake skipped, no need to establish a connection, TCP connection already set between peers :)");
+					cancel();
 				}
 				
 				
@@ -212,13 +213,13 @@ public class PeerRequestManager extends Thread{
 							}
 							//TODO: we should ask for the pieces that we don't have sending requests
 							//Create thread to start sending requests
-							
+							PeerRequestCreator prc = new PeerRequestCreator(downloadedChunks, otherPeerChunks, pieceLength, out, torrent);
+							prc.start();
 						}
 						break;
 					case REQUEST:
 						// <len=0013><id=6><index><begin><length>
 						//It is requesting one block, so we have to serve it 
-						//TODO: Look for the piece that wants and send it 
 						if(!firstTime)
 						{
 							RequestMsg requestmessage = (RequestMsg) message;
@@ -227,7 +228,7 @@ public class PeerRequestManager extends Thread{
 							int begin = requestmessage.getBegin();
 							int pieceL = requestmessage.getRLength();
 							//Just to be sure, check if we have it
-							if(donwloadedChunks.get(pieceIndex)){
+							if(downloadedChunks.get(pieceIndex)){
 								byte[] bufferFile = new byte[pieceL];
 								downloadingFile.read(bufferFile, begin, pieceL);
 								PieceMsg piece = new PieceMsg(pieceIndex, begin, bufferFile);
@@ -264,7 +265,7 @@ public class PeerRequestManager extends Thread{
 									downloadingFile.write(currentPiece, newpieceIndex*pieceLength, currentPiece.length);
 									
 									//Update downloaded
-									donwloadedChunks.set(newpieceIndex);
+									downloadedChunks.set(newpieceIndex);
 									int dimension = pieceLength/16384;
 									currentPiece = new byte[dimension];
 									interestedPiece = 0;

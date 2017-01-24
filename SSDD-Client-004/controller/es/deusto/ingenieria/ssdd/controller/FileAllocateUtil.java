@@ -47,7 +47,7 @@ public class FileAllocateUtil {
 				BitSet temp = new BitSet(piecelength/16384);
 				myBlockInfoByPiece.add(temp);
 			}
-			
+			//donwloadedChunks.set(0, donwloadedChunks.size());
 			File outFile = new File("downloads/"+single.getMetainfo().getInfo().getName()+".state");
 		    FileOutputStream fos = new FileOutputStream(outFile);
 		    ObjectOutputStream oos = new ObjectOutputStream(fos);
