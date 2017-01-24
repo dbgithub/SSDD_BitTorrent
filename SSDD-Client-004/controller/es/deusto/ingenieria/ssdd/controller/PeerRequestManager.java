@@ -62,7 +62,6 @@ public class PeerRequestManager extends Thread{
 	public PeerRequestManager(Socket socket, MetainfoHandlerSingleFile torrent, RandomAccessFile downloadingFile, int piece, String peerid, BitSet donwloadedChunks) {
 		try {
 			//set socket timeout to two minutes if no message is received
-			socket.setSoTimeout(120000);
 			this.tcpSocket = socket;
 		    this.in = new DataInputStream(socket.getInputStream());
 			this.out = new DataOutputStream(socket.getOutputStream());
@@ -215,7 +214,7 @@ public class PeerRequestManager extends Thread{
 							
 							//TODO: we should ask for the pieces that we don't have sending requests
 							//Create thread to start sending requests
-							System.out.println("[PeerRequestManager] -  Creating PeerRequestCreator...");
+							System.out.println("[PeerRequestManager] - Creating PeerRequestCreator...");
 							PeerRequestCreator prc = new PeerRequestCreator(downloadedChunks, otherPeerChunks, pieceLength, out, torrent);
 							prc.start();
 						}
@@ -235,6 +234,7 @@ public class PeerRequestManager extends Thread{
 							
 							//Just to be sure, check if we have it
 							if(downloadedChunks.get(pieceIndex)){
+								System.out.println("[PeerRequestManager] -  I have that piece number: "+ pieceIndex);
 								byte[] bufferFile = new byte[pieceL];
 								downloadingFile.read(bufferFile, begin, pieceL);
 								PieceMsg piece = new PieceMsg(pieceIndex, begin, bufferFile);
@@ -252,6 +252,9 @@ public class PeerRequestManager extends Thread{
 							int newpieceIndex = piecemessage.getIndex();
 							
 							//Add block to current piece download
+							if(currentPiece == null){
+								currentPiece = new byte[pieceLength/16384];
+							}
 							ByteUtils.concatenateByteArrays(currentPiece, block);
 							//currentPiece.add(block);
 							int numberOfBlock = piecemessage.getBegin() / 16384;
