@@ -31,10 +31,12 @@ public class PeerRequestCreator extends Thread{
 	}
 
 	public void run() {
-		
+		System.out.println("[PeerRequestCreator] - Intialized!");
+		System.out.println("[PeerRequestCreator] - Actual state - Mine: "+ mine.cardinality()+ " Other: "+ otherPeer.cardinality());
 		while(!cancel){
 			if(mine.cardinality() == mine.size()){
 				//All pieces downloaded
+				System.out.println("[PeerRequestCreator] - All downloaded");
 				cancel = true;
 			}
 			else{
@@ -43,6 +45,7 @@ public class PeerRequestCreator extends Thread{
 				for(int i =0; i < mine.size(); i++){
 					if(!(mine.get(i))){
 						//I don't have that piece, check if the other peer has it
+						System.out.println("[PeerRequestCreator] - Piece number "+ i);
 						if(otherPeer.get(i)){
 							//It has it, so ask for it, block by block
 							//Each block 16384 bytes
@@ -71,6 +74,7 @@ public class PeerRequestCreator extends Thread{
 				int actualCardinality = otherPeerCardinality;
 				do{
 					try {
+						System.out.println("[PeerRequestCreator] - Sleep and check then");
 						Thread.sleep(10000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
