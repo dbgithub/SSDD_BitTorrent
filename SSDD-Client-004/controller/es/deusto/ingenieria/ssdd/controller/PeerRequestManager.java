@@ -236,7 +236,8 @@ public class PeerRequestManager extends Thread{
 							if(downloadedChunks.get(pieceIndex)){
 								System.out.println("[PeerRequestManager] -  I have that piece number: "+ pieceIndex);
 								byte[] bufferFile = new byte[pieceL];
-								downloadingFile.read(bufferFile, begin, pieceL);
+								downloadingFile.seek(pieceLength*pieceIndex);
+								downloadingFile.read(bufferFile, 0, pieceL);
 								PieceMsg piece = new PieceMsg(pieceIndex, begin, bufferFile);
 								this.out.write(piece.getBytes());
 							}
