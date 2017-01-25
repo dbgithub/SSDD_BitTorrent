@@ -236,7 +236,7 @@ public class PeerRequestManager extends Thread{
 							if(downloadedChunks.get(pieceIndex)){
 								System.out.println("[PeerRequestManager] -  I have that piece number: "+ pieceIndex);
 								byte[] bufferFile = new byte[pieceL];
-								downloadingFile.seek(pieceLength*pieceIndex);
+								downloadingFile.seek(pieceLength*pieceIndex+begin);
 								downloadingFile.read(bufferFile, 0, pieceL);
 								PieceMsg piece = new PieceMsg(pieceIndex, begin, bufferFile);
 								this.out.write(piece.getBytes());
@@ -264,10 +264,9 @@ public class PeerRequestManager extends Thread{
 							//Setting block to downloaded (true)
 							if(myBlockInfoByPiece == null){
 								myBlockInfoByPiece = new ArrayList<BitSet>();
-								myBlockInfoByPiece.add(new BitSet(pieceLength/16384));
-							}
-							if (newpieceIndex == myBlockInfoByPiece.size()) {
-								myBlockInfoByPiece.add(new BitSet(pieceLength/16384));
+								for (int l = 0; l < downloadedChunks.size(); l++) {
+									myBlockInfoByPiece.add(new BitSet(pieceLength/16384));
+								}
 							}
 							myBlockInfoByPiece.get(newpieceIndex).set(numberOfBlock);
 							
