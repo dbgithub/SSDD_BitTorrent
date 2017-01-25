@@ -63,6 +63,8 @@ public class PeerRequestManager extends Thread{
 		try {
 			//set socket timeout to two minutes if no message is received
 			this.tcpSocket = socket;
+			tcpSocket.setSendBufferSize(32000);
+			tcpSocket.setReceiveBufferSize(32000);
 		    this.in = new DataInputStream(socket.getInputStream());
 			this.out = new DataOutputStream(socket.getOutputStream());
 			this.downloadedChunks = donwloadedChunks;
@@ -230,14 +232,14 @@ public class PeerRequestManager extends Thread{
 							int begin = requestmessage.getBegin();
 							int pieceL = requestmessage.getRLength();
 							
-							System.out.println("[PeerRequestManager] -  Asked for piece number "+pieceIndex+ " and block offset "+ begin);
+							System.out.println("[PeerRequestManager] -  Asked for piece number "+pieceIndex+ " and block offset "+ begin+ " (block length "+ pieceL+")");
 							
 							//Just to be sure, check if we have it
 							if(downloadedChunks.get(pieceIndex)){
 								System.out.println("[PeerRequestManager] -  I have that piece number: "+ pieceIndex);
-								byte[] bufferFile = new byte[pieceL];
+								byte[] bufferFile = new byte[16000];
 								downloadingFile.seek(pieceLength*pieceIndex+begin);
-								downloadingFile.read(bufferFile, 0, pieceL);
+								downloadingFile.read(bufferFile, 0, 16000);
 								PieceMsg piece = new PieceMsg(pieceIndex, begin, bufferFile);
 								this.out.write(piece.getBytes());
 							}
