@@ -128,7 +128,7 @@ public class PeerRequestManager extends Thread{
 				
 				// Waits for other messages in this socket
 				while(!cancel && !(tcpSocket.isClosed())){
-					buffer = new byte[1024];
+					buffer = new byte[32760];
 					numberOfBytesReaded = this.in.read(buffer);
 					PeerProtocolMessage message = PeerProtocolMessage.parseMessage(ByteUtils.subArray(buffer, 0, numberOfBytesReaded));
 					switch (message.getType()) {
