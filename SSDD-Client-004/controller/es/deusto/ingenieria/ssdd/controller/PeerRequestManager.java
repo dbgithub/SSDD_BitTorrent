@@ -130,7 +130,7 @@ public class PeerRequestManager extends Thread{
 				while(!cancel && !(tcpSocket.isClosed())){
 					buffer = new byte[1024];
 					numberOfBytesReaded = this.in.read(buffer);
-					PeerProtocolMessage message = PeerProtocolMessage.parseMessage(buffer);
+					PeerProtocolMessage message = PeerProtocolMessage.parseMessage(ByteUtils.subArray(buffer, 0, numberOfBytesReaded));
 					switch (message.getType()) {
 					case KEEP_ALIVE:
 						// <len=0000>
@@ -264,6 +264,9 @@ public class PeerRequestManager extends Thread{
 							//Setting block to downloaded (true)
 							if(myBlockInfoByPiece == null){
 								myBlockInfoByPiece = new ArrayList<BitSet>();
+								myBlockInfoByPiece.add(new BitSet(pieceLength/16384));
+							}
+							if (newpieceIndex == myBlockInfoByPiece.size()) {
 								myBlockInfoByPiece.add(new BitSet(pieceLength/16384));
 							}
 							myBlockInfoByPiece.get(newpieceIndex).set(numberOfBlock);
